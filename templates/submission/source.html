@@ -1,0 +1,100 @@
+{% extends "submission/info-base.html" %}
+{% block media %}
+    <style>
+        .line {
+            position: relative;
+        }
+
+        .highlighter {
+            position: absolute;
+            width: 9999px;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        a:active .line .highlighter {
+            background: rgba(255, 212, 0, 0.48);
+        }
+
+        .copy-clipboard {
+            margin-top: 0 !important;
+        }
+    </style>
+{% endblock %}
+
+{% block js_media %}
+    {% compress js %}
+        <script src="{{ static('libs/clipboard/clipboard.js') }}"></script>
+        <script src="{{ static('libs/clipboard/tooltip.js') }}"></script>
+        <script type="text/javascript">
+            $(function () {
+                $(document).find('pre code').each(function () {
+                    var copyButton;
+                    $(this).closest('.source-wrap').before($('<div>', {'class': 'copy-clipboard'})
+                        .append(copyButton = $('<span>', {
+                            'class': 'btn-clipboard',
+                            'data-clipboard-text': $(this).text(),
+                            'title': 'Click to copy'
+                        }).text('Copy')));
+
+                    $(copyButton.get(0)).mouseleave(function () {
+                        $(this).attr('class', 'btn-clipboard');
+                        $(this).removeAttr('aria-label');
+                    });
+
+                    var curClipboard = new Clipboard(copyButton.get(0));
+
+                    curClipboard.on('success', function (e) {
+                        e.clearSelection();
+                        showTooltip(e.trigger, 'Copied!');
+                    });
+
+                    curClipboard.on('error', function (e) {
+                        showTooltip(e.trigger, fallbackMessage(e.action));
+                    });
+                });
+            });
+        </script>
+    {% endcompress %}
+    {% block content_js_media %}{% endblock %}
+{% endblock %}
+
+{% block body %}
+    <br>
+    <div><a href="{{ url('submission_status', submission.id) }}">{{ _('View status') }}</a></div>
+    <div><a href="{{ url('submission_source_raw', submission.id) }}">{{ _('View raw source') }}</a></div>
+    {% if (request.user == submission.user.user or perms.judge.resubmit_other) and not submission.language.file_only %}
+        <div><a href="{{ url('problem_submit', submission.problem.code, submission.id) }}">{{ _('Resubmit') }}</a></div>
+    {% endif %}
+    {% set can_edit = submission.problem.is_editable_by(request.user) %}
+    {% if perms.judge.rejudge_submission and can_edit and not submission.is_locked %}
+        <div>
+            <form action="{{ url('submission_rejudge') }}" method="post">
+                {% csrf_token %}
+                <a href="#" onclick="parentNode.submit()">{{ _('Rejudge') }}</a>
+                <input type="hidden" name="id" value="{{ submission.id }}">
+                <input type="hidden" name="path" value="{{ url('submission_status', submission.id) }}">
+            </form>
+        </div>
+    {% endif %}
+    <br>
+    <hr>
+    <div class="source-wrap">
+        <table>
+            <tr>
+                <td class="source-ln">
+                    <div>
+                        {% for line in raw_source.split('\n') %}
+                            <a href="#line-{{ loop.index }}" name="line-{{ loop.index }}">
+                                <pre class="line">{{ loop.index }}</pre>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </td>
+                <td class="source-code">{{ highlighted_source }}</td>
+            </tr>
+        </table>
+    </div>
+{% endblock %}

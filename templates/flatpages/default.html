@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ _(flatpage.title) }} - {{ SITE_LONG_NAME }}{% endblock %}
+{% block og_title %}
+    <meta property="og:title" content="{{ _(flatpage.title) }} - {{ SITE_LONG_NAME }}">
+{% endblock %}
+
+{% block content_title %}{{ _(flatpage.title) }}{% endblock %}
+
+{% block header %}
+    {% include "flatpages/admin_link.html" %}
+{% endblock %}
+{% block body %}
+    <div class="body content-description">
+        {% cache 86400 'flatpage' flatpage.url %}
+            {{ flatpage.content|markdown('flatpage', jax)|reference|str|safe}}
+        {% endcache %}
+    </div>
+{% endblock %}
+
+{% block bodyend %}
+    {% if REQUIRE_JAX %}
+        {% include "mathjax-load.html" %}
+    {% endif %}
+{% endblock %}

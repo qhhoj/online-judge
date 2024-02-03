@@ -1,0 +1,159 @@
+{% extends "common-content.html" %}
+
+{% block js_media %}
+    <script type="text/javascript">
+        $(function () {
+            $('a.sub-case-status').featherlight($('.partial-output-window'), {
+                afterOpen: function () {
+                    var $parent = this.$currentTarget.parent();
+                    var partial = $parent.attr('data-partial-output');
+                    this.$instance.find('.partial-output-window').find('code').text(partial).end().show();
+                }
+            });
+
+            $('input.sub-check').on('change', function (e) {
+                var table = $(this).closest('table');
+                var column = $(this).parent().index();
+                var sel = 'tr td:nth-child(' + (column + 1) + ') input.sub-check';
+                var count = table.find(sel + ':checked').length;
+                if (count == 1) {
+                    table.find(sel + ':not(:checked)').attr('disabled', true);
+                } else {
+                    table.find(sel).removeAttr('disabled');
+                }
+            });
+
+            $('#diff').click(function (e) {
+                e.preventDefault();
+
+                var first = $('#case-table tr td:nth-child(1) input.sub-check:checked')[0];
+                var second = $('#case-table tr td:nth-child(2) input.sub-check:checked')[0];
+                if (!first || !second) {
+                    alert('Please select two submissions.');
+                    return;
+                }
+
+                var first_id = $(first).parent().parent().attr('sub-id');
+                var second_id = $(second).parent().parent().attr('sub-id');
+                if (first_id === second_id) {
+                    alert('Please select two different submissions.');
+                    return;
+                }
+
+                window.location.href = '{{ url('diff_submissions') }}?first_id=' + first_id + '&second_id=' + second_id;
+            });
+
+            var highlight_id = (new URL(window.location.href)).searchParams.get('highlight');
+            if (highlight_id) {
+                var row = $('tr[sub-id=' + highlight_id + ']');
+                if (row.length > 0) {
+                    row.addClass('highlighted');
+                    var checkbox = row.find('td:nth-child(2) input.sub-check');
+                    checkbox.attr('checked', true);
+                    checkbox.trigger('change');
+                }
+            }
+        });
+    </script>
+    <script type="text/javascript" src="{{ static('libs/featherlight/featherlight.min.js') }}"></script>
+    <script type="text/javascript">
+    </script>
+{% endblock %}
+
+{% block media %}
+    <style>
+        #content-body {
+            overflow-x: auto;
+            padding-bottom: 0;
+        }
+
+        .sub-id {
+            width: 4em;
+            min-width: 4em;
+        }
+
+        .sub-username {
+            width: 5em;
+        }
+
+        .sub-result {
+            width: 3em;
+        }
+
+        .sub-language {
+            width: 6em;
+        }
+
+        .sub-date {
+            min-width: 8em;
+        }
+
+        .sub-case {
+            min-width: 3em;
+        }
+
+        .sub-case-status {
+            text-decoration: underline;
+        }
+
+        .highlighted {
+            background: lightBlue
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <table id="case-table" class="table">
+        <thead>
+        <tr>
+            <th class="sub-check">{{ _('1st') }}</th>
+            <th class="sub-check">{{ _('2nd') }}</th>
+            <th class="sub-id">{{ _('ID') }}</th>
+            <th class="sub-username">{{ _('Username') }}</th>
+            <th class="sub-result">{{ _('Result') }}</th>
+            <th class="sub-language">{{ _('Language') }}</th>
+            <th class="sub-date">{{ _('Date') }}</th>
+            {% for case in range(num_cases) %}
+                <th class="sub-case">{{ loop.index }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for sub in submissions %}
+            <tr sub-id={{ sub.id }}>
+                <td><input class="sub-check" type="checkbox"></td>
+                <td><input class="sub-check" type="checkbox"></td>
+                <td><a href="{{ url('submission_source', sub.id) }}">{{ sub.id }}</a></td>
+                <td>{{ link_user(sub.user) }}</td>
+                <td><span class="case-{{ sub.result }}">{{ sub.result }}</span></td>
+                <td>{{ sub.language.name }}</td>
+                <td><span class="time">{{ relative_time(sub.date) }}</span></td>
+                {% for case in sub.test_cases.all() %}
+                    <td data-partial-output="{{ case.output }}">
+                        {% if case.status == 'SC' %}
+                            <span class="case-SC">---</span>
+                        {% else %}
+                            <a href="javascript:void(0);" class="sub-case-status case-{{ case.status }}">
+                                {% if case.status == 'AC' %}
+                                    {{ case.time|floatformat(2) }}
+                                {% else %}
+                                    {{ case.status }}
+                                {% endif %}
+                            </a>
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div style="display: none" class="partial-output-window"><pre><code></code></pre></div>
+{% endblock %}
+
+{% block bodyend %}
+    <div style="padding-bottom: 4em;">
+        <a id="diff" class="unselectable button full" href="#" style="width: 90%; margin: auto;">
+            {{ _('Diff source code') }}
+        </a>
+    </div>
+{% endblock %}

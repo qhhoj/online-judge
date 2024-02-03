@@ -1,0 +1,780 @@
+{% extends "base.html" %}
+
+{% block js_media %}
+    {{data_form.media.js}}
+    {% include "leave-warning.html" %}
+    <script type="text/javascript" src="{{ static('libs/jquery-sortable.js') }}"></script>
+    <script type="text/javascript" src="{{ static('libs/featherlight/featherlight.min.js') }}"></script>
+    <script type="text/javascript" src="{{ static('vnoj/jszip/jszip.min.js') }}"></script>
+    <script type="text/javascript">
+        window.valid_files = {{valid_files_json}}.sort();
+        window.testcase_limit = {{testcase_limit}};
+        window.testcase_soft_limit = {{testcase_soft_limit}};
+
+        $(function () {
+            function autofill_if_exists($select, file) {
+                if (!$select.val() && ~window.valid_files.indexOf(file))
+                    $select.append(new Option(file, file, true, true)).change();
+            }
+
+            var valid_files_options = window.valid_files.map(function (file) {
+                return {id: file, text: file};
+            });
+
+            var select2_settings = {
+                theme: '{{ DMOJ_SELECT2_THEME }}',
+                ajax: {
+                    transport: function (params, success) {
+                        success({results: valid_files_options});
+                    },
+                },
+                allowClear: true,
+                placeholder: ''
+            };
+
+            var $table = $('#case-table');
+            $table.on('add-row', function (e, $tr) {
+                $tr.find('input').filter('[id$=file]').each(function () {
+                    var $select, val = $(this).replaceWith($select = $('<select>').attr({
+                        id: $(this).attr('id'),
+                        name: $(this).attr('name'),
+                        style: 'width: 100%'
+                    })).val();
+                    var option = new Option(val, val, true, true);
+                    $select.select2(select2_settings).append(option).change().on('change', function () {
+                        var val = $select.val();
+                        if (val) {
+                            if ($select.attr('id').endsWith('input_file'))
+                                autofill_if_exists($tr.find('select[id$=output_file]'), val.replace(/in(?!.*?in)/, 'out'));
+                            else
+                                autofill_if_exists($tr.find('select[id$=input_file]'), val.replace(/out(?!.*?out)/, 'in'));
+                        }
+                    });
+                });
+            });
+
+            var order = 0;
+
+            function handle_table_reorder() {
+                var in_batch = false;
+                $table.find('tbody:first tr').each(function () {
+                    switch ($(this).attr('data-type')) {
+                        case 'C':
+                            $(this).find('input[id$=points], input[id$=pretest]').toggle(!in_batch);
+                            break;
+                        case 'S':
+                            in_batch = true;
+                            break;
+                        case 'E':
+                            in_batch = false;
+                    }
+                });
+            }
+
+            function try_parse_json(json) {
+                try {
+                    return JSON.parse(json);
+                } catch (e) {
+                    return {};
+                }
+            }
+
+            var $checker = $('#id_problem-data-checker');
+            var $args = $('#id_problem-data-checker_args');
+
+            var $custom_checker_file = $('#id_problem-data-custom_checker');
+            var $custom_checker_type = $('#id_problem-data-checker_type');
+            var $tr_custom_checker_file = $custom_checker_file.parent().parent();
+            var $tr_custom_checker_type = $custom_checker_type.parent().parent();
+
+            (function checker_args_auto_fill() {
+                var $precision = $('<input>', {
+                    type: 'number',
+                    value: try_parse_json($args.val()).precision || 6,
+                    title: '{{ _('precision (decimal digits)') }}',
+                    style: 'width: 4em'
+                }).appendTo($checker.parent());
+
+                $custom_checker_type.parent().append('<br>');
+                var $treat_checker_points_as_percentage = $('<input>', {
+                    type: 'checkbox',
+                    checked: try_parse_json($args.val()).treat_checker_points_as_percentage || false,
+                    id: 'treat-checker-points-as-percentage',
+                }).appendTo($custom_checker_type.parent());
+                var $treat_checker_points_as_percentage_label = $('<label>', {
+                    for: 'treat-checker-points-as-percentage',
+                    text: '{{ _('Treat checker points as percentage') }}',
+                }).appendTo($custom_checker_type.parent());
+
+                if ($args.val()) {
+                    var old_args = try_parse_json($args.val());
+                    if ("type" in old_args) {
+                        $custom_checker_type.val(old_args["type"]);
+                    }
+                }
+
+                function fill_args() {
+                    if ($checker.val().startsWith('floats')) {
+                        $args.val(JSON.stringify({precision: parseInt($precision.val())}));
+                    } else if ($checker.val() === 'bridged') {
+                        $file_name = $custom_checker_file.val().split('\\').pop();
+                        // Handle case that the current file is null but we have a file in database
+                        $old_file = $custom_checker_file.parent().find('a')[0];
+                        if ($old_file && $file_name == '') {
+                            $file_name = $old_file.innerText;
+                        }
+                        if (!($file_name == '')) {
+                            $file_name = $file_name.split('/').pop()
+                            $file_ext = $file_name.split('.').pop()
+                            if (!(['cpp', 'pas', 'java'].includes($file_ext))) {
+                                alert("{{ _('Expected checker\'s extension must be in [cpp, pas, java], found ') }}'" + $file_ext + "'");
+                            } else {
+                                var custom_checker_type = $custom_checker_type.find(":selected").val();
+                                var lang = $file_ext.toUpperCase();
+                                if (lang == "CPP") lang = "CPP17";
+                                if (lang == "JAVA") lang = "JAVA8";
+                                var args = {
+                                    files: $file_name,
+                                    lang,
+                                    type: custom_checker_type,
+                                }
+                                if (custom_checker_type === 'testlib' && $treat_checker_points_as_percentage.is(':checked')) {
+                                    args['treat_checker_points_as_percentage'] = true;
+                                }
+                                $args.val(JSON.stringify(args));
+                            }
+                        }
+                    } else {
+                        $args.val('');
+                    }
+                }
+
+                $precision.change(fill_args);
+                $treat_checker_points_as_percentage.change(fill_args);
+                $custom_checker_file.change(fill_args);
+                $custom_checker_type.change(function() {
+                    var is_testlib_checker = $custom_checker_type.find(":selected").val() === 'testlib';
+                    $treat_checker_points_as_percentage.toggle(is_testlib_checker);
+                    $treat_checker_points_as_percentage_label.toggle(is_testlib_checker);
+                    fill_args();
+                });
+                $checker.change(function () {
+                    $custom_checker_file.toggle($checker.val() === 'bridged').change();
+                    $custom_checker_type.toggle($checker.val() === 'bridged').change();
+                    $tr_custom_checker_file.toggle($checker.val() === 'bridged');
+                    $tr_custom_checker_type.toggle($checker.val() === 'bridged');
+                    $precision.toggle($checker.val().startsWith('floats')).change();
+                    fill_args();
+                }).change();
+            })();
+
+            var $grader = $('#id_problem-data-grader');
+            var $io_method = $('#id_problem-data-io_method');
+            var $io_input_file = $('#id_problem-data-io_input_file');
+            var $io_output_file = $('#id_problem-data-io_output_file');
+            var $custom_grader_file = $('#id_problem-data-custom_grader');
+            var $custom_header_file = $('#id_problem-data-custom_header');
+            var $grader_args = $('#id_problem-data-grader_args');
+
+            var $tr_io_method = $io_method.parent().parent();
+            var $tr_io_input_file = $io_input_file.parent().parent();
+            var $tr_io_output_file = $io_output_file.parent().parent();
+            var $tr_custom_grader_file = $custom_grader_file.parent().parent();
+            var $tr_custom_header_file = $custom_header_file.parent().parent();
+            var $tr_grader_args = $grader_args.parent().parent();
+
+            function clean_io_method() {
+                var old_args = try_parse_json($grader_args.val());
+                delete old_args.io_method;
+                delete old_args.io_input_file;
+                delete old_args.io_output_file;
+                $grader_args.val(JSON.stringify(old_args));
+            }
+
+            $grader.change(function () {
+                var grader = $grader.val();
+                var standard_grader = grader === 'standard';
+                var signature_grader = grader === 'signature';
+                var output_only = grader === 'output_only';
+                var standard_io = $io_method.val() === 'standard';
+
+                if (!standard_grader) {
+                    clean_io_method();
+                }
+
+                $tr_io_method.toggle(standard_grader);
+                $tr_io_input_file.toggle(standard_grader && !standard_io);
+                $tr_io_output_file.toggle(standard_grader && !standard_io);
+                $tr_custom_grader_file.toggle(!standard_grader && !output_only && !!grader);
+                $tr_custom_header_file.toggle(signature_grader);
+                $tr_grader_args.toggle(signature_grader);
+            }).change();
+
+            $io_method.change(function () {
+                var standard_io = $io_method.val() === 'standard';
+                $tr_io_input_file.toggle(!standard_io);
+                $tr_io_output_file.toggle(!standard_io);
+
+                if (standard_io) {
+                    clean_io_method();
+                } else {
+                    var old_args = try_parse_json($grader_args.val());
+                    old_args['io_method'] = $io_method.val();
+                    $grader_args.val(JSON.stringify(old_args));
+                }
+            });
+
+            $io_input_file.change(function () {
+                var old_args = try_parse_json($grader_args.val());
+                old_args['io_input_file'] = $io_input_file.val();
+                $grader_args.val(JSON.stringify(old_args));
+            });
+
+            $io_output_file.change(function () {
+                var old_args = try_parse_json($grader_args.val());
+                old_args['io_output_file'] = $io_output_file.val();
+                $grader_args.val(JSON.stringify(old_args));
+            });
+
+            if ($grader.val() === 'standard') {
+                $io_method.val(try_parse_json($grader_args.val()).io_method || 'standard').change();
+                if ($io_method.val() === 'file') {
+                    $io_input_file.val(try_parse_json($grader_args.val()).io_input_file || '').change();
+                    $io_output_file.val(try_parse_json($grader_args.val()).io_output_file || '').change();
+                }
+            }
+
+            var $sample = $("<a/>",{
+                text: "{{_('Instruction')}}",
+                style: "margin-left:3em;",
+                target: "_blank",
+                href: "/custom_checkers"
+            }).appendTo($checker.parent());
+
+            var $file_test = $('#id_problem-data-zipfile');
+            $("<br>").appendTo($file_test.parent());
+            $("<input/>", {
+                type: "submit",
+                value: "{{ _('Please press this button if you have just updated the zip data') }}",
+                class: "button",
+                style: "display: inherit",
+                id: "submit-button",
+            }).appendTo($file_test.parent());
+
+            function swap_row($a, $b) {
+                var $a_order = $a.find('input[id$=order]'), $b_order = $b.find('input[id$=order]');
+                var order = $a_order.val();
+                $a_order.val($b_order.val());
+                $b_order.val(order);
+                $b.after($a);
+                $a.find('span.order').text($a_order.val());
+                $b.find('span.order').text($b_order.val());
+                handle_table_reorder();
+            }
+
+            $table.on('add-row', function (e, $tr) {
+                var $order = $tr.find('input').filter('[id$=order]').attr('type', 'hidden').val(++order);
+                $order.after($('<span>', {'class': 'order'}).text($order.val()))
+                    .after($('<i>', {'class': 'fa fa-fw fa-lg fa-ellipsis-v'}));
+
+                var $opts = $tr.find('input').slice(2, 6);
+                var $files = $tr.find('select').slice(1, 3);
+                var $checker = $files.end().last();
+                $tr.find('select[id$=type]').change(function () {
+                    var $this = $(this), val = $this.val(), disabled;
+                    switch (val) {
+                        case 'S':
+                        case 'E':
+                            disabled = val == 'S';
+                            $opts.toggle(val == 'S');
+                            $files.siblings('.select2').hide();
+                            $checker.toggle(val == 'S');
+                            break;
+                        default:
+                            $opts.toggle(val == 'C');
+                            $files.siblings('.select2').toggle(val == 'C');
+                            $checker.toggle(val == 'C');
+                            var $prevs = $tr.prevAll('tr[data-type=S], tr[data-type=E]');
+                            disabled = $prevs.length && $prevs.get(0).getAttribute('data-type') == 'S';
+                            $tr.find('input[id$=points], input[id$=pretest]').toggle(val == 'C' && !disabled);
+                    }
+                    $tr.attr('data-type', val).nextUntil('tr[data-type=S], tr[data-type=E], tr[data-type=""]')
+                        .find('input[id$=points], input[id$=pretest]').toggle(!disabled);
+                }).change();
+
+                var tooltip_classes = 'tooltipped tooltipped-s';
+                $tr.find('a.edit-generator-args').mouseover(function () {
+                    switch ($tr.attr('data-type')) {
+                        case 'C':
+                        case 'S':
+                            var $this = $(this).addClass(tooltip_classes);
+                            $this.attr('aria-label', $this.prev().val() || '(none)');
+                    }
+                }).mouseout(function () {
+                    $(this).removeClass(tooltip_classes).removeAttr('aria-label');
+                }).featherlight($('.generator-args-editor'), {
+                    beforeOpen: function () {
+                        switch ($tr.attr('data-type')) {
+                            case 'C':
+                            case 'S':
+                                return true;
+                            default:
+                                return false;
+                        }
+                    },
+                    afterOpen: function () {
+                        var $input = this.$currentTarget.prev();
+                        this.$instance.find('.generator-args-editor')
+                            .find('textarea').val($input.val()).end()
+                            .find('.button').click(function () {
+                            $input.val($(this).prev().val());
+                            $.featherlight.current().close();
+                        }).end()
+                            .show();
+                    }
+                });
+            }).find('tbody:first').find('tr').each(function () {
+                $table.trigger('add-row', [$(this)]);
+            });
+
+            $('form').submit(function () {
+                $table.find('tbody:first').find('tr').each(function () {
+                    var filled = false;
+                    $(this).find('input, select').each(function () {
+                        var $this = $(this);
+                        if (!$this.attr('name'))
+                            return;
+                        if ($this.attr('type') === 'checkbox')
+                            filled |= $this.is(':checked');
+                        else if (!$this.attr('name').endsWith('order'))
+                            filled |= !!$this.val();
+                    });
+                    if (!filled)
+                        $(this).find('input[id$=order]').val('');
+                });
+
+                // Check all hidden "Clear" checkboxes
+                // so the corresponding files are cleaned up automatically by django-cleanup
+                $(':checkbox').filter(function() { return this.id.endsWith('clear_id') }).each(function () {
+                    if ($(this).parent().is(':hidden')) {
+                        $(this).attr('checked', true);
+                    }
+                });
+            });
+
+            var $total = $('#id_cases-TOTAL_FORMS');
+            var alerted = false;
+
+            $('a#add-case-row').click(function () {
+                total = parseInt($total.val());
+                if (total >= window.testcase_soft_limit) {
+                    if (!alerted) {
+                        s = `{{_('You are about to create more than ${testcase_soft_limit} testcases.')}}`;
+                        s += "\n{{_('Please do not create too many testcases if not really necessary.')}}";
+                        alert(s);
+                        alerted = true;
+                    }
+                }
+                if (total >= window.testcase_limit) {
+                    s = `{{_('Too many testcases')}}: ${total}`;
+                    s += '\n';
+                    s += `{{_('Number of testcases must not exceed ${window.testcase_limit}')}}`;
+                    alert(s);
+                    return true;
+                }
+                var $tr;
+                $table.find('tbody:first').append($tr = $($table.find('.extra-row-body').html()
+                    .replace(/__prefix__/g, $total.val())));
+                $tr.find('.type-column select option[value="C"]').attr('selected', true);
+                $total.val(parseInt($total.val()) + 1);
+                $table.trigger('add-row', [$tr]);
+                return false;
+            });
+
+            function reordering_row(oldIndex, newIndex, $item) {
+                if (newIndex > oldIndex) {
+                    var order = parseInt($item.parent().children().slice(oldIndex, newIndex).each(function () {
+                        var $order = $(this).find('input[id$=order]');
+                        $order.val(parseInt($order.val()) - 1).siblings('span.order').text($order.val());
+                    }).last().after($item).find('input[id$=order]').val());
+                    $item.find('input[id$=order]').val(order + 1).siblings('span.order').text(order + 1);
+                } else if (newIndex < oldIndex) {
+                    var order = parseInt($item.parent().children().slice(newIndex + 1, oldIndex + 1).each(function () {
+                        var $order = $(this).find('input[id$=order]');
+                        $order.val(parseInt($order.val()) + 1).siblings('span.order').text($order.val());
+                    }).first().before($item).find('input[id$=order]').val());
+                    $item.find('input[id$=order]').val(order - 1).siblings('span.order').text(order - 1);
+                }
+                if (newIndex != oldIndex)
+                    handle_table_reorder();
+            };
+
+            $('a#add-case-first-row').click(function () {
+                var cntRow = parseInt($total.val());
+                $('a#add-case-row').click();
+                if (cntRow == parseInt($total.val()))
+                    return false;
+                var newIndex = -1;
+                var oldIndex = parseInt($total.val()) - 1;
+                $item = $($table.find('tbody:first').children()[oldIndex]);
+                reordering_row(oldIndex, newIndex, $item);
+                return false;
+            });
+
+            $('#case-table tbody').on("click", ".add-case-row-below", function (event) {
+                var cntRow = parseInt($total.val());
+                $('a#add-case-row').click();
+                if (cntRow == parseInt($total.val()))
+                    return false;
+                var $current_row = $(this).parent().parent();
+                var newIndex = parseInt($current_row.find('input[id$=order]').val()) - 1;
+                var oldIndex = parseInt($total.val()) - 1;
+                $item = $($current_row.parent().children()[oldIndex]);
+                reordering_row(oldIndex, newIndex, $item);
+                return false;
+            });
+
+            function fill_testcases() {
+                console.log("Filling testcase...");
+                var inFiles = [], outFiles = [];
+
+                var format = ["Themis", "CMS", "Polygon", "DMOJ"];
+
+                var in_re = [
+                    new RegExp(/^(.+\.inp|.+\.in|inp|in)$/),
+                    new RegExp(/^input.(.+\d+)$/),
+                    new RegExp(/^(.+\d+)$/),
+                    new RegExp(/^(?=.*?\.in|in).*?(?:(?:^|\W)(?<batch>\d+)[^\d\s]+)?(?<case>\d+)[^\d\s]*$/),
+                ];
+
+                var out_re = [
+                    new RegExp(/^(.+\.out|.+\.ok|.+\.ans|out|ok|ans)$/),
+                    new RegExp(/^output.(.+\d+)$/),
+                    new RegExp(/^(.+\d+\.a)$/),
+                    new RegExp(/^(?=.*?\.out|out).*?(?:(?:^|\W)(?<batch>\d+)[^\d\s]+)?(?<case>\d+)[^\d\s]*$/),
+                ];
+
+                var test_type = -1;
+
+                for (var i = 0; i < window.valid_files.length; i++) {
+                    var lastSlashIdx = window.valid_files[i].lastIndexOf('/');
+                    var tested_filename = window.valid_files[i].slice(lastSlashIdx + 1).toLowerCase();
+
+                    for (var type = 0; type < 3; type++) {
+                        if (in_re[type].test(tested_filename)) {
+                            if (test_type != -1 && test_type != type) {
+                                alert("{{_('Files are not in the same format!')}}");
+                                return false;
+                            }
+
+                            test_type = type;
+                            inFiles.push(window.valid_files[i]);
+                            console.log(`Found input file: ${window.valid_files[i]}`);
+                            console.log(`type: ${format[type]}`);
+                            break;
+                        }
+
+                        if (out_re[type].test(tested_filename)) {
+                            if (test_type != -1 && test_type != type) {
+                                alert("{{_('Files are not in the same format!')}}");
+                                return false;
+                            }
+
+                            test_type = type;
+                            outFiles.push(window.valid_files[i]);
+                            console.log(`Found output file: ${window.valid_files[i]}`);
+                            console.log(`type: ${format[type]}`);
+                            break;
+                        }
+                    }
+                }
+                if (inFiles.length == 0) {
+                    alert("{{_('No input/output files. Make sure your files are following themis/polygon/cms test format')}}");
+                    return false;
+                }
+                if (inFiles.length != outFiles.length) {
+                    s = `{{_('The number of input files (${inFiles.length}) do not match the number of output files (${outFiles.length})!')}}`
+                    s = s + `Input: ${inFiles}\n=====================\n`
+                    s = s + `Output: ${outFiles}\n`
+                    alert(s);
+                    return false;
+                }
+                n_test = Math.min(inFiles.length, window.testcase_limit);
+                // add boxes
+                while ($total.val() < n_test) {
+                    $('a#add-case-row').click();
+                }
+                // natsort
+                var collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
+                inFiles.sort(collator.compare);
+                outFiles.sort(collator.compare);
+                // fill cases
+                for (var i = 0; i < n_test; i++) {
+                    $("#id_cases-" + i + "-input_file").append(new Option(inFiles[i], inFiles[i], true, true)).change();
+                    $("#id_cases-" + i + "-output_file").append(new Option(outFiles[i], outFiles[i], true, true)).change();
+                    $("#id_cases-" + i + "-points").val("1").change();
+                }
+                $("#fill-test-case-noti").show();
+                if (inFiles.length > window.testcase_limit) {
+                    s = `{{_('Too many testcases')}}: ${inFiles.length}`;
+                    s += '\n';
+                    s += `{{_('Number of testcases must not exceed ${window.testcase_limit}')}}`;
+                    s += '\n';
+                    s += `{{_('Because of that, only the first ${window.testcase_limit} testcases will be saved!')}}`
+                    alert(s);
+                }
+                return false;
+            };
+
+            var oldIndex;
+            $table.sortable({
+                containerSelector: 'table',
+                itemPath: '> tbody:first',
+                itemSelector: 'tr',
+                handle: 'i.fa-ellipsis-v',
+                placeholder: '<tr class="placeholder">',
+                onDragStart: function ($item, container, _super) {
+                    oldIndex = $item.index();
+                    _super($item, container);
+                },
+                onDrop: function ($item, container, _super) {
+                    var newIndex = $item.index();
+                    reordering_row(oldIndex, newIndex, $item);
+                    _super($item, container);
+                }
+            });
+
+            $('input#delete-all').change(function() {
+                if (this.checked) {
+                    $("input[name$='DELETE']").attr('checked', true);
+                }
+                else {
+                    $("input[name$='DELETE']").attr('checked', false);
+                }
+            });
+            $('#problem-data-zipfile-clear_id').change(function(){
+                if (this.checked) {
+                    $('input#delete-all').attr('checked', true);
+                }
+                else {
+                    $('input#delete-all').attr('checked', false);
+                }
+                $('input#delete-all').change();
+            });
+            if (parseInt($total.val()) == 0 && window.valid_files.length) {
+                fill_testcases();
+            }
+
+            $("#id_problem-data-zipfile").change((event) => {
+                let fileInput = event.target.files[0];
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    JSZip.loadAsync(ev.target.result).then(function(zip) {
+                        window.valid_files = Object.keys(zip.files).sort();
+                        fill_testcases();
+                    }).catch(function(err) {
+                        console.log(err);
+                        console.error("Failed to open as ZIP file");
+                        alert("{{ _('Test file must be a ZIP file') }}");
+                        event.target.value = "";
+                    })
+                };
+                reader.readAsArrayBuffer(fileInput);
+            })
+            $('form').dirty('setAsClean');
+        }).change();
+    </script>
+{% endblock %}
+
+{% block media %}
+    {{data_form.media.css}}
+    <style>
+        #case-table .select2 {
+            text-align: initial;
+        }
+
+        .order-column {
+            width: 1em;
+        }
+
+        .bad-file input, .bad-file .select2-selection {
+            border-color: red;
+        }
+
+        span.order {
+            padding-right: 0.5em;
+        }
+
+        body.dragging, body.dragging * {
+            cursor: move !important;
+        }
+
+        .dragged {
+            position: absolute;
+            opacity: 0.5;
+            z-index: 2000;
+        }
+
+        tr.placeholder {
+            display: block;
+            background: red;
+            position: relative;
+            margin: 0;
+            padding: 0;
+            border: none;
+        }
+
+        tr.placeholder:before {
+            content: "";
+            position: absolute;
+            width: 0;
+            height: 0;
+            border: 5px solid transparent;
+            border-left-color: red;
+            margin-top: -5px;
+            left: -5px;
+            border-right: none;
+        }
+
+        i.fa-ellipsis-v {
+            cursor: move;
+        }
+
+        .edit-generator-args {
+            position: relative;
+        }
+
+        .generator-args-editor textarea {
+            display: block;
+            width: 100%;
+            margin-bottom: 0.5em;
+            height: 8em;
+        }
+
+        .generator-args-editor #submit-button {
+            display: block;
+            float: right;
+        }
+
+        #case-table tbody td {
+            white-space: nowrap;
+        }
+
+        .type-column {
+            width: 8em;
+        }
+
+        ul.errorlist {
+            border: 3px red solid;
+            border-radius: 5px;
+            padding-top: 1em;
+            padding-bottom: 1em;
+            background: #e99;
+        }
+    </style>
+{% endblock %}
+
+{% block header %}
+    {% if problem.is_organization_private %}
+        <span class="organization-tags">
+            {% for org in problem.organizations.all() %}
+                <span class="organization-tag">
+                    <a href="{{ org.get_absolute_url() }}">
+                        <i class="fa fa-lock"></i> {{ org.name }}
+                    </a>
+                </span>
+            {% endfor %}
+        </span>
+    {% endif %}
+    {% if data_form.instance.has_yml() %}
+        <div class="title-line-action">
+            [<a href="{{ url('problem_data_init', problem.code) }}">{{ _('View YAML') }}</a>]
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+    {% if data_form.instance.feedback %}
+        <ul class="errorlist">
+            <li>{{ data_form.instance.feedback }}</li>
+        </ul>
+    {% endif %}
+    <form action="" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ cases_formset.management_form }}
+        <table class="table">
+            {{ data_form.as_table() }}
+        </table>
+        <div class="alert alert-warning alert-dismissable" id="fill-test-case-noti" style="display: none;">
+            <a class="close">x</a>
+            <b>{{ _('Test cases have been filled automatically!') }}</b>
+            <br>
+            {{ (_('Test cases have been filled automatically and **not saved yet**!'))|markdown('default', strip_paragraphs=True) }}
+            <br>
+            {{ _('Please modify the table below if needed and press the `Apply` button to save!') }}
+        </div>
+        {% if cases_formset._non_form_errors %}
+            {{ cases_formset._non_form_errors }}
+        {% endif %}
+        <table id="case-table" class="table">
+            <thead>
+            <tr>
+                <th><a id="add-case-first-row" href="#"><i class="fa fa-plus"></i></a></th>
+                <th class="order-column"></th>
+                <th class="type-column">{{ _('Type') }}</th>
+                <th>{{ _('Input file') }}</th>
+                <th>{{ _('Output file') }}</th>
+                <th>{{ _('Points') }}</th>
+                <th>{{ _('Pretest?') }}</th>
+                <!-- <th class="generator-args">{{ _('Generator args') }}</th> -->
+                {% if cases_formset.can_delete %}
+                    <th>{{ _('Delete?') }}
+                        <br>
+                        <input type="checkbox" name="delete-all" id="delete-all">
+                    </th>
+                {% endif %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for form in all_case_forms %}
+                {% if form.non_field_errors() %}
+                    <tr>
+                        <td colspan="{{ 9 + cases_formset.can_delete }}">{{ form.non_field_errors() }}</td>
+                    </tr>
+                {% endif %}
+                {% if form.prefix and '__prefix__' in form.prefix %}
+                    </tbody>
+                    <tbody class="extra-row-body" style="display: none">
+                {% endif %}
+                <tr data-type="{{ form['type'].value() }}">
+                    <td><a class="add-case-row-below" href="#"><i class="fa fa-plus"></i></a></td>
+                    <td>{{ form.id }}{{ form.order.errors }}{{ form.order }}</td>
+                    <td class="type-column">{{ form.type.errors }}{{ form.type }}</td>
+                    <td{% if not (form.empty_permitted or form['type'].value() != 'C' or
+                                  form['input_file'].value() in valid_files) %} class="bad-file"{% endif %}>
+                        {{ form.input_file.errors }}{{ form.input_file }}
+                    </td>
+                    <td{% if not (form.empty_permitted or form['type'].value() != 'C' or
+                                  form['output_file'].value() in valid_files) %} class="bad-file"{% endif %}>
+                        {{ form.output_file.errors }}{{ form.output_file }}
+                    </td>
+                    <td>{{ form.points.errors }}{{ form.points }}</td>
+                    <td>{{ form.is_pretest.errors }}{{ form.is_pretest }}</td>
+                    <!-- <td class="generator-args">{{ form.generator_args.errors }}{{ form.generator_args }}
+                        <a href="javascript:void(0)" class="edit-generator-args">
+                            <i class="fa fa-pencil"></i>
+                            {{ _('Edit generator args') }}
+                        </a>
+                    </td> -->
+                    {% if cases_formset.can_delete %}
+                        <td>{{ form.DELETE }}</td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <input type="submit" value="{{ _('Apply!') }}" class="button" id="submit-button">
+        <a id="add-case-row" href="#" style="display: None;"><i class="fa fa-plus"></i> {{ _('Add new case') }}</a>
+    </form>
+    <div style="display: none" class="generator-args-editor"><textarea></textarea><a class="button">{{ _('Save') }}</a></div>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block js_media %}
+    {% include "leave-warning.html" %}
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script type="text/javascript">
+        window.django = {jQuery: $};
+    </script>
+
+    <script>
+        // This code activates flatpickr on fields with the 'datetimefield' class when the document has loaded
+        window.addEventListener("DOMContentLoaded", function () {
+            flatpickr(".datetimefield", {
+                enableTime: true,
+                enableSeconds: true,
+                dateFormat: "Y-m-d H:i:S",
+                time_24hr: true,
+            });
+        });
+    </script>
+
+    <script src="{{ static('vnoj/jquery.formset.js') }}"></script>
+    <script type="text/javascript">
+        $(function() {
+            $('#form_set tr').formset({
+                prefix: '{{ contest_problem_formset.prefix }}'
+            });
+
+            var noResults = function () {
+                return '{{ _('Press Enter to select multiple users...') }}';
+            };
+
+            $(document).one('click', '#id_private_contestants + .select2', function (e) {
+                $('#id_private_contestants').data().select2.options.get('translations').dict['noResults'] = noResults;
+            });
+
+            $(document).on('keyup', '#id_private_contestants + .select2 .select2-search__field', function (e) {
+                if (e.keyCode === 13) {
+                    var $id_private_contestants = $('#id_private_contestants');
+                    var contestants = $(this).val().split(/[\s,]+/);
+                    if (contestants.length <= 1) {
+                        // Skip to let select2 handle this
+                        return;
+                    }
+
+                    $.ajax({
+                        type: 'GET',
+                        url: $id_private_contestants.data().select2.dataAdapter.ajaxOptions.url,
+                        data: {
+                            multiple_terms: contestants,
+                        },
+                        success: function (response) {
+                            for (const contestant of response.results) {
+                                $id_private_contestants.select2('trigger', 'select', {
+                                    data: contestant,
+                                });
+                            }
+                        },
+                    });
+                }
+            });
+        })
+    </script>
+    {{ form.media.js }}
+{% endblock %}
+
+{% block media %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    {{ form.media.css }}
+    <link rel="stylesheet" type="text/css" href="{{ static('ui_form.css') }}">
+{% endblock %}
+
+{% block body %}
+
+{% macro form_as_row(form) -%}
+    {% if form.non_field_errors() %}
+    <tr>
+        <td colspan="6">{{ form.non_field_errors() }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+        <td>{{ form.id }} {{ form.problem.errors }}{{ form.problem }}</td>
+        <td class="points-column">{{ form.points.errors }}{{ form.points }}</td>
+        <td>{{ form.order.errors }}{{ form.order }}</td>
+        <td>{{ form.max_submissions.errors }}{{ form.max_submissions }}</td>
+        <td>
+        {% if contest_problem_formset.can_delete and form.instance.pk %}
+            {{ form.DELETE }}
+        {% endif %}
+        </td>
+    <tr>
+{%- endmacro %}
+
+<div>
+    {% block edit_contest %}
+        {% if request.user.is_staff %}
+            <div class="alert alert-warning alert-dismissable">
+                <a class="close">x</a>
+                <a href="{{ url('admin:judge_contest_change', contest.id) }}">{{ _('Edit contest in admin panel for more options') }}</a>
+            </div>
+        {% endif %}
+    {% endblock %}
+    <form action="" method="post" class="form-area" style="display: flex; justify-content: center; flex-direction: column;">
+        {% csrf_token %}
+        {{ contest_problem_formset.management_form }}
+        <table class="django-as-table">{{ form.as_table() }}</table>
+        <hr>
+        <center><h3> {{ _('Problems') }} </h3></center>
+        {% if contest_problem_formset.non_form_errors() %}
+            {{ contest_problem_formset.non_form_errors() }}
+        {% endif %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="problem-column" style="width: 20em;"> {{ _('Problems') }} </th>
+                    <th class="points-column"> {{ _('Points') }} </th>
+                    <th> {{ _('Order in contest') }} </th>
+                    <th>
+                        {{ _('Max submission') }}
+                        <br>
+                        <span class="helptext">
+                            {{ _('Maximum number of submissions') }}
+                            <br>
+                            {{_('or leave blank for no limit.') }}
+                        </span>
+                    </th>
+                    <th> {{ _('Delete') }} </th>
+                </tr>
+            </thead>
+            <tbody id="form_set">
+                {% for form in contest_problem_formset %}
+                    {{ form_as_row(form) }}
+                {% endfor %}
+            </tbody>
+        </table>
+        <div style="display: flex; justify-content: flex-end;"><button class="submit-bar" type="submit">
+            {% if request.resolver_match.url_name == 'contest_edit' %}
+                {{ _('Update') }}
+            {% else %}
+                {{ _('Create') }}
+            {% endif %}
+        </button></div>
+    </form>
+</div>
+{% endblock %}

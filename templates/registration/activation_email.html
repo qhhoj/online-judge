@@ -1,0 +1,19 @@
+<b>{{ _('Thanks for registering on the %(site_name)s! We\'re glad to have you.', site_name=site.name) }}</b>
+<br><br>
+{{ _('Please activate your %(site_name)s account in the next %(expiration_days)d days.', expiration_days=expiration_days, site_name=SITE_NAME) }}
+<br><br>
+{{ _('Please click on the following link to activate your account:') }}
+<p style="margin-left:1em">
+      <a href="http://{{ site.domain }}/accounts/activate/{{ activation_key }}/">http://{{ site.domain }}/accounts/activate/{{ activation_key }}</a>
+</p>
+
+{{ _('Alternatively, you can reply to this message to activate your account.') }}
+{{ _('Your reply must keep the following text intact for this to work:') }}
+
+<pre style="margin-left:1em">
+{{ activation_key }}
+</pre>
+
+{{ _('See you soon!') }}
+<br>
+{{ _('If you have problems activating your account, feel free to shoot us a message at: ') }}{% if misc_config.discord_invite_link and misc_config.discord_invite_shieldio %}<a href="{{ misc_config.discord_invite_link }}"><img src="{{ misc_config.discord_invite_shieldio }}"></a>{% endif %}

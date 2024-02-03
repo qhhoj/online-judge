@@ -1,0 +1,130 @@
+[
+    {
+        "model": "judge.navigationbar",
+        "pk": 1,
+        "fields": {
+            "order": 1,
+            "key": "problems",
+            "label": "PRoblems",
+            "path": "/problems/",
+            "regex": "^/problem",
+            "parent": null,
+            "lft": 1,
+            "rght": 2,
+            "tree_id": 1,
+            "level": 0
+        }
+    },
+    {
+        "model": "judge.navigationbar",
+        "pk": 2,
+        "fields": {
+            "order": 2,
+            "key": "submit",
+            "label": "Submissions",
+            "path": "/submissions/",
+            "regex": "^/submi|^/src/",
+            "parent": null,
+            "lft": 1,
+            "rght": 2,
+            "tree_id": 2,
+            "level": 0
+        }
+    },
+    {
+        "model": "judge.navigationbar",
+        "pk": 3,
+        "fields": {
+            "order": 3,
+            "key": "user",
+            "label": "Users",
+            "path": "/users/",
+            "regex": "^/user",
+            "parent": null,
+            "lft": 1,
+            "rght": 2,
+            "tree_id": 3,
+            "level": 0
+        }
+    },
+    {
+        "model": "judge.navigationbar",
+        "pk": 4,
+        "fields": {
+            "order": 4,
+            "key": "contest",
+            "label": "Contests",
+            "path": "/contests/",
+            "regex": "^/contest",
+            "parent": null,
+            "lft": 1,
+            "rght": 2,
+            "tree_id": 4,
+            "level": 0
+        }
+    },
+    {
+        "model": "judge.navigationbar",
+        "pk": 5,
+        "fields": {
+            "order": 5,
+            "key": "about",
+            "label": "About",
+            "path": "/about/",
+            "regex": "^/about/$",
+            "parent": null,
+            "lft": 1,
+            "rght": 8,
+            "tree_id": 5,
+            "level": 0
+        }
+    },
+    {
+        "model": "judge.navigationbar",
+        "pk": 6,
+        "fields": {
+            "order": 6,
+            "key": "status",
+            "label": "Judges",
+            "path": "/status/",
+            "regex": "^/status/$|^/judge/",
+            "parent": 5,
+            "lft": 2,
+            "rght": 3,
+            "tree_id": 5,
+            "level": 1
+        }
+    },
+    {
+        "model": "judge.navigationbar",
+        "pk": 7,
+        "fields": {
+            "order": 7,
+            "key": "checkers",
+            "label": "Custom Checkers",
+            "path": "/custom_checkers/",
+            "regex": "^/custom_checkers/$",
+            "parent": 5,
+            "lft": 4,
+            "rght": 5,
+            "tree_id": 5,
+            "level": 1
+        }
+    },
+    {
+        "model": "judge.navigationbar",
+        "pk": 8,
+        "fields": {
+            "order": 8,
+            "key": "github",
+            "label": "Github",
+            "path": "https://github.com/VNOI-Admin/OJ",
+            "regex": "^https://github.com/VNOI-Admin/OJ$",
+            "parent": 5,
+            "lft": 6,
+            "rght": 7,
+            "tree_id": 5,
+            "level": 1
+        }
+    }
+]

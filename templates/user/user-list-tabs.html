@@ -1,0 +1,7 @@
+{% extends "tabs-base.html" %}
+
+{% block tabs %}
+    {{ make_tab('list', 'fa-users', url('user_list'), _('Leaderboard')) }}
+    {{ make_tab('contributor', 'fa-thumbs-up', url('contributors_list'), _('Contributors')) }}
+    {{ make_tab('organizations', 'fa-university', url('organization_list'), _('Organizations')) }}
+{% endblock %}

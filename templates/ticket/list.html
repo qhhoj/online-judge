@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block media %}{% endblock %}
+
+{% block js_media %}
+    <script type="text/javascript">
+        window.filter_user_ids = {{filter_status.user_id}};
+        window.filter_own_id = {{filter_status.own_id}};
+        window.filter_assignee_ids = {{filter_status.assignee_id}};
+    </script>
+    <script type="text/javascript">
+        $(function () {
+            $('input#open, input#own').click(function () {
+                ($('<form>').attr('action', window.location.pathname + '?' + $('form#filter-form').serialize())
+                    .append($('<input>').attr('type', 'hidden').attr('name', 'csrfmiddlewaretoken')
+                        .attr('value', $.cookie('csrftoken')))
+                    .attr('method', 'POST').appendTo($('body')).submit());
+            });
+
+            register_notify('ticket', {
+                $checkbox: $('#notification'),
+                change: function (enabled) {
+                    if (!enabled)
+                        for (key in localStorage)
+                            if (key.startsWith('ticket:open:'))
+                                delete localStorage[key];
+                }
+            });
+
+            function main_list_notify(id) {
+                key = 'ticket:open:' + id;
+                return !(key in localStorage) || localStorage[key] == '0';
+            }
+
+            var $tbody = $('#ticket-list').find('tbody');
+
+            function new_ticket(ticket) {
+                console.log('Fetching data for: ' + ticket.id);
+                $.ajax({
+                    url: '{{ url('ticket_ajax') }}',
+                    data: {id: ticket.id},
+                    success: function (data) {
+                        console.log('Got data for: ' + ticket.id);
+                        console.log(data);
+                        $tbody.prepend($(data.row));
+                        notify('ticket', data.notification.title, {
+                            body: data.notification.body
+                        });
+                    },
+                    error: function (data) {
+                        if (data.status === 403)
+                            console.log('No right to see: ' + ticket.id);
+                        else {
+                            console.log('Could not load ticket:');
+                            console.log(data.responseText);
+                        }
+                    }
+                });
+            }
+
+            function ticket_status(ticket) {
+                if (!main_list_notify(ticket.id)) return;
+
+                var $row = $('#ticket-' + ticket.id);
+                console.log('Ticket status change: ' + ticket.id);
+                if ($row.length) {
+                    var $status = $row.find('td').first().find('i');
+                    if (ticket.open) {
+                        $status.removeClass('fa-check-circle-o').addClass('fa-exclamation-circle');
+                        notify('ticket', '{{ _('Reopened: ') }}' + ticket.title);
+                    } else {
+                        $status.removeClass('fa-exclamation-circle').addClass('fa-check-circle-o');
+                        notify('ticket', '{{ _('Closed: ') }}' + ticket.title);
+                    }
+                }
+            }
+
+            window.load_dynamic_update = function () {
+                var $assignees = $(filter_assignee_ids);
+
+                event_dispatcher.auto_reconnect = true;
+                event_dispatcher.on('tickets', function (message) {
+                        console.log(message);
+                        if (filter_own_id != null && message.user != filter_own_id &&
+                            !~message.assignees.indexOf(filter_own_id))
+                            return;
+                        if (filter_user_ids.length && !~filter_user_ids.indexOf(message.user))
+                            return;
+                        if ($assignees.length && !$assignees.filter(message.assignees).length)
+                            return;
+                        switch (message.type) {
+                            case 'new-ticket':
+                                new_ticket(message);
+                                break;
+                            case 'ticket-status':
+                                ticket_status(message);
+                                break;
+                        }
+                    }
+                );
+            };
+
+            var user_select2 = {
+                theme: '{{ DMOJ_SELECT2_THEME }}',
+                templateResult: function (data, container) {
+                    return $('<span>')
+                        .append($('<img>', {
+                            'class': 'user-search-image', src: data.gravatar_url,
+                            width: 24, height: 24
+                        }))
+                        .append($('<span>', {'class': data.display_rank + ' user-search-name'}).text(data.text));
+                },
+                ajax: {
+                    data: function (params) {
+                        return {
+                            term: params.term || '',
+                            page: params.page || 1
+                        }
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.results,
+                            pagination: {
+                                more: data.more
+                            }
+                        };
+                    },
+                },
+            };
+
+            $('#filter-user').select2($.extend(true, {}, user_select2,
+                {ajax: {url: '{{ url('ticket_user_select2_ajax') }}'}}));
+            $('#filter-assignee').select2($.extend(true, {}, user_select2,
+                {ajax: {url: '{{ url('ticket_assignee_select2_ajax') }}'}}));
+        });
+    </script>
+
+    {% if EVENT_LAST_MSG %}
+        <script type="text/javascript">
+            $(function () {
+                load_dynamic_update();
+            });
+        </script>
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+    {% if page_obj.has_other_pages() %}
+        <div class="top-pagination-bar">{% include "list-pages.html" %}</div>
+    {% endif %}
+    <div id="ticket-list-container">
+        <aside>
+            <div>
+                <div id="notification-box">
+                    <input id="notification" type="checkbox">
+                    <label for="notification">{{ _('Use desktop notification') }}</label>
+                </div>
+
+                <form id="filter-form" name="form" action="" method="get">
+                    <div id="open-box" class="filter-check">
+                        <input id="open" type="checkbox" name="open"{% if filter_status.open %} checked{% endif %} value="1">
+                        <label for="open">{{ _('Hide closed tickets') }}</label>
+                    </div>
+
+                    <div id="own-box" class="filter-check">
+                        <input id="own" type="checkbox" name="own"{% if filter_status.own %} checked{% endif %} value="1">
+                        <label for="own">{{ _('Show my tickets only') }}</label>
+                    </div>
+
+                    <div id="user-box" class="filter-select2">
+                        <label for="filter-user">{{ _('Filing user') }}</label>
+                        <select id="filter-user" style="width: 100%" multiple name="user">
+                            {% for username in filter_status.user %}
+                                <option value="{{ username }}" selected>{{ username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="assignee-box" class="filter-select2">
+                        <label for="filter-user">{{ _('Assignee') }}</label>
+                        <select id="filter-assignee" style="width: 100%" multiple name="assignee">
+                            {% for username in filter_status.assignee %}
+                                <option value="{{ username }}" selected>{{ username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" style="margin-left: auto" class="submit">{{ _('Go') }}</button>
+                </form>
+            </div>
+        </aside>
+
+        <main>
+            <div class="h-scrollable-table">
+                <table id="ticket-list" class="table striped">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>{{ _('ID') }}</th>
+                        <th>{{ _('Title') }}</th>
+                        <th>{{ _('User') }}</th>
+                        <th>{{ _('Assignees') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for ticket in tickets %}
+                        {% include "ticket/row.html" %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+    {% if page_obj.has_other_pages() %}
+        <div class="bottom-pagination-bar">{% include "list-pages.html" %}</div>
+    {% endif %}
+{% endblock %}

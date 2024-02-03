@@ -1,0 +1,124 @@
+{% extends "submission/info-base.html" %}
+{% block js_media %}
+    {% if not submission.is_graded and EVENT_LAST_MSG %}
+        <script type="text/javascript">
+            $(function () {
+                var blocked = false, request = false;
+                var list = $('#test-cases');
+
+                function update() {
+                    if (blocked) {
+                        request = true;
+                        return;
+                    }
+                    request = false;
+                    blocked = true;
+                    $.ajax({
+                        url: '{{ url('submission_testcases_query') }}',
+                        data: {id: '{{ submission.id }}'}
+                    }).done(function (data) {
+                        list.empty().html(data).find('.toggle').each(function () {
+                            register_toggle($(this));
+                        });
+                        setTimeout(function () {
+                            blocked = false;
+                            if (request)
+                                update();
+                        }, 500);
+                    }).fail(function (data) {
+                        console.log('Failed to update testcases!');
+                    });
+
+                    if ($(window).scrollTop() + $(window).height() > $(document).height() - 100)
+                        $("html, body").animate({scrollTop: $(document).height()}, 0);
+                }
+
+                event_dispatcher.on('sub_{{ submission.id_secret }}', function (message) {
+                        switch (message.type) {
+                            case 'aborted':
+                            case 'internal-error':
+                            case 'grading-end':
+                            case 'compile-error':
+                                $('#abort-button').remove();
+                                $('#grading-label').remove();
+                            case 'test-case':
+                            case 'grading-begin':
+                            case 'processing':
+                                update();
+                        }
+                    }
+                )
+            });
+        </script>
+    {% endif %}
+    {% if not submission.is_graded %}
+        <script type="text/javascript">
+            $(function () {
+                $(document).keydown(function(e) {
+                    // Ctrl-Enter or Command-Enter
+                    if ((e.metaKey || e.ctrlKey) && e.which == 13) {
+                        $('#abort-button form').submit();
+                    }
+                });
+            });
+        </script>
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+    <br>
+    {% if not submission.language.file_only or request.user.is_superuser %}
+        <div><a href="{{ url('submission_source', submission.id) }}">{{ _('View source') }}</a></div>
+    {% endif %}
+    {% if submission.language.file_only %}
+        <div><a href="{{ url('submission_source_download', submission.id) }}">{{ _('Download') }}</a></div>
+    {% endif %}
+    {% if (request.user == submission.user.user or perms.judge.resubmit_other) and not submission.language.file_only %}
+        <div><a href="{{ url('problem_submit', submission.problem.code, submission.id) }}">{{ _('Resubmit') }}</a></div>
+    {% endif %}
+    {% set can_edit = submission.problem.is_editable_by(request.user) %}
+    {% if perms.judge.rejudge_submission and can_edit and not submission.is_locked %}
+        {% compress js %}
+            <script type="text/javascript">
+                window.confirm_and_rejudge = function (form) {
+                    if (confirm("{{ _('Are you sure you want to rejudge?') }}")) {
+                        form.submit();
+                    }
+                };
+            </script>
+        {% endcompress %}
+        <div>
+            <form action="{{ url('submission_rejudge') }}" method="post">
+                {% csrf_token %}
+                <a href="#" onclick="confirm_and_rejudge(parentNode)">{{ _('Rejudge') }}</a>
+                <input type="hidden" name="id" value="{{ submission.id }}">
+                <input type="hidden" name="path" value="{{ url('submission_status', submission.id) }}">
+            </form>
+        </div>
+    {% endif %}
+    {% if can_edit and not submission.language.file_only %}
+        <div><a href="{{ url('problem_submission_diff', submission.problem.code) }}?username={{ submission.user.user.username }}&highlight={{ submission.id }}">{{ _('Diff this submission') }}</a></div>
+    {% endif %}
+
+    <br>
+    <hr class="half-hr">
+    <br>
+
+    <div id="test-cases">{% include "submission/status-testcases.html" %}</div>
+
+    {% if not submission.is_graded %}
+        {% if (request.user == submission.user.user and not request.official_contest_mode) or perms.judge.abort_any_submission %}
+            <div id="abort-button">
+                <br>
+                <hr class="half-hr">
+                <br>
+                <form action="{{ url('submission_abort', submission.id) }}" method="post"
+                      title="{{ _('Press Ctrl-Enter or Command-Enter to abort.') }}">
+                    {% csrf_token %}
+                    <input style="float:left" type="submit" value="{{ _('Abort') }}" class="button">
+                    <br><br>
+                </form>
+            </div>
+        {% endif %}
+    {% endif %}
+{% endblock %}

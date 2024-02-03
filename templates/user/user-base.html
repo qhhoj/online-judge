@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block media %}
+    {% block user_media %}{% endblock %}
+{% endblock %}
+
+{% block js_media %}
+    {% block user_js_media %}{% endblock %}
+{% endblock %}
+
+{% block body %}
+    <div class="user-info-page">
+        <div class="user-sidebar">
+            <img src="{{ gravatar(user, 135) }}" class="user-gravatar">
+            <br>
+            {% if user.user == request.user or request.user.is_superuser %}
+                <div>
+                    <b class="semibold">{{ _('Email:') }}</b>
+                    <span style="word-wrap: break-word;">{{ user.user.email }}</span>
+                </div>
+            {% endif %}
+            <div><b>
+                    {{ _('Problems solved:') }} {{ user.problem_count }}
+            </b></div>
+
+            {% if not user.is_unlisted %}
+                <div><b class="semibold">{{ _('Rank by points:') }}</b> #{{ rank }}</div>
+            {% endif %}
+            <div>
+                <b class="semibold">{{ _('Total points:') }}</b>
+                <span title="{{ user.performance_points|floatformat(2) }}">
+                    {{ user.performance_points|floatformat(2) }}
+                </span>
+            </div>
+            <div>
+                <b class="semibold">{{ _('Contribution points:') }}</b>
+                <span title="{{ user.contribution_points }}">
+                    {{ user.contribution_points }}
+                </span>
+            </div>
+
+            <br>
+            <div>
+                <a href="{{ url('all_user_submissions', user.user.username) }}">{{ _('View submissions') }}</a>
+            </div>
+
+            {% if ratings %}
+                <br>
+                <div><b>
+                    {%- trans trimmed counter=ratings|length %}
+                        {{ counter }} contest written
+                    {% pluralize %}
+                        {{ counter }} contests written
+                    {% endtrans -%}
+                </b></div>
+                {% if not user.is_unlisted %}
+                    <div><b class="semibold">{{ _('Rank by rating:') }}</b> #{{ rating_rank }}</div>
+                {% endif %}
+                <div><b class="semibold">{{ _('Rating:') }}</b> {{ rating_number(rating) }}</div>
+                <div><b class="semibold">{{ _('Min. rating:') }}</b> {{ rating_number(min_rating) }}</div>
+                <div><b class="semibold">{{ _('Max rating:') }}</b> {{ rating_number(max_rating) }}</div>
+            {% endif %}
+        </div>
+        <div class="user-content">{% block user_content %}{% endblock %}</div>
+    </div>
+{% endblock %}

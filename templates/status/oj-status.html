@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block js_media %}
+    {% compress js %}
+        {% include "stats/media-js.html" %}
+        <script type="text/javascript" src="{{ static('vnoj/daterangepicker/daterangepicker.min.js') }}"></script>
+        <script type="text/javascript">
+            var by_day_chart = null;
+            var by_language_chart = null;
+            var result_chart = null;
+            var queue_time_chart = null;
+            var org_by_day_chart = null;
+
+            function draw_charts(start_date, end_date) {
+                $.ajax({
+                    url: '{{ url('stats_data_all') }}',
+                    type: 'POST',
+                    data: {
+                        start_date: start_date.toISOString(),
+                        end_date: end_date.toISOString(),
+                        utc_offset: moment().utcOffset()
+                    },
+                    success: function (stats) {
+                        if (by_day_chart == null) {
+                            by_day_chart = draw_vertical_stacked_bar_chart(stats.by_day, $('#by-day'));
+                        } else {
+                            by_day_chart.data = stats.by_day;
+                            by_day_chart.update();
+                        }
+                        if (by_language_chart == null) {
+                            by_language_chart = draw_pie_chart(stats.by_language, $('#by-language'));
+                        } else {
+                            by_language_chart.data = stats.by_language;
+                            by_language_chart.update();
+                        }
+                        if (result_chart == null) {
+                            result_chart = draw_pie_chart(stats.result, $('#result'));
+                        } else {
+                            result_chart.data = stats.result;
+                            result_chart.update();
+                        }
+                        if (queue_time_chart == null) {
+                            queue_time_chart = draw_bar_chart(stats.queue_time, $('#queue-time'), false);
+                        } else {
+                            queue_time_chart.data = stats.queue_time;
+                            queue_time_chart.update();
+                        }
+                        if (org_by_day_chart == null) {
+                            org_by_day_chart = draw_vertical_stacked_bar_chart(stats.org_by_day, $('#org-by-day'), true);
+                        } else {
+                            org_by_day_chart.data = stats.org_by_day;
+                            org_by_day_chart.update();
+                        }
+                    },
+                    error: function (data) {
+                        console.log('Could not load OJ stats');
+                    }
+                });
+            }
+
+            $(function () {
+                var date_format = '{{ _('HH:mm:ss MMMM D, YYYY') }}';
+
+                function cb(start_date, end_date) {
+                    $('#daterange span').html(start_date.format(date_format) + ' - ' + end_date.format(date_format));
+                }
+
+                $('#daterange').daterangepicker({
+                    timePicker: true,
+                    timePicker24Hour: true,
+                    timePickerSeconds: true,
+                    locale: {
+                        customRangeLabel: '{{ _('Custom Range') }}',
+                        applyLabel: '{{ _('Apply') }}',
+                        cancelLabel: '{{ _('Cancel') }}',
+                        fromLabel: '{{ _('From') }}',
+                        toLabel: '{{ _('To') }}'
+                    },
+                    ranges: {
+                        '{{ _('Last Minute') }}': [moment().subtract(1, 'minutes'), moment()],
+                        '{{ _('Last Hour') }}': [moment().subtract(1, 'hours'), moment()],
+                        '{{ _('Today') }}': [moment().startOf('day'), moment().endOf('day')],
+                        '{{ _('Yesterday') }}': [moment().subtract(1, 'days').startOf('day'), moment().subtract(1, 'days').endOf('day')],
+                        '{{ _('Last 7 Days') }}': [moment().subtract(6, 'days').startOf('day'), moment().endOf('day')],
+                        '{{ _('Last 14 Days') }}': [moment().subtract(13, 'days').startOf('day'), moment().endOf('day')],
+                        '{{ _('Last 30 Days') }}': [moment().subtract(29, 'days').startOf('day'), moment().endOf('day')],
+                        '{{ _('Last 60 Days') }}': [moment().subtract(59, 'days').startOf('day'), moment().endOf('day')],
+                        '{{ _('Last 90 Days') }}': [moment().subtract(89, 'days').startOf('day'), moment().endOf('day')]
+                    }
+                }, cb);
+
+                $('#daterange').on('apply.daterangepicker', function(ev, picker) {
+                    draw_charts(picker.startDate, picker.endDate);
+                });
+            });
+        </script>
+    {% endcompress %}
+    {% include "contest/media-js.html" %}
+{% endblock %}
+
+{% block media %}
+    {% include "status/media-css.html" %}
+    {% block content_media %}{% endblock %}
+    <link rel="stylesheet" type="text/css" href="{{ static('vnoj/daterangepicker/daterangepicker.css') }}">
+{% endblock %}
+
+{% block title_ruler %}{% endblock %}
+
+{% block title_row %}
+    {% set tab = 'OJ' %}
+    {% include "status/status-tabs.html" %}
+{% endblock %}
+
+{% block body %}
+    <div id="daterange" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">
+        <i class="fa fa-calendar"></i>&nbsp;
+        <span></span> <i class="fa fa-caret-down"></i>
+    </div>
+    <table id="stats-table" class="table">
+        <tr>
+            <th colspan="2">{{ _('Submissions by Day') }}</th>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div id="by-day" style="height: 500px">
+                    <canvas></canvas>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <th>{{ _('Submissions by Language') }}</th>
+            <th>{{ _('Submissions Result') }}</th>
+        </tr>
+        <tr>
+            <td>
+                <div id="by-language" style="display: flex; justify-content: center;">
+                    <canvas width="400" height="300"></canvas>
+                </div>
+            </td>
+            <td >
+                <div id="result" style="display: flex; justify-content: center;">
+                    <canvas width="550" height="300"></canvas>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <th colspan="2">{{ _('Queue Time') }}</th>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div id="queue-time">
+                    <canvas></canvas>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <th colspan="2">{{ _('Organization Submissions/New Problems by Day') }}</th>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div id="org-by-day" style="height: 500px">
+                    <canvas></canvas>
+                </div>
+            </td>
+        </tr>
+    </table>
+{% endblock %}

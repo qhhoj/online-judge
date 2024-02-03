@@ -1,0 +1,364 @@
+{% extends "user/user-base.html" %}
+
+{% block title_ruler %}{% endblock %}
+
+{% block title_row %}
+    {% set tab = 'about' %}
+    {% set title = link_user(user) %}
+    {% include "user/user-tabs.html" %}
+{% endblock %}
+
+{% block user_content %}
+    <div class="content-description">
+        {% with orgs=user.organizations.filter(is_unlisted=False) %}
+            {% if orgs %}
+                <p style="margin-top: 0"><b>{{ _('From') }}</b>
+                    {% for org in orgs -%}
+                        <a href="{{ org.get_absolute_url() }}">{{ org.name }}</a>
+                        {%- if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+            {% endif %}
+        {% endwith %}
+        {% if perms.judge.change_profile %}
+            {% with notes=user.notes %}
+                {% if notes %}
+                    <b>{{ _('Admin notes:') }}</b>
+                    <pre style="margin-top: 0">{{ notes }}</pre>
+                {% endif %}
+            {% endwith %}
+        {% endif %}
+
+        {% if user.about %}
+            <h4>{{ _('About') }}</h4>
+            {% cache 86400 'user_about' user.id MATH_ENGINE %}
+                {{ user.about|markdown('self-description', MATH_ENGINE)|reference|str|safe }}
+            {% endcache %}
+        {% else %}
+            <i>
+                {% if user.user == request.user %}
+                    {{ _('You have not shared any information.') }}
+                {% else %}
+                    {{ _('This user has not shared any information.') }}
+                {% endif %}
+            </i>
+            <br>
+        {% endif %}
+
+        <h4>{{ _('Badges & Awards') }}</h4>
+        {% for badge in user.badges.all() %}
+            <div style="display: inline-block; margin-left: 1em; margin-right: 1em;">
+                <img src="{{ badge.full_size or badge.mini or '' }}" title="{{ badge.name }}" style="height: 10em; width: auto; display: block; margin: 0 auto;" />
+                <p style="text-align: center; font-weight: bold; text-transform: uppercase;">{{ badge.name }}</p>
+            </div>
+        {% else %}
+            <i>{{ _('This user has not earned any badges or awards.') }}</i>
+        {% endfor %}
+
+        <h4 id="submission-activity-header"></h4>
+        <div id="submission-activity" style="display: none;">
+            <div id="submission-activity-actions">
+                <a href="javascript:void(0)" id="prev-year-action">&laquo;</a>
+                &nbsp;<span id="year"></span>&nbsp;
+                <a href="javascript:void(0)" id="next-year-action">&raquo;</a>
+            </div>
+            <div id="submission-activity-display">
+                <table id="submission-activity-table">
+                    <tr id="submission-0">
+                        <th class="submission-date-col info-text">
+                            {{ _('Sun') }}
+                        </th>
+                    </tr>
+                    <tr id="submission-1">
+                        <th class="submission-date-col info-text">
+                            {{ _('Mon') }}
+                        </th>
+                    </tr>
+                    <tr id="submission-2">
+                        <th class="submission-date-col info-text">
+                            {{ _('Tues') }}
+                        </th>
+                    </tr>
+                    <tr id="submission-3">
+                        <th class="submission-date-col info-text">
+                            {{ _('Wed') }}
+                        </th>
+                    </tr>
+                    <tr id="submission-4">
+                        <th class="submission-date-col info-text">
+                            {{ _('Thurs') }}
+                        </th>
+                    </tr>
+                    <tr id="submission-5">
+                        <th class="submission-date-col info-text">
+                            {{ _('Fri') }}
+                        </th>
+                    </tr>
+                    <tr id="submission-6">
+                        <th class="submission-date-col info-text">
+                            {{ _('Sat') }}
+                        </th>
+                    </tr>
+                </table>
+                <div class="info-bar">
+                    <span id="submission-total-count" class="info-text">
+                    </span>
+                    <table class="info-table">
+                        <tr>
+                            <th class="info-table-text info-text">{{ _('Less') }}</th>
+                            <td class="activity-0"><div></div></td>
+                            <td class="activity-1"><div></div></td>
+                            <td class="activity-2"><div></div></td>
+                            <td class="activity-3"><div></div></td>
+                            <td class="activity-4"><div></div></td>
+                            <th class="info-table-text info-text">{{ _('More') }}</th>
+                        <tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {% if rating %}
+            <h4>{{ _('Rating history') }}</h4>
+            <div id="rating-chart">
+                <canvas></canvas>
+            </div>
+            <div id="rating-tooltip">
+                <div class="contest"></div>
+                <div class="date"></div>
+                <div class="rate-group">
+                    <span class="rate-box"><span></span></span>
+                    <span class="rating"></span>, #<span class="rank"></span>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block bodyend %}
+    {% if REQUIRE_JAX %}
+        {% include "mathjax-load.html" %}
+    {% endif %}
+
+    <script type="text/javascript" src="{{ static('user_profile.js') }}"></script>
+    <script type="text/javascript">
+        $(function () {
+            window.init_submission_table($, {{ submission_data }}, {{ submission_metadata }}, "{{ LANGUAGE_CODE }}");
+        });
+    </script>
+
+    {% if ratings %}
+        <script type="text/javascript" src="{{ static('libs/chart.js/Chart.js') }}"></script>
+        <script type="text/javascript">
+            var rating_history = {{ rating_data }};
+
+            $.each(rating_history, function (index, item) {
+                item.x = new Date(item.timestamp);
+                item.y = item.rating;
+            });
+
+            $(function () {
+                var $canvas = $('#rating-chart').find('canvas');
+                var ctx = $canvas.get(0).getContext('2d');
+
+                var getItem = function (index) {
+                    return rating_history[index];
+                };
+                var ratings = rating_history.map(function (x) {
+                    return x.rating;
+                });
+
+                var originalDraw = Chart.controllers.scatter.prototype.draw;
+                Chart.helpers.extend(Chart.controllers.scatter.prototype, {
+                    draw: function () {
+                        var chart = this.chart;
+                        var yHighlight = chart.config.options.yHighlight;
+
+                        if (yHighlight != null) {
+                            var ctx = chart.chart.ctx;
+                            var xaxis = chart.scales['x-axis-1'];
+                            var yaxis = chart.scales['y-axis-1'];
+
+                            ctx.save();
+                            yHighlight.forEach(range => {
+                                var yRangeBeginPixel = yaxis.getPixelForValue(range.begin);
+                                var yRangeEndPixel = yaxis.getPixelForValue(range.end);
+
+                                if (range.begin >= yaxis.end || range.end <= yaxis.begin) {
+                                    return;
+                                }
+
+                                yRangeEndPixel = Math.max(yaxis.top + 1, yRangeEndPixel);
+                                yRangeBeginPixel = Math.min(yaxis.bottom - 1, yRangeBeginPixel);
+
+                                if (yRangeBeginPixel < yRangeEndPixel) {
+                                    return;
+                                }
+
+                                ctx.fillStyle = range.color;
+                                ctx.fillRect(
+                                    xaxis.left + 1,
+                                    yRangeEndPixel,
+                                    xaxis.right - xaxis.left,
+                                    yRangeBeginPixel - yRangeEndPixel,
+                                );
+                            });
+                            ctx.restore();
+                        }
+                        originalDraw.apply(this, arguments);
+                    }
+                });
+
+                window.rating_chart = new Chart(ctx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'rating',
+                            backgroundColor: 'rgb(0, 0, 0, 0)',
+                            borderColor: '#A31515',
+                            pointBackgroundColor: '#FFF',
+                            pointHoverBackgroundColor: '#A31515',
+                            pointRadius: 5,
+                            pointHoverRadius: 5,
+                            showLine: true,
+                            data: rating_history,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        elements: {
+                            line: {
+                                tension: 0,
+                            },
+                        },
+                        legend: {
+                            display: false,
+                        },
+                        layout: {
+                            padding: {
+                                right: 10,
+                            },
+                        },
+                        scales: {
+                            xAxes: [{
+                                type: 'time',
+                                distribution: 'linear',
+                            }],
+                            yAxes: [{
+                                ticks: {
+                                    precision: 0,
+                                    suggestedMin: Math.max(0, Math.min.apply(null, ratings) - 50),
+                                    suggestedMax: Math.max.apply(null, ratings) + 50,
+                                },
+                            }],
+                        },
+                        tooltips: {
+                            enabled: false,
+                            custom: function (tooltipModel) {
+                                var $tooltip = $('#rating-tooltip');
+
+                                if (tooltipModel.opacity == 0) {
+                                    $tooltip.hide();
+                                    return;
+                                }
+
+                                var element = tooltipModel.dataPoints[0]
+                                var item = getItem(element.index);
+
+                                $tooltip.find('.contest').text(item.label);
+                                $tooltip.find('.date').text(item.date);
+                                $tooltip.find('.rate-box').attr('class', 'rate-box ' + item.class)
+                                        .find('span').css('height', item.height);
+                                $tooltip.find('.rating').text(item.rating).attr('class', 'rating ' + item.class);
+                                $tooltip.find('.rank').text(item.ranking);
+
+                                $tooltip.removeClass('above below');
+                                $tooltip.addClass(element.y < $tooltip.height() ? 'below' : 'above');
+
+                                var position = $canvas.offset();
+                                var container = $('#page-container').offset();
+                                $tooltip.css({
+                                    left: position.left - container.left + element.x + $tooltip.width() / 2,
+                                    top: position.top - container.top + element.y - $tooltip.height() - 13,
+                                    fontFamily: tooltipModel._bodyFontFamily,
+                                    fontSize: tooltipModel._bodyFontSize,
+                                    fontStyle: tooltipModel._bodyFontStyle,
+                                }).show();
+                            },
+                        },
+                        yHighlight: [
+                            {
+                                begin: 0,
+                                end: 1200,
+                                color: 'rgb(128, 128, 128, 0.43)'
+                            },
+                            {
+                                begin: 1200,
+                                end: 1400,
+                                color: 'rgb(0, 128, 0, 0.4)'
+                            },
+                            {
+                                begin: 1400,
+                                end: 1600,
+                                color: 'rgb(3, 168, 158, 0.4)'
+                            },
+                            {
+                                begin: 1600,
+                                end: 1900,
+                                color: 'rgb(0, 0, 255, 0.37)'
+                            },
+                            {
+                                begin: 1900,
+                                end: 2200,
+                                color: 'rgb(170, 0, 170, 0.4)'
+                            },
+                            {
+                                begin: 2200,
+                                end: 2300,
+                                color: 'rgb(255, 140, 0, 0.4)'
+                            },
+                            {
+                                begin: 2300,
+                                end: 2400,
+                                color: 'rgb(255, 140, 0, 0.4)'
+                            },
+                            {
+                                begin: 2400,
+                                end: 2600,
+                                color: 'rgb(255, 0, 0, 0.4)'
+                            },
+                            {
+                                begin: 2600,
+                                end: 2900,
+                                color: 'rgb(255, 0, 0, 0.4)'
+                            },
+                            {
+                                begin: 2900,
+                                end: 3600,
+                                color: 'rgb(165, 28, 28, 0.4)'
+                            }
+                        ],
+                    }
+                });
+
+                $canvas.click(function (evt) {
+                    var elements = window.rating_chart.getElementsAtEvent(evt);
+                    if (elements.length > 0) {
+                        var item = getItem(elements[0]._index);
+                        window.location.href = item.link;
+                    }
+                });
+
+                $canvas.mousemove(function (evt) {
+                    var elements = window.rating_chart.getElementsAtEvent(evt);
+                    if (elements.length > 0) {
+                        $canvas.css('cursor', 'pointer');
+                    } else {
+                        $canvas.css('cursor', '');
+                    }
+                });
+            });
+        </script>
+    {% endif %}
+{% endblock %}

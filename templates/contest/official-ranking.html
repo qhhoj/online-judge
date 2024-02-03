@@ -1,0 +1,12 @@
+{% extends "contest/ranking.html" %}
+
+{% block users_media %}
+    {{ super() }}
+    <style>
+        #ranking-table .wrap-name {
+            display: block;
+            max-width: 20em;
+            word-wrap: break-word;
+        }
+    </style>
+{% endblock %}

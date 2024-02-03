@@ -1,0 +1,49 @@
+{% extends "user/base-users.html" %}
+
+{% block users_media %}
+    <style>
+        .kick-form .button {
+            margin: -8px 0;
+        }
+
+        form.kick-form a.button {
+            visibility: hidden;
+        }
+
+        tr:hover td > form.kick-form a.button {
+            visibility: visible;
+        }
+    </style>
+
+    {% if is_admin %}
+        <style>
+            th.username, td.user-name {
+                border-right: none;
+            }
+        </style>
+    {% endif %}
+{% endblock %}
+
+{% block users_js_media %}
+    <script type="text/javascript">
+        $(function () {
+            $('form.kick-form').find('a.button').click(function () {
+                if (confirm("{{ _('Are you sure you want to kick this user?') }}")) {
+                    $(this).parent().submit();
+                }
+                return false;
+            })
+        });
+    </script>
+{% endblock %}
+
+{% block title_row %}
+    {% set tab = 'users' %}
+    {% include "organization/tabs.html" %}
+{% endblock %}
+{% block title_ruler %}{% endblock %}
+
+{% block users_table %}
+    {% set table_id='organization-users-table' %}
+    {% include "organization/users-table.html" %}
+{% endblock %}

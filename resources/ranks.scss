@@ -1,0 +1,158 @@
+@import "vars";
+
+.admin a, .admin {
+    color: $color_primary100 !important;
+    font-weight: bold !important;
+}
+
+.banned a, .banned {
+    color: black !important;
+    font-weight: normal !important;
+    text-decoration: line-through !important;
+}
+
+.banned a::before {
+    content: "🚫";
+}
+
+.staff a, .staff {
+    color: #ff888a !important;
+    font-weight: bold !important;
+}
+
+.staff a::before {
+    content: "🔥";
+}
+
+.daor a, .daor {
+    color: #ff0066 !important;
+    font-weight: bold !important;
+}
+
+.daor a::before {
+    content: "🌸";
+}
+
+.teacher a::before {
+    content: "🧑‍🏫";
+}
+
+.deleted-user, .deleted-user a {
+    color: #999;
+    font-weight: normal;
+    text-decoration: line-through $color_primary100;
+}
+
+@mixin rate-svg-color($color) {
+    circle {
+        stroke: $color;
+    }
+    path {
+        fill: $color;
+    }
+}
+
+svg.rate-box {
+    width: 1.2em;
+
+    circle {
+        fill: none;
+        stroke-width: 2px;
+    }
+
+    &.rate-none {
+        visibility: hidden;
+    }
+
+    &.rate-primary0 {
+        @include rate-svg-color($color_primary0);
+    }
+
+    &.rate-newbie {
+        @include rate-svg-color($color_rating_newbie);
+    }
+
+    &.rate-pupil {
+        @include rate-svg-color($color_rating_pupil);
+    }
+
+    &.rate-specialist {
+        @include rate-svg-color($color_rating_specialist);
+    }
+
+    &.rate-expert {
+        @include rate-svg-color($color_rating_expert);
+    }
+
+    &.rate-candidate-master {
+        @include rate-svg-color($color_rating_candidate_master);
+    }
+
+    &.rate-master, &.rate-international-master {
+        @include rate-svg-color($color_rating_master);
+    }
+
+    &.rate-grandmaster, &.rate-international-grandmaster, &.rate-legendary-grandmaster {
+        @include rate-svg-color($color_rating_grandmaster);
+    }
+}
+
+.rating {
+    font-weight: bold;
+}
+
+.rate-none, .rate-none a {
+    color: $color_rating_none;
+    font-weight: normal;
+}
+
+.rate-newbie, .rate-newbie a {
+    color: $color_rating_newbie;
+}
+
+.rate-pupil, .rate-pupil a {
+    color: $color_rating_pupil;
+}
+
+.rate-specialist, .rate-specialist a {
+    color: $color_rating_specialist;
+}
+
+.rate-expert, .rate-expert a {
+    color: $color_rating_expert;
+}
+
+.rate-candidate-master, .rate-candidate-master a {
+    color: $color_rating_candidate_master;
+}
+
+.rate-master, .rate-master a,
+.rate-international-master, .rate-international-master a {
+    color: $color_rating_master;
+}
+
+.rate-grandmaster, .rate-grandmaster a,
+.rate-international-grandmaster, .rate-international-grandmaster a,
+.rate-legendary-grandmaster, .rate-legendary-grandmaster a {
+    color: $color_rating_grandmaster;
+}
+
+.rate-legendary-grandmaster a::first-letter {
+    color: $color_primary100;
+}
+
+.rate-group {
+    white-space: nowrap;
+    display: inline-block;
+    color: black;
+
+    .rating {
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .rate-box {
+        margin-right: 0.2em;
+        vertical-align: middle;
+    }
+}
