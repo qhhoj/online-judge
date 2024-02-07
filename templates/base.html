@@ -379,7 +379,7 @@
         <span id="footer-content">
             <br>
             {{_('proudly powered by %(dmoj)s', dmoj=safe('<a style="color: #808080" href="https://dmoj.ca"><b>DMOJ</b></a>'))}} |
-            {{_('follow us on %(github)', github=safe('<a style="color: #808080" href="https://github.com/qhhoj/online-judge"><b>GitHub</b></a>'))}}
+            {{_('follow us on %(github)s', github=safe('<a style="color: #808080" href="https://github.com/qhhoj/online-judge"><b>GitHub</b></a>'))}}
             {% if misc_config.footer %}
                 {{ misc_config.footer|safe }} |
             {% endif %}
