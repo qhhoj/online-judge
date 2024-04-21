@@ -78,10 +78,10 @@
             {% if perms.judge.reject_submission and can_edit %} ·
                 {% if not submission.is_locked %}
                     <a href="#" onclick="reject_submission({{ submission.id }}, event);return false">
-                        <i class="fa fa-refresh fa-fw"></i><span class="label">{{ _('reject') }}</span>
+                        <i class="fa fa-times fa-fw"></i><span class="label">{{ _('reject') }}</span>
                     </a>
                 {% else %}
-                    <i class="fa fa-refresh fa-fw grey-icon"></i>
+                    <i class="fa fa-times fa-fw grey-icon"></i>
                     <span class="label grey-label"
                           title="{{ _('This submission has been locked, and cannot be reject.') }}">
                         {{ _('locked') }}
