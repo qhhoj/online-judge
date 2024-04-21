@@ -142,6 +142,10 @@ class Submission(models.Model):
         for tc in queryset:
             tc.points = 0
             tc.status = 'RJ'
+            tc.feedback = ''
+            tc.extended_feedback = ''
+            tc.time = 0
+            tc.memory = 0
             tc.save()
         self.update_contest()
 
