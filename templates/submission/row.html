@@ -75,6 +75,19 @@
                     </span>
                 {% endif %}
             {% endif %}
+            {% if perms.judge.reject_submission and can_edit %} ·
+                {% if not submission.is_locked %}
+                    <a href="#" onclick="reject_submission({{ submission.id }}, event);return false">
+                        <i class="fa fa-refresh fa-fw"></i><span class="label">{{ _('reject') }}</span>
+                    </a>
+                {% else %}
+                    <i class="fa fa-refresh fa-fw grey-icon"></i>
+                    <span class="label grey-label"
+                          title="{{ _('This submission has been locked, and cannot be reject.') }}">
+                        {{ _('locked') }}
+                    </span>
+                {% endif %}
+            {% endif %}
             {% if can_edit %}
                 {% if not submission.language.file_only %} ·
                     <a href="{{ url('problem_submission_diff', submission.problem.code) }}?username={{ submission.user.user.username }}&highlight={{ submission.id }}">
