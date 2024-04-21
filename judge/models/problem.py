@@ -322,6 +322,9 @@ class Problem(models.Model):
     def is_rejudgeable_by(self, user):
         return user.has_perm('judge.rejudge_submission') and self.is_editable_by(user)
 
+    def is_rejectable_by(self, user):
+        return user.has_perm('judge.reject_submission') and self.is_editable_by(user)
+
     def is_subs_manageable_by(self, user):
         return user.is_staff and self.is_rejudgeable_by(user)
 

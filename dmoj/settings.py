@@ -231,6 +231,7 @@ DMOJ_STATS_SUBMISSION_RESULT_COLORS = {
     'WA': '#ed4420',
     'CE': '#42586d',
     'ERR': '#ffa71c',
+    'RJ': '#3e6291',
 }
 DMOJ_API_PAGE_SIZE = 1000
 

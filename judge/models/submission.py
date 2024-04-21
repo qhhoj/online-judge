@@ -30,6 +30,7 @@ SUBMISSION_RESULT = (
     ('IE', _('Internal Error')),
     ('SC', _('Short Circuited')),
     ('AB', _('Aborted')),
+    ('RJ', _('Rejected')),
 )
 
 SUBMISSION_STATUS = (
@@ -68,6 +69,7 @@ class Submission(models.Model):
         'G': _('Grading'),
         'D': _('Completed'),
         'AB': _('Aborted'),
+        'RJ': _('Rejected'),
     }
 
     user = models.ForeignKey(Profile, on_delete=models.CASCADE, db_index=False)
@@ -125,6 +127,23 @@ class Submission(models.Model):
     @cached_property
     def is_locked(self):
         return self.locked_after is not None and self.locked_after < timezone.now()
+
+    def reject(self):
+        self.points = 0
+        self.result = 'RJ'
+        self.case_points = 0
+        if self.problem.is_public and not self.problem.is_organization_private:
+            self.user._updating_stats_only = True
+            self.user.calculate_points()
+        self.problem._updating_stats_only = True
+        self.problem.update_stats()
+        self.save()
+        queryset = SubmissionTestCase.objects.filter(submission=self)
+        for tc in queryset:
+            tc.points = 0
+            tc.status = 'RJ'
+            tc.save()
+        self.update_contest()
 
     def judge(self, *args, rejudge=False, force_judge=False, rejudge_user=None, **kwargs):
         if force_judge or not self.is_locked:
@@ -229,6 +248,7 @@ class Submission(models.Model):
         permissions = (
             ('abort_any_submission', _('Abort any submission')),
             ('rejudge_submission', _('Rejudge the submission')),
+            ('reject_submission', _('Reject the submisison')),
             ('rejudge_submission_lot', _('Rejudge a lot of submissions')),
             ('spam_submission', _('Submit without limit')),
             ('view_all_submission', _('View all submission')),

@@ -37,6 +37,27 @@ def rejudge_submission(request):
     return HttpResponseRedirect(redirect) if redirect else HttpResponse('success', content_type='text/plain')
 
 
+@login_required
+@require_POST
+def reject_submission(request):
+    if 'id' not in request.POST or not request.POST['id'].isdigit():
+        return HttpResponseBadRequest()
+
+    try:
+        submission = Submission.objects.get(id=request.POST['id'])
+    except Submission.DoesNotExist:
+        return HttpResponseBadRequest()
+
+    if not submission.problem.is_rejectable_by(request.user):
+        return HttpResponseForbidden()
+
+    submission.reject()
+
+    redirect = request.POST.get('path', None)
+
+    return HttpResponseRedirect(redirect) if redirect else HttpResponse('success', content_type='text/plain')
+
+
 def django_uploader(image):
     ext = os.path.splitext(image.name)[1]
     if ext not in settings.MARTOR_UPLOAD_SAFE_EXTS:
