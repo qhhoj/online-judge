@@ -69,6 +69,7 @@ def _get_result_data(results):
             {'code': 'TLE', 'name': gettext_noop('Timeout'), 'count': results['TLE']},
             {'code': 'ERR', 'name': gettext_noop('Error'),
              'count': results['MLE'] + results['OLE'] + results['IR'] + results['RTE'] + results['AB'] + results['IE']},
+            {'code': 'RJ', 'name': gettext_noop('Rejected'), 'count': results['RJ']},
         ],
         'total': sum(results.values()),
     }
