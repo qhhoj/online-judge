@@ -7600,3 +7600,7 @@ msgstr "Từ chối"
 #: template/submission/status.html:104
 msgid "Are you sure you want to reject?"
 msgstr "Bạn có chắc bạn muốn từ chối?"
+
+#: template/submission/row.html:81
+msgid "reject"
+msgstr "từ chối"

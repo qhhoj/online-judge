@@ -7279,3 +7279,7 @@ msgstr ""
 #: template/submission/status.html:104
 msgid "Are you sure you want to reject?"
 msgstr ""
+
+#: template/submission/row.html:81
+msgid "reject"
+msgstr ""
