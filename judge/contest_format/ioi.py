@@ -1,5 +1,4 @@
 from django.db import connection
-from django.db.models import OuterRef, Subquery
 from django.utils.translation import gettext as _, gettext_lazy
 
 from judge.contest_format.legacy_ioi import LegacyIOIContestFormat
@@ -86,34 +85,12 @@ class IOIContestFormat(LegacyIOIContestFormat):
                 if self.config['cumtime'] and points:
                     cumtime += penalty
 
-        from judge.models.contest import ContestSubmission, ContestProblem
-        from judge.models.submission import SubmissionTestCase
-        queryset = (ContestSubmission.objects.filter(
-            participation=participation,
-            points=Subquery(ContestSubmission.objects.filter(
-                problem_id=OuterRef('problem_id'),
-            ).order_by('-points').values('points')[:1]),
-        ).values_list('problem_id', 'problem', 'submission'))
+        from judge.models.contest import ContestProblem
 
-        for problem_id, problem, submission in queryset:
-            max_possible_points = ContestProblem.objects.filter(id=problem).values_list('points')[0][0]
-            max_testcase_points = 0
-            submission_testcase = SubmissionTestCase.objects.filter(
-                submission=submission,
-            ).values_list('total', 'batch')
-            batches = {}
-            for total, batch in submission_testcase:
-                if not batch:
-                    max_testcase_points += total
-                else:
-                    if batch in batches:
-                        batches[batch] = max(batches[batch], total)
-                    else:
-                        batches[batch] = total
-            for points in batches.values():
-                max_testcase_points += points
-            format_data[str(problem_id)]['points'] *= max_possible_points / max_testcase_points
-            score += format_data[str(problem_id)]['points']
+        for problem_id, valueset in format_data.items():
+            queryset = ContestProblem.objects.filter(id=problem_id, contest=self.contest)
+            valueset['points'] *= queryset.first().points_scaling_factor
+            score += valueset['points']
 
         participation.cumtime = max(cumtime, 0)
         participation.score = round(score, self.contest.points_precision)

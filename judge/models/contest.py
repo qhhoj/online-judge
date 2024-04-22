@@ -17,6 +17,7 @@ from moss import MOSS_LANG_C, MOSS_LANG_CC, MOSS_LANG_JAVA, MOSS_LANG_PASCAL, MO
 
 from judge import contest_format, event_poster as event
 from judge.models.problem import Problem
+from judge.models.problem_data import ProblemTestCase
 from judge.models.profile import Organization, Profile
 from judge.models.submission import Submission
 from judge.ratings import rate_contest
@@ -683,6 +684,24 @@ class ContestProblem(models.Model):
                                           default=None, null=True, blank=True,
                                           validators=[MinValueOrNoneValidator(1, _('Why include a problem you '
                                                                                    "can't submit to?"))])
+
+    @property
+    def points_scaling_factor(self):
+        testcaseset = ProblemTestCase.objects.filter(
+            dataset=self.problem,
+        ).order_by('order').values_list('type', 'points')
+        sum_batch_points = 0
+        batch = False
+        for type, points in testcaseset:
+            if type == 'C':
+                if not batch:
+                    sum_batch_points += points
+            if type == 'S':
+                batch = True
+                sum_batch_points += points
+            if type == 'E':
+                batch = False
+        return self.points / sum_batch_points
 
     class Meta:
         unique_together = ('problem', 'contest')
