@@ -7271,3 +7271,11 @@ msgstr ""
 #: templates/widgets/select_all.html:8
 msgid "Check all"
 msgstr ""
+
+#: templates/submission/source.html:86 templates/submission/status.html:113
+msgid "Reject"
+msgstr ""
+
+#: template/submission/status.html:104
+msgid "Are you sure you want to reject?"
+msgstr ""

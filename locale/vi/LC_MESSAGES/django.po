@@ -7592,3 +7592,11 @@ msgstr "Số bài"
 #: templates/widgets/select_all.html:8
 msgid "Check all"
 msgstr "Chọn tất cả"
+
+#: templates/submission/source.html:86 templates/submission/status.html:113
+msgid "Reject"
+msgstr "Từ chối"
+
+#: template/submission/status.html:104
+msgid "Are you sure you want to reject?"
+msgstr "Bạn có chắc bạn muốn từ chối?"
