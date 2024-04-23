@@ -9,7 +9,7 @@
     {{ (description or problem.i18n_description or problem.description)|markdown(problem.markdown_style, MATH_ENGINE)|reference|str|safe }}
 {% endcache %}
 
-{% with material_url=problem.absolute_material_url %}
+{% with material_url=problem.problem_material %}
 {% if material_url %}
     <p>{{ _("Download materials for this problem: ") }}<a href="{{ material_url }}">{{ _("Materials") }}</a></p>
 {% endif %}

@@ -89,7 +89,7 @@ def problem_material_uploader(material, problem):
                        urljoin(settings.MEDIA_URL, settings.PROBLEM_MATERIAL_UPLOAD_MEDIA_DIR))
     if not url_base.endswith('/'):
         url_base += '/'
-    return urljoin(url_base, problem.code, name)
+    return urljoin(url_base, os.path.join(problem.code, name))
 
 
 def submission_uploader(submission_file, problem_code, user_id):
