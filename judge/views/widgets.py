@@ -82,6 +82,16 @@ def pdf_statement_uploader(statement):
     return urljoin(url_base, name)
 
 
+def problem_material_uploader(material, problem):
+    name = os.path.basename(material.name)
+    default_storage.save(os.path.join(settings.PROBLEM_MATERIAL_UPLOAD_MEDIA_DIR, problem.code, name), material)
+    url_base = getattr(settings, 'PROBLEM_MATERIAL_UPLOAD_URL_PREFIX',
+                       urljoin(settings.MEDIA_URL, settings.PROBLEM_MATERIAL_UPLOAD_MEDIA_DIR))
+    if not url_base.endswith('/'):
+        url_base += '/'
+    return urljoin(url_base, problem.code, name)
+
+
 def submission_uploader(submission_file, problem_code, user_id):
     ext = os.path.splitext(submission_file.name)[1]
     name = str(uuid.uuid4()) + ext

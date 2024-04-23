@@ -42,7 +42,7 @@ from judge.utils.problems import hot_problems, user_attempted_ids, \
 from judge.utils.strings import safe_float_or_none, safe_int_or_none
 from judge.utils.tickets import own_ticket_filter
 from judge.utils.views import QueryStringSortMixin, SingleObjectFormView, TitleMixin, add_file_response, generic_message
-from judge.views.widgets import pdf_statement_uploader, submission_uploader
+from judge.views.widgets import pdf_statement_uploader, problem_material_uploader, submission_uploader
 
 recjk = re.compile(r'[\u2E80-\u2E99\u2E9B-\u2EF3\u2F00-\u2FD5\u3005\u3007\u3021-\u3029\u3038-\u303A\u303B\u3400-\u4DB5'
                    r'\u4E00-\u9FC3\uF900-\uFA2D\uFA30-\uFA6A\uFA70-\uFAD9\U00020000-\U0002A6D6\U0002F800-\U0002FA1D]')
@@ -802,6 +802,11 @@ class ProblemCreate(PermissionRequiredMixin, TitleMixin, CreateView):
         if statement_file is not None:
             problem.pdf_url = pdf_statement_uploader(statement_file)
 
+    def save_material(self, form, problem):
+        material_file = form.files.get('problem_material_file', None)
+        if material_file is not None:
+            problem.problem_material = problem_material_uploader(material_file, problem)
+
     def form_valid(self, form):
         with revisions.create_revision(atomic=True):
             self.object = problem = form.save()
@@ -809,6 +814,7 @@ class ProblemCreate(PermissionRequiredMixin, TitleMixin, CreateView):
             problem.allowed_languages.set(Language.objects.filter(include_in_problem=True))
             problem.date = timezone.now()
             self.save_statement(form, problem)
+            self.save_material(form, problem)
             problem.save()
 
             revisions.set_comment(_('Created on site'))
@@ -849,6 +855,7 @@ class ProblemSuggest(ProblemCreate):
             problem.allowed_languages.set(Language.objects.filter(include_in_problem=True))
             problem.date = timezone.now()
             self.save_statement(form, problem)
+            self.save_material(form, problem)
             problem.save()
 
             revisions.set_comment(_('Created on site'))
@@ -992,6 +999,11 @@ class ProblemEdit(ProblemMixin, TitleMixin, UpdateView):
         if statement_file is not None:
             problem.pdf_url = pdf_statement_uploader(statement_file)
 
+    def save_material(self, form, problem):
+        material_file = form.files.get('problem_material_file', None)
+        if material_file is not None:
+            problem.problem_material = problem_material_uploader(material_file, problem)
+
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form = self.get_form()
@@ -1001,6 +1013,7 @@ class ProblemEdit(ProblemMixin, TitleMixin, UpdateView):
             with revisions.create_revision(atomic=True):
                 problem = form.save()
                 self.save_statement(form, problem)
+                self.save_material(form, problem)
                 problem.save()
                 form_lang_limit.save()
                 form_edit.save()

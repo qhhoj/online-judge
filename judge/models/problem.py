@@ -20,7 +20,7 @@ from judge.models.problem_data import problem_data_storage
 from judge.models.profile import Organization, Profile
 from judge.models.runtime import Language
 from judge.user_translations import gettext as user_gettext
-from judge.utils.url import get_absolute_pdf_url
+from judge.utils.url import get_absolute_material_url, get_absolute_pdf_url
 
 __all__ = ['ProblemGroup', 'ProblemType', 'Problem', 'ProblemTranslation', 'ProblemClarification', 'License',
            'Solution', 'SubmissionSourceAccess', 'TranslatedProblemQuerySet']
@@ -146,6 +146,10 @@ class Problem(models.Model):
     pdf_url = models.CharField(max_length=200, verbose_name=_('PDF statement URL'), blank=True,
                                help_text=_('URL to PDF statement. The PDF file must be embeddable (Mobile web browsers'
                                            'may not support embedding). Fallback included.'))
+
+    problem_material = models.CharField(max_length=200, verbose_name=_('problem material URL'), blank=True,
+                                        help_text=_("URL to this problem's contest materials."))
+
     source = models.CharField(max_length=200, verbose_name=_('Problem source'), db_index=True, blank=True,
                               help_text=_('Source of problem. Please credit the source of the problem'
                                           'if it is not yours'))
@@ -240,6 +244,10 @@ class Problem(models.Model):
     @property
     def absolute_pdf_url(self):
         return get_absolute_pdf_url(self.pdf_url) if self.pdf_url else None
+
+    @property
+    def absolute_material_url(self):
+        return get_absolute_material_url(self.problem_material) if self.problem_material else None
 
     @cached_property
     def types_list(self):
@@ -623,6 +631,7 @@ class Problem(models.Model):
             ('problem_full_markup', _('Edit problems with full markup')),
             ('clone_problem', _('Clone problem')),
             ('upload_file_statement', _('Upload file-type statement')),
+            ('upload_problem_material', _('Upload problem materials')),
             ('change_public_visibility', _('Change is_public field')),
             ('change_manually_managed', _('Change is_manually_managed field')),
             ('see_organization_problem', _('See organization-private problems')),

@@ -168,6 +168,12 @@ class ProblemEditForm(ModelForm):
         widget=forms.FileInput(attrs={'accept': 'application/pdf'}),
         label=_('Statement file'),
     )
+    problem_material_file = forms.FileField(
+        required=False,
+        help_text=_('Maximum file size is %s.') % filesizeformat(settings.PROBLEM_MATERIAL_MAX_FILE_SIZE),
+        widget=forms.FileInput(attrs={'accept': '*.*'}),
+        label=_('Problem materials'),
+    )
     required_css_class = 'required'
 
     def __init__(self, *args, **kwargs):
@@ -213,6 +219,19 @@ class ProblemEditForm(ModelForm):
 
         return content
 
+    def clean_problem_material(self):
+        content = self.files.get('problem_material_file', None)
+        if content is not None:
+            if content.size > settings.PROBLEM_MATERIAL_MAX_FILE_SIZE:
+                raise forms.ValidationError(_('File size is too big! Maximum file size is %s') %
+                                            filesizeformat(settings.PROBLEM_MATERIAL_MAX_FILE_SIZE),
+                                            'big_file_size')
+            if self.user and not self.user.has_perm('judge.upload_problem_material'):
+                raise forms.ValidationError(_("You don't have permission to upload problem material."),
+                                            'problem_material_upload_permission_denined')
+
+        return content
+
     def clean_time_limit(self):
         has_high_perm = self.user and self.user.has_perm('judge.high_problem_timelimit')
         timelimit = self.cleaned_data['time_limit']
@@ -225,7 +244,8 @@ class ProblemEditForm(ModelForm):
     class Meta:
         model = Problem
         fields = ['is_public', 'code', 'name', 'time_limit', 'memory_limit', 'points', 'partial',
-                  'statement_file', 'source', 'types', 'group', 'submission_source_visibility_mode',
+                  'statement_file', 'problem_material_file', 'source', 'types', 'group',
+                  'submission_source_visibility_mode',
                   'testcase_visibility_mode', 'description', 'testers']
         widgets = {
             'types': Select2MultipleWidget,
