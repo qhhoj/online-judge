@@ -11,6 +11,7 @@
 
 {% with material_url=problem.absolute_material_url %}
 {% if material_url %}
+    <h4>Problem Materials</h4>
     <p>{{ _("Download materials for this problem: ") }}<a href="{{ material_url }}">{{ _("Materials") }}</a></p>
 {% endif %}
 {% endwith %}
