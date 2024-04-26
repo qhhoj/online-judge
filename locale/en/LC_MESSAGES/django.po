@@ -7283,3 +7283,11 @@ msgstr ""
 #: template/submission/row.html:81
 msgid "reject"
 msgstr ""
+
+#: template/problem/problem-detail.html:14
+msgid "Download materials for this problem: "
+msgstr ""
+
+#: template/problem/problem-detail.html:14
+msgid "Materials"
+msgstr ""
