@@ -83,7 +83,7 @@ def pdf_statement_uploader(statement):
 
 
 def problem_material_uploader(material, problem):
-    name = os.path.basename(material.name)
+    name = os.path.basename(material.name.replace(' ', '_'))
     default_storage.save(os.path.join(settings.PROBLEM_MATERIAL_UPLOAD_MEDIA_DIR, problem.code, name), material)
     url_base = getattr(settings, 'PROBLEM_MATERIAL_UPLOAD_URL_PREFIX',
                        urljoin(settings.MEDIA_URL, settings.PROBLEM_MATERIAL_UPLOAD_MEDIA_DIR))
