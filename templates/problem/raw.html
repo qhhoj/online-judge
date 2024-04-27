@@ -81,6 +81,14 @@
 <div class="content-description printing">
     {{ description|markdown(problem.markdown_style, 'tex')|reference|absolutify(url)|str|safe }}
 </div>
+{% with material_url=problem.absolute_material_url %}
+{% if material_url %}
+<div class="content-description printing">
+    {{ _("## Problem Materials")|markdown(problem.markdown_style, 'tex')|reference|absolutify(url)|str|safe }}
+    <p>{{ _("Download materials for this problem: ") }}<a href="{{ material_url }}">{{ _("Materials") }}</a></p>
+</div>
+{% endif %}
+{% endwith %}
 <script type="text/javascript" src="{{ urljoin(url, static('mathjax_config.js')) }}"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.min.js"></script>
 <script type="text/javascript">
