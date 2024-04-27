@@ -33,6 +33,14 @@ def rescore_contest(self, contest_key):
     return rescored
 
 
+MOSS_IGNORE = {
+    'CE',
+    'IE',
+    'AB',
+    'RJ',
+}
+
+
 @shared_task(bind=True)
 def run_moss(self, contest_key):
     moss_api_key = settings.MOSS_API_KEY
@@ -55,7 +63,16 @@ def run_moss(self, contest_key):
                     contest_object=contest,
                     problem=problem,
                     language__common_name=dmoj_lang,
-                ).order_by('-points').values_list('user__user__username', 'source__source')
+                ).order_by('-points').values_list(
+                    'user__user__username',
+                    'source__source',
+                ).exclude(result__in=MOSS_IGNORE).exclude(
+                    case_points=0,
+                ).order_by('-points').values_list(
+                    'user__user__username',
+                    'source__source',
+                    'id',
+                )
 
                 if subs.exists():
                     moss_call = MOSS(moss_api_key, language=moss_lang, matching_file_limit=100,
@@ -63,11 +80,16 @@ def run_moss(self, contest_key):
 
                     users = set()
 
-                    for username, source in subs:
+                    for username, source, sub_id in subs:
                         if username in users:
                             continue
                         users.add(username)
-                        moss_call.add_file_from_memory(username, source.encode('utf-8'))
+                        moss_call.add_file_from_memory(
+                            username,
+                            ('// https://' + settings.SITE_FULL_URL +
+                             '/submission/' + str(sub_id) +
+                             '\n' + source).encode('utf-8'),
+                        )
 
                     result.url = moss_call.process()
                     result.submission_count = len(users)
