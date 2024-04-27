@@ -167,7 +167,7 @@ DISCORD_WEBHOOK = {
     'on_error': None,
 }
 
-SITE_FULL_URL = None  # ie 'https://oj.vnoi.info', please remove the last / if needed
+SITE_FULL_URL = 'https://qhhoj.com'
 
 ACE_URL = '//cdnjs.cloudflare.com/ajax/libs/ace/1.1.3'
 SELECT2_JS_URL = '//cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js'
