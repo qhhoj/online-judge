@@ -86,7 +86,7 @@ def run_moss(self, contest_key):
                         users.add(username)
                         moss_call.add_file_from_memory(
                             username,
-                            ('// https://' + settings.SITE_FULL_URL +
+                            ('// ' + settings.SITE_FULL_URL +
                              '/submission/' + str(sub_id) +
                              '\n' + source).encode('utf-8'),
                         )
