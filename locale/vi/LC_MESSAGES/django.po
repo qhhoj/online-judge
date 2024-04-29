@@ -7612,3 +7612,11 @@ msgstr "Tải xuống tệp đính kèm cho bài tập này: "
 #: template/problem/problem-detail.html:14
 msgid "Materials"
 msgstr "Tệp đính kèm"
+
+#: judge/contest_format/ultimate.py:76
+msgid "The last submission score for each problem will be used."
+msgstr "Điểm của bài sẽ là điểm của lần nộp bài cuối cùng."
+
+#: judge/contest_format/ultimate.py:77
+msgid "Ties will be broken by the sum of the last submission time for each problem."
+msgstr "Các thí sinh bằng điểm nhau sẽ được phân định kết quả bằng tổng thời gian của các bài nộp cuối cùng của mỗi bài."

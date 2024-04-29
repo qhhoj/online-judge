@@ -7291,3 +7291,11 @@ msgstr ""
 #: template/problem/problem-detail.html:14
 msgid "Materials"
 msgstr ""
+
+#: judge/contest_format/ultimate.py:76
+msgid "The last submission score for each problem will be used."
+msgstr ""
+
+#: judge/contest_format/ultimate.py:77
+msgid "Ties will be broken by the sum of the last submission time for each problem."
+msgstr ""
