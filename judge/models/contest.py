@@ -32,7 +32,6 @@ class MinValueOrNoneValidator(MinValueValidator):
         return a is not None and b is not None and super().compare(a, b)
 
 
-
 class ContestTag(models.Model):
     color_validator = RegexValidator('^#(?:[A-Fa-f0-9]{3}){1,2}$', _('Invalid colour.'))
 

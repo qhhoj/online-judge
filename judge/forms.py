@@ -664,10 +664,10 @@ class ProposeContestProblemForm(ModelForm):
         verbose_name = _('Problem')
         verbose_name_plural = 'Problems'
         fields = (
-            'problem', 
-            'points', 
-            'order', 
-            'max_submissions', 
+            'problem',
+            'points',
+            'order',
+            'max_submissions',
             'hidden_subtasks',
         )
 
