@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db.models import Q
 from django.forms import BooleanField, CharField, ChoiceField, DateInput, Form, ModelForm, MultipleChoiceField, \
-    formset_factory, inlineformset_factory
+    formset_factory, inlineformset_factory, TextInput
 from django.forms.widgets import DateTimeInput
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse, reverse_lazy
@@ -673,6 +673,9 @@ class ProposeContestProblemForm(ModelForm):
 
         widgets = {
             'problem': HeavySelect2Widget(data_view='problem_select2', attrs={'style': 'width: 100%'}),
+            'points': TextInput(attrs={'type': 'number', 'style': 'width: 100px;'}),
+            'order': TextInput(attrs={'type': 'number', 'style': 'width: 100px;'}),
+            'max_submission': TextInput(attrs={'type': 'number', 'style': 'width: 100px;'}),
         }
 
         error_messages = {

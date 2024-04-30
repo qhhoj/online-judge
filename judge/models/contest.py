@@ -690,7 +690,7 @@ class ContestProblem(models.Model):
         null=True,
         blank=True,
         max_length=50,
-        validators=[int_list_validator(',', _('Invalid format'))],
+        validators=[int_list_validator(', ', _('Invalid format'))],
     )
 
     @property

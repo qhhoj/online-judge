@@ -59,8 +59,9 @@ class ContestProblemInlineForm(ModelForm):
     class Meta:
         widgets = {
             'problem': AdminHeavySelect2Widget(data_view='problem_select2', attrs={'size': '10'}),
-            'points': TextInput(attrs={'size': '3'}),
-            'max_submissions': TextInput(attrs={'size': '3'}),
+            'points': TextInput(attrs={'type': 'number', 'style': 'width: 50px;'}),
+            'max_submissions': TextInput(attrs={'type': 'number', 'style': 'width: 50px;'}),
+            'output_prefix_override': TextInput(attrs={'type': 'number', 'style': 'width: 50px;'}),
             'hidden_subtasks': TextInput(attrs={'size': '3'}),
         }
 

@@ -83,6 +83,7 @@
         <td class="points-column">{{ form.points.errors }}{{ form.points }}</td>
         <td>{{ form.order.errors }}{{ form.order }}</td>
         <td>{{ form.max_submissions.errors }}{{ form.max_submissions }}</td>
+        <td>{{ form.hidden_subtasks.errors }}{{ form.hidden_subtasks }}</td>
         <td>
         {% if contest_problem_formset.can_delete and form.instance.pk %}
             {{ form.DELETE }}
@@ -124,6 +125,7 @@
                             {{_('or leave blank for no limit.') }}
                         </span>
                     </th>
+                    <th> {{ _('Hidden subtasks') }} </th>
                     <th> {{ _('Delete') }} </th>
                 </tr>
             </thead>
