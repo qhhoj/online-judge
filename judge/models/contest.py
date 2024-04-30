@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator, int_list_validator
 from django.db import models, transaction
 from django.db.models import CASCADE, Q
 from django.urls import reverse
@@ -30,6 +30,7 @@ __all__ = ['Contest', 'ContestTag', 'ContestAnnouncement', 'ContestParticipation
 class MinValueOrNoneValidator(MinValueValidator):
     def compare(self, a, b):
         return a is not None and b is not None and super().compare(a, b)
+
 
 
 class ContestTag(models.Model):
@@ -684,6 +685,14 @@ class ContestProblem(models.Model):
                                           default=None, null=True, blank=True,
                                           validators=[MinValueOrNoneValidator(1, _('Why include a problem you '
                                                                                    "can't submit to?"))])
+    hidden_subtasks = models.CharField(
+        help_text=_('Only for IOI format. Seperated by commas, e.g: 2, 3, 7'),
+        verbose_name=_('hidden subtasks'),
+        null=True,
+        blank=True,
+        max_length=50,
+        validators=[int_list_validator(',', _('Invalid format'))],
+    )
 
     @property
     def points_scaling_factor(self):

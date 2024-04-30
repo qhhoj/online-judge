@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.core.exceptions import PermissionDenied
 from django.db import connection, transaction
 from django.db.models import Q, TextField
-from django.forms import ModelForm, ModelMultipleChoiceField
+from django.forms import ModelForm, ModelMultipleChoiceField, TextInput
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse, reverse_lazy
@@ -57,15 +57,30 @@ class ContestTagAdmin(admin.ModelAdmin):
 
 class ContestProblemInlineForm(ModelForm):
     class Meta:
-        widgets = {'problem': AdminHeavySelect2Widget(data_view='problem_select2')}
+        widgets = {
+            'problem': AdminHeavySelect2Widget(data_view='problem_select2', attrs={'size': '10'}),
+            'points': TextInput(attrs={'size': '3'}),
+            'max_submissions': TextInput(attrs={'size': '3'}),
+            'hidden_subtasks': TextInput(attrs={'size': '3'}),
+        }
 
 
 class ContestProblemInline(SortableInlineAdminMixin, admin.TabularInline):
     model = ContestProblem
     verbose_name = _('Problem')
     verbose_name_plural = _('Problems')
-    fields = ('problem', 'points', 'partial', 'is_pretested', 'max_submissions', 'output_prefix_override', 'order',
-              'rejudge_column', 'rescore_column')
+    fields = (
+                'problem',
+                'points',
+                'partial',
+                'is_pretested',
+                'max_submissions',
+                'output_prefix_override',
+                'order',
+                'hidden_subtasks',
+                'rejudge_column',
+                'rescore_column',
+              )
     readonly_fields = ('rejudge_column', 'rescore_column')
     form = ContestProblemInlineForm
 
