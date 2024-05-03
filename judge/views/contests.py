@@ -974,7 +974,9 @@ class ContestRanking(ContestRankingBase):
 
     @cached_property
     def is_frozen(self):
-        return self.object.is_frozen and not self.can_edit
+        if self.can_edit:
+            return False
+        return self.object.is_frozen or self.object.format.name == 'IOI'
 
     @property
     def cache_key(self):

@@ -590,6 +590,35 @@ class ContestParticipation(models.Model):
                 self.save(update_fields=['score', 'cumtime', 'tiebreaker'])
     recompute_results.alters_data = True
 
+    def get_best_subtask_point(self):
+        queryset = ContestSubmission.objects.filter(
+            participation = self,
+        )
+        format_data = {}
+
+        for cs in queryset:
+            problem_id = str(cs.problem.id)
+
+            if format_data.get(problem_id) is None:
+                format_data[problem_id] = {}
+
+            testcaseset = cs.submission.test_cases.values_list('points', 'batch')
+            current_subtask_point = {}
+            for points, batch in testcaseset:
+                batch = 0 if batch is None else batch
+                if current_subtask_point.get(batch) is None:
+                    current_subtask_point[batch] = points
+                else:
+                    current_subtask_point[batch] = min(points, current_subtask_point[batch])
+
+            for batch, points in current_subtask_point.items():
+                if format_data[problem_id].get(batch) is None:
+                    format_data[problem_id][batch] = points
+                else:
+                    format_data[problem_id][batch] = max(format_data[problem_id][batch], points)
+
+        return format_data
+
     def set_disqualified(self, disqualified):
         self.is_disqualified = disqualified
         self.recompute_results()
@@ -692,6 +721,9 @@ class ContestProblem(models.Model):
         max_length=50,
         validators=[int_list_validator(', ', _('Invalid format'))],
     )
+
+    def get_hidden_subtasks(self):
+        return [] if self.hidden_subtasks is None else [int (x) for x in self.hidden_subtasks.split(', ')]
 
     @property
     def points_scaling_factor(self):
