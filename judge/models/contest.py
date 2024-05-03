@@ -592,7 +592,7 @@ class ContestParticipation(models.Model):
 
     def get_best_subtask_point(self):
         queryset = ContestSubmission.objects.filter(
-            participation = self,
+            participation=self,
         )
         format_data = {}
 
@@ -723,7 +723,7 @@ class ContestProblem(models.Model):
     )
 
     def get_hidden_subtasks(self):
-        return [] if self.hidden_subtasks is None else [int (x) for x in self.hidden_subtasks.split(', ')]
+        return [] if self.hidden_subtasks is None else [int(x) for x in self.hidden_subtasks.split(', ')]
 
     @property
     def points_scaling_factor(self):

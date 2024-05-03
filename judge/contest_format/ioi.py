@@ -9,7 +9,6 @@ from django.utils.translation import gettext as _, gettext_lazy
 from judge.contest_format.legacy_ioi import LegacyIOIContestFormat
 from judge.contest_format.registry import register_contest_format
 from judge.utils.timedelta import nice_repr
-from judge.timezone import from_database_time
 
 
 @register_contest_format('ioi16')
@@ -45,10 +44,10 @@ class IOIContestFormat(LegacyIOIContestFormat):
                     have_hidden_subtasks = True
             public_points = points - hidden_points
             format_data[problem_id] = {
-                'points' : points,
+                'points': points,
                 'frozen_points': public_points,
                 'have_hidden_subtasks': have_hidden_subtasks,
-                'time' : 0,
+                'time': 0,
             }
             score += points
             hidden_score += hidden_points
@@ -72,10 +71,16 @@ class IOIContestFormat(LegacyIOIContestFormat):
                 return format_html(
                     '<td class="{state}"><a href="{url}">{points}<div class="solving-time">{time}</div></a></td>',
                     state=(('pretest-' if self.contest.run_pretests_only and contest_problem.is_pretested else '') +
-                           ('first-solve ' if first_solves.get(str(contest_problem.id), None) == participation.id else '') +
+                           ('first-solve ' if first_solves.get(
+                                str(contest_problem.id),
+                                None,
+                            )
+                            == participation.id else '') +
                            self.best_solution_state(format_data['points'], contest_problem.points)),
-                    url=reverse('contest_user_submissions',
-                                args=[self.contest.key, participation.user.user.username, contest_problem.problem.code]),
+                    url=reverse(
+                        'contest_user_submissions',
+                        args=[self.contest.key, participation.user.user.username, contest_problem.problem.code],
+                    ),
                     points=str(floatformat(format_data['points'], -self.contest.points_precision)),
                     time=nice_repr(timedelta(seconds=format_data['time']), 'noday'),
                 )
@@ -83,10 +88,16 @@ class IOIContestFormat(LegacyIOIContestFormat):
             return format_html(
                 '<td class="{state}"><a href="{url}">{points}<div class="solving-time">{time}</div></a></td>',
                 state=(('pretest-' if self.contest.run_pretests_only and contest_problem.is_pretested else '') +
-                       ('first-solve ' if first_solves.get(str(contest_problem.id), None) == participation.id else '') +
+                       ('first-solve ' if first_solves.get(
+                            str(contest_problem.id),
+                            None,
+                        )
+                       == participation.id else '') +
                        self.best_solution_state(format_data['frozen_points'], contest_problem.points)),
-                url=reverse('contest_user_submissions',
-                            args=[self.contest.key, participation.user.user.username, contest_problem.problem.code]),
+                url=reverse(
+                    'contest_user_submissions',
+                    args=[self.contest.key, participation.user.user.username, contest_problem.problem.code]
+                ),
                 points=(
                     str(floatformat(format_data['frozen_points'], -self.contest.points_precision)) + 
                     ('+???' if format_data['have_hidden_subtasks'] else '')
