@@ -33,7 +33,7 @@ class Command(BaseCommand):
         parser.add_argument('output', help='where to store output csv file')
 
     def handle(self, *args, **options):
-        fin = open(options['input'], 'r')
+        fin = open(options['input'], 'r', encoding='utf-8-sig')
         fout = open(options['output'], 'w', newline='')
 
         reader = csv.DictReader(fin)
