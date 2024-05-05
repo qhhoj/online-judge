@@ -63,7 +63,7 @@
     left: 0;
     width: 100%;
     height: 56px;
-    background: #231f20;
+    background: #1e1e1e;
 }
 
 #nav-shadow {
@@ -72,7 +72,7 @@
 }
 
 #nav-container {
-    background: #231f20;
+    background: #1e1e1e;
 
     // opacity: 0.77
     // filter: alpha(opacity=77)
@@ -96,7 +96,7 @@ nav {
             color: #FFF;
             text-transform: uppercase;
             position: relative;
-            font-family: 'Source Sans Pro', sans-serif;
+            font-family: 'Lato', sans-serif;
             &.home-nav-element a {
                 padding: 0;
                 height: 44px;
@@ -145,7 +145,7 @@ nav {
                 left: 5px;
                 display: none;
                 color: #fff;
-                background: #231f20;
+                background: #1e1e1e;
                 margin: 0 !important;
                 box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
 
@@ -236,7 +236,7 @@ nav {
         margin: 0;
         position: fixed;
         top: 36px;
-        background: #231f20;
+        background: #1e1e1e;
         bottom: 0;
         width: 8em;
         left: 0;

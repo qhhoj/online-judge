@@ -32,8 +32,8 @@
     font-weight: 400;
     line-height: 1.4;
     background: rgb(51, 122, 183) none repeat scroll 0 (0% / auto) padding-box border-box;
-    background: -webkit-linear-gradient(top, #337ab7 0, #265a88 100%) repeat-x;
-    background: linear-gradient(to bottom, #337ab7 0, #265a88 100%) repeat-x;
+    background: -webkit-linear-gradient(top, rgb(196, 80, 76) 0, rgb(158, 74, 61) 100%) repeat-x;
+    background: linear-gradient(to bottom, rgb(196, 80, 76) 0, rgb(158, 74, 61) 100%) repeat-x;
     border-radius: $widget_border_radius;
     padding: 6px 12px;
     display: block;
@@ -44,12 +44,12 @@
     font-size: $base_font_size;
 
     &:hover {
-        background: #265a88;
+        background: rgb(158, 74, 61);
     }
 
     &:active {
-        border-color: #245580;
-        background: #265a88;
+        border-color: rgb(153, 67, 54);
+        background: rgb(158, 74, 61);
     }
 
     &.full {
@@ -185,7 +185,7 @@ textarea:focus {
             color: $color_primary50;
 
             &.fa-plus {
-                color: green !important;
+                color: rgb(196, 80, 76) !important;
             }
         }
 
