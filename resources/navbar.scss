@@ -97,6 +97,7 @@ nav {
             text-transform: uppercase;
             position: relative;
             font-family: 'Lato', sans-serif;
+            font-size: 15px;
             &.home-nav-element a {
                 padding: 0;
                 height: 44px;
@@ -112,8 +113,8 @@ nav {
                 text-decoration: none;
                 vertical-align: middle;
                 color: #FFF;
-                padding: 14px 7px;
-                height: 20px;
+                padding: 13px 7px;
+                height: 18px;
                 display: inline-table;
 
                 &:link {
