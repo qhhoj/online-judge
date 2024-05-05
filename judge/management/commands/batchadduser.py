@@ -16,7 +16,7 @@ def generate_password():
 
 
 def add_user(username, fullname, password):
-    usr = User(username=username, first_name=fullname, is_active=True)
+    usr = User(username=username, first_name=fullname, is_active=True, is_unlisted=True)
     usr.set_password(password)
     usr.save()
 
