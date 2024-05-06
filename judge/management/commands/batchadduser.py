@@ -10,7 +10,7 @@ from judge.models import Language, Profile
 
 ALPHABET = string.ascii_letters + string.digits
 
-html_header = '''
+html_header = """
 <style>
     .card {
         font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -38,9 +38,9 @@ html_header = '''
         margin: 10px 10px 10px 0;
     }
 </style>
-'''
+"""
 
-user_html_template = '''
+user_html_template = """
 <div class="card ">
     <div class="participantName">{fullname}</div>
 
@@ -56,7 +56,7 @@ user_html_template = '''
         <code>{site_url}</code>
     </p>
 </div>
-'''
+"""
 
 
 def generate_password():
@@ -111,6 +111,11 @@ class Command(BaseCommand):
             fhtml.write(html_header)
 
             for username, fullname, password in usr_list:
-                fhtml.write(user_html_template.format(username=username, fullname=fullname, password=password, site_url=settings.SITE_FULL_URL))
+                fhtml.write(user_html_template.format(
+                    username=username,
+                    fullname=fullname,
+                    password=password,
+                    site_url=settings.SITE_FULL_URL,
+                ))
         fin.close()
         fout.close()
