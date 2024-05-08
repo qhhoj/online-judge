@@ -7299,3 +7299,7 @@ msgstr ""
 #: judge/contest_format/ultimate.py:77
 msgid "Ties will be broken by the sum of the last submission time for each problem."
 msgstr ""
+
+#: judge/utils/pdfoid.py
+msgid "Page {page_number} of {total_pages}"
+msgstr ""
