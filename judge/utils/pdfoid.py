@@ -12,7 +12,7 @@ PDFOID_URL = settings.DMOJ_PDF_PDFOID_URL
 PDF_RENDERING_ENABLED = PDFOID_URL is not None
 
 
-def render_pdf(*, title: str, html: str, footer: bool = False) -> bytes:
+def render_pdf(*, title: str, html: str, footer: bool = True) -> bytes:
     if not PDF_RENDERING_ENABLED:
         raise RuntimeError("pdfoid is not configured, can't render PDFs")
 
