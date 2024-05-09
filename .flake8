@@ -16,8 +16,6 @@ per-file-ignores =
     ./*/__init__.py:F401,F403
     # F405: name comes from import *
     ./judge/management/commands/runmoss.py:F403,F405
-    # E501: line too long, ignore in migrations
-    ./judge/migrations/*.py:E501
 exclude =
     # belongs to the user
     ./dmoj/local_settings.py,
@@ -25,4 +23,6 @@ exclude =
     ./dmoj/local_urls.py,
     # is actually a fragment to be included by settings.py
     ./.ci.settings.py,
+    # ignore migration files
+    ./judge/migrations/*.py,
     fc_*
