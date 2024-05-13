@@ -85,11 +85,11 @@ def inc_header(text, level):
 
 
 def add_table_class(text):
-    return text.replace(r'<table>', r'<div class="h-scrollable-table">\n<table class="table">')
+    return text.replace(r'<table>', r'<div class="h-scrollable-table"><table class="table">')
 
 
 def end_table_class(text):
-    return text.replace(r'</table>', r'</table>\n</div>\n')
+    return text.replace(r'</table>', r'</table></div>')
 
 
 @registry.filter
