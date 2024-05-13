@@ -85,7 +85,11 @@ def inc_header(text, level):
 
 
 def add_table_class(text):
-    return text.replace(r'<table>', r'<table class="table">')
+    return text.replace(r'<table>', r'<div class="h-scrollable-table">\n<table class="table">')
+
+
+def end_table_class(text):
+    return text.replace(r'</table>', r'</table>\n</div>\n')
 
 
 @registry.filter
@@ -111,6 +115,7 @@ def markdown(text, style, math_engine=None, lazy_load=False, strip_paragraphs=Fa
     result = markdown2.markdown(text, safe_mode=safe_mode, extras=extras)
 
     result = add_table_class(result)
+    result = end_table_class(result)
     result = inc_header(result, 2)
 
     if post_processors or strip_paragraphs:
