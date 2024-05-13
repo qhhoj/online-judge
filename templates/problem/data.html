@@ -442,7 +442,7 @@
 
                 var in_re = [
                     new RegExp(/^(.+\.inp|.+\.in|inp|in)$/),
-                    new RegExp(/^([\w]+)\.(inp|in)(\d+)([a-zA-Z])$/),
+                    new RegExp(/^[a-zA-Z]+\.(?:in|dummy\.in)\.\d+[a-zA-Z]?$/),
                     new RegExp(/^input.(.+\d+)$/),
                     new RegExp(/^(.+\d+)$/),
                     new RegExp(/^(?=.*?\.in|in).*?(?:(?:^|\W)(?<batch>\d+)[^\d\s]+)?(?<case>\d+)[^\d\s]*$/),
@@ -450,7 +450,7 @@
 
                 var out_re = [
                     new RegExp(/^(.+\.out|.+\.ok|.+\.ans|out|ok|ans)$/),
-                    new RegExp(/^([\w]+)\.(out|ans)(\d+)([a-zA-Z])$/),
+                    new RegExp(/^^[a-zA-Z]+\.(?:out|dummy\.out)\.\d+[a-zA-Z]?$/),
                     new RegExp(/^output.(.+\d+)$/),
                     new RegExp(/^(.+\d+\.a)$/),
                     new RegExp(/^(?=.*?\.out|out).*?(?:(?:^|\W)(?<batch>\d+)[^\d\s]+)?(?<case>\d+)[^\d\s]*$/),
