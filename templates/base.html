@@ -239,7 +239,7 @@
                 <li class="home-menu-item"><a href="{{ url('home') }}" class="nav-home">{{ _('Home') }}</a></li>
                 {% for node in mptt_tree(nav_bar) recursive %}
                     <li>
-                        {% if not node.hidden %}
+                        {% if not node.hidden or request.user.is_superuser %}
                             <a href="{{ node.path }}" class="nav-{{ node.key }}{% if node.key in nav_tab %} active{% endif %}">
                                 {{ _(node.label) }}
                                 {% if not node.is_leaf_node() %}
