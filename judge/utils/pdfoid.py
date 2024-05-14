@@ -12,6 +12,11 @@ PDFOID_URL = settings.DMOJ_PDF_PDFOID_URL
 PDF_RENDERING_ENABLED = PDFOID_URL is not None
 
 
+def clean_markdown_table(html: str) -> str:
+    return html.replace('<div class="h-scrollable-table"><table class="table">', '<table class="table">') \
+               .replace('</table></div>', '</table>')
+
+
 def render_pdf(*, title: str, html: str, footer: bool = True) -> bytes:
     if not PDF_RENDERING_ENABLED:
         raise RuntimeError("pdfoid is not configured, can't render PDFs")
@@ -27,7 +32,7 @@ def render_pdf(*, title: str, html: str, footer: bool = True) -> bytes:
     response = requests.post(
         PDFOID_URL,
         data={
-            'html': html,
+            'html': clean_markdown_table(html),
             'title': title,
             'footer-template': footer_template,
             'wait-for-class': 'math-loaded',
