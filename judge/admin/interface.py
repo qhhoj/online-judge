@@ -16,7 +16,7 @@ from judge.widgets import AdminHeavySelect2MultipleWidget, AdminHeavySelect2Widg
 
 class NavigationBarAdmin(DraggableMPTTAdmin):
     list_display = DraggableMPTTAdmin.list_display + ('key', 'linked_path')
-    fields = ('key', 'label', 'path', 'order', 'regex', 'parent')
+    fields = ('key', 'label', 'path', 'order', 'regex', 'hidden', 'parent')
     list_editable = ()  # Bug in SortableModelAdmin: 500 without list_editable being set
     mptt_level_indent = 20
     sortable = 'order'
