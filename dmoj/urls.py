@@ -229,6 +229,7 @@ urlpatterns = [
     re_path(r'^contests/tag/(?P<name>[a-z-]+)', include([
         path('', contests.ContestTagDetail.as_view(), name='contest_tag'),
         path('/ajax', contests.ContestTagDetailAjax.as_view(), name='contest_tag_ajax'),
+        path('/list', paged_list_view(contests.ContestListByTag, name='contest_list_by_tag')),
     ])),
 
     path('contest/<str:contest>', include([

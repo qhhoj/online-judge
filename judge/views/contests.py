@@ -1225,6 +1225,37 @@ class ContestTagDetail(TitleMixin, ContestTagDetailAjax):
         return _('Contest tag: %s') % self.object.name
 
 
+class ContestListByTag(ContestList):
+    slug_url_kwarg = 'name'
+    slug_field = 'name'
+    template_name = 'contest/list-by-tag.html'
+
+    def get_object(self, queryset=None):
+        if queryset is None:
+            queryset = ContestTag.objects.all()
+        slug = self.kwargs.get(self.slug_url_kwarg)
+        if slug is not None:
+            queryset = queryset.filter(**{self.slug_field: slug})
+        else:
+            raise ImproperlyConfigured('ContestTagDetail requires tag name')
+        return queryset.get()
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return super().get(request, *args, **kwargs)
+
+    def _get_queryset(self):
+        return super()._get_queryset().filter(tags__in=[self.object])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tag'] = self.object
+        return context
+
+    def get_title(self):
+        return _(self.object.full_name)
+
+
 class CreateContest(PermissionRequiredMixin, TitleMixin, CreateView):
     template_name = 'contest/create.html'
     model = Contest
