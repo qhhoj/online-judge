@@ -10,7 +10,7 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from reversion import revisions
 
-from judge.judgeapi import abort_submission, judge_submission
+from judge.judgeapi import _post_update_submission, abort_submission, judge_submission
 from judge.models.problem import Problem, SubmissionSourceAccess
 from judge.models.profile import Profile
 from judge.models.runtime import Language
@@ -147,6 +147,7 @@ class Submission(models.Model):
             tc.time = 0
             tc.memory = 0
             tc.save()
+        _post_update_submission(self, done=True)
         self.update_contest()
 
     def judge(self, *args, rejudge=False, force_judge=False, rejudge_user=None, **kwargs):
