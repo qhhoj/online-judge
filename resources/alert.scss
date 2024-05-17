@@ -1,5 +1,10 @@
 .jGrowl .information {
+    background-color: black;
     font-family: "Lato", "Segoe UI", "Lucida Grande", Arial, sans-serif;
-    border-width: 1px;
-    border-style: solid;
+}
+
+.jGrowl .information .jGrowl-header {
+    color: rgb(196, 80, 76);
+    font-weight: 700;
+    font-size: 14px;
 }
