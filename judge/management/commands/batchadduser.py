@@ -11,6 +11,8 @@ from judge.models import Language, Profile
 ALPHABET = string.ascii_letters + string.digits
 
 html_header = """
+<meta charset="UTF-8">
+
 <style>
     .card {
         font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
