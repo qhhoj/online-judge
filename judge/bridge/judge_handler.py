@@ -76,9 +76,6 @@ class JudgeHandler(ZlibPacketHandler):
         self.judge = None
         self.judge_address = None
 
-        self._submission_cache_id = None
-        self._submission_cache = {}
-
     def on_connect(self):
         self.timeout = 15
         logger.info('Judge connected from: %s', self.client_address)
@@ -620,14 +617,11 @@ class JudgeHandler(ZlibPacketHandler):
         return json.dumps(data)
 
     def _get_submission_cache(self, id):
-        if self._submission_cache_id != id:
-            self._submission_cache = Submission.objects.filter(id=id).values(
-                'problem__is_public', 'problem__testcase_result_visibility_mode', 'contest_object_id',
-                'user_id', 'problem_id', 'status', 'language__key',
-            ).get()
-            self._submission_cache_id = id
-
-        return self._submission_cache
+        return Submission.objects.filter(id=id).values(
+            'problem__is_public', 'problem__testcase_result_visibility_mode', 'contest_object_id',
+            'user_id', 'problem_id', 'status', 'language__key', 'case_points', 'case_total',
+            'result', 'problem__name',
+        ).get()
 
     def _post_update_submission(self, id, state, done=False):
         data = self._get_submission_cache(id)
@@ -638,6 +632,18 @@ class JudgeHandler(ZlibPacketHandler):
                 'contest': data['contest_object_id'],
                 'user': data['user_id'], 'problem': data['problem_id'],
                 'status': data['status'], 'language': data['language__key'],
+                'organizations':
+                [x[0] for x in Profile.objects.get(id=data['user_id']).organizations.values_list('id')],
+            })
+        if done:
+            event.post('grading-notify', {
+                'id': id,
+                'contest': data['contest_object_id'],
+                'user': data['user_id'], 'problem': data['problem_id'],
+                'status': data['status'], 'language': data['language__key'],
+                'points': data['case_points'], 'max_points': data['case_total'],
+                'result': data['result'],
+                'name': data['problem__name'],
                 'organizations':
                 [x[0] for x in Profile.objects.get(id=data['user_id']).organizations.values_list('id')],
             })

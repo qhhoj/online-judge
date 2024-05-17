@@ -94,6 +94,10 @@
             });
         </script>
     {% endcompress %}
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-jgrowl/1.4.8/jquery.jgrowl.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-jgrowl/1.4.8/jquery.jgrowl.min.js"></script>
+
     {% block js_media %}{% endblock %}
     {% if EVENT_LAST_MSG %}
         <script>
@@ -162,6 +166,27 @@
                 })
             {% endif %}
         });
+        </script>
+    {% endif %}
+
+    {% if request.user.is_authenticated %}
+        <script>
+            {% if EVENT_LAST_MSG %}
+                $(function () {
+                    event_dispatcher.auto_reconnect = true;
+                    event_dispatcher.on('grading-notify', function (message) {
+                        if (message.user == '{{ request.user.id }}') {
+                            $.jGrowl(message.name + ' (' + message.result + ' ' + message.points + '/' + message.max_points + ')', { 
+                                life: 5000, 
+                                position: 'bottom-left', 
+                                header: 'Grading Completed', 
+                                theme: 'information',
+                            });
+                            $.jGrowl.defaults.closerTemplate = '<div>hide all notifications</div>';
+                        }
+                    });
+                })
+            {% endif %}
         </script>
     {% endif %}
 

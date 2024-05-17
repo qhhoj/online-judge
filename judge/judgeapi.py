@@ -14,6 +14,19 @@ logger = logging.getLogger('judge.judgeapi')
 size_pack = struct.Struct('!I')
 
 
+def _post_all_update_submission(submission):
+    event.post('grading-notify', {'id': submission.id,
+                                  'contest': submission.contest_key,
+                                  'user': submission.user_id, 'problem': submission.problem_id,
+                                  'status': submission.status, 'language': submission.language.key,
+                                  'points': submission.case_points, 'max_points': submission.case_total,
+                                  'result': submission.result,
+                                  'name': submission.problem.name,
+                                  'organizations':
+                                      [x[0] for x in submission.user.organizations.get_queryset().values_list('id')],
+                                  })
+
+
 def _post_update_submission(submission, done=False):
     if submission.problem.is_public:
         event.post('submissions', {'type': 'done-submission' if done else 'update-submission',
@@ -24,6 +37,8 @@ def _post_update_submission(submission, done=False):
                                    'organizations':
                                    [x[0] for x in submission.user.organizations.get_queryset().values_list('id')],
                                    })
+    if done:
+        _post_all_update_submission(submission)
 
 
 def judge_request(packet, reply=True):
