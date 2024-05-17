@@ -176,12 +176,19 @@
                     event_dispatcher.auto_reconnect = true;
                     event_dispatcher.on('grading-notify', function (message) {
                         if (message.user == '{{ request.user.id }}') {
-                            $.jGrowl('<a href="{{ SITE_FULL_URL }}/submission/' + message.id + '">' + message.name + '</a> (' + message.result + ': ' + message.points + '/' + message.max_points + ')', { 
-                                life: 5000, 
-                                position: 'bottom-left', 
-                                header: 'Grading Completed', 
+                            const submissionURL = `{{ SITE_FULL_URL }}/submission/${message.id}`;
+                            const problemName = `<a href="${submissionURL}">${message.name}</a>`;
+                            const submissionResult = `${message.result}: ${message.points}/${message.max_points}`;
+                            const notificationContent = `${problemName} (${submissionResult})`;
+
+                            const jGrowlOptions = {
+                                life: 5000,
+                                position: 'bottom-left',
+                                header: 'Grading Completed',
                                 theme: 'information',
-                            });
+                            };
+
+                            $.jGrowl(notificationContent, jGrowlOptions);
                             $.jGrowl.defaults.closerTemplate = '<div>Hide all notifications</div>';
                         }
                     });
