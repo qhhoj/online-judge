@@ -74,6 +74,10 @@
         <script src="{{ JQUERY_JS }}"></script>
     {% endif %}
 
+    {% if not request.user.is_superuser %}
+        <script disable-devtool-auto src='https://cdn.jsdelivr.net/npm/disable-devtool@latest'></script>
+    {% endif %}
+
     {% compress js %}
         <script>{{ inlinei18n(LANGUAGE_CODE)|safe }}</script>
         {% if INLINE_JQUERY %}
