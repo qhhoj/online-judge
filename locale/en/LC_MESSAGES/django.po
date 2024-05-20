@@ -7303,3 +7303,11 @@ msgstr ""
 #: judge/utils/pdfoid.py
 msgid "Page {page_number} of {total_pages}"
 msgstr ""
+
+#: templates/base.html
+msgid "Grading Completed"
+msgstr ""
+
+#: templates/base.html
+msgid "Hide all notifications"
+msgstr ""

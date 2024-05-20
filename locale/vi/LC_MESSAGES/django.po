@@ -7624,3 +7624,11 @@ msgstr "Các thí sinh bằng điểm nhau sẽ được phân định kết qu�
 #: judge/utils/pdfoid.py
 msgid "Page {page_number} of {total_pages}"
 msgstr "Trang {page_number} trên {total_pages}"
+
+#: templates/base.html
+msgid "Grading Completed"
+msgstr "Đã chấm xong"
+
+#: templates/base.html
+msgid "Hide all notifications"
+msgstr "Ẩn tất cả thông báo"

@@ -188,12 +188,12 @@
                             const jGrowlOptions = {
                                 life: 5000,
                                 position: 'bottom-left',
-                                header: 'Grading Completed',
+                                header: '{{ _("Grading Completed") }}',
                                 theme: 'information',
                             };
 
                             $.jGrowl(notificationContent, jGrowlOptions);
-                            $.jGrowl.defaults.closerTemplate = '<div>Hide all notifications</div>';
+                            $.jGrowl.defaults.closerTemplate = '<div>{{ _("Hide all notifications") }}</div>';
                         }
                     });
                 })
