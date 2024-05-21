@@ -6409,52 +6409,40 @@ msgstr "%(key)s là một mã kích hoạt không hợp lệ."
 msgid "Your account has been successfully activated."
 msgstr "Tài khoản của bạn đã được kích hoạt thành công."
 
-#: templates/registration/activation_email.html:1
+#: templates/registration/activation_email.html
 #, python-format
-msgid "Thanks for registering on the %(site_name)s! We're glad to have you."
-msgstr "Cảm ơn bạn đã đăng ký tài khoản ở trang %(site_name)s!"
+msgid "Activate your account"
+msgstr "Kích hoạt tài khoản của bạn"
 
-#: templates/registration/activation_email.html:3
-#: templates/registration/activation_email.txt:1
+#: templates/registration/activation_email.html
 #, python-format
-msgid ""
-"Please activate your %(site_name)s account in the next %(expiration_days)d "
-"days."
-msgstr ""
-"Hãy kích hoạt tài khoản %(site_name)s của bạn trong vòng %(expiration_days)d "
-"tới"
+msgid "Hello there,"
+msgstr "Xin chào,"
 
-#: templates/registration/activation_email.html:5
-#: templates/registration/activation_email.txt:3
-msgid "Please click on the following link to activate your account:"
-msgstr "Hãy nhấn vào link này để kích hoạt tài khoản:"
+#: templates/registration/activation_email.html
+#, python-format
+msgid "Thanks for registering on %(site_name)s. Please click on the button below to activate your account in the next %(expiration_days)d days. If you did not create an account on %(site_short_name)s, you can ignore this message."
+msgstr "Cảm ơn bạn vì đã đăng ký tài khoản trên trang %(site_name)s. Hãy nhấn vào nút bấm phía bên dưới trong vòng %(expiration_days)d ngày để hoàn thành kích hoạt tài khoản của bạn. Nếu bạn không phải là người tạo tài khoản %(site_short_name)s, vui lòng bỏ qua email này."
 
-#: templates/registration/activation_email.html:10
-#: templates/registration/activation_email.txt:6
-msgid "Alternatively, you can reply to this message to activate your account."
-msgstr "Hoặc bạn có thể reply lại email này để kích hoạt."
+#: templates/registration/activation_email.html
+#, python-format
+msgid "If you have problems activating your account, feel free to reply to this email."
+msgstr "Nếu bạn còn gặp vấn đề với việc kích hoạt tài khoản, đừng ngần ngại phản hồi email này để chúng mình biết nhé!"
 
-#: templates/registration/activation_email.html:11
-#: templates/registration/activation_email.txt:7
-msgid "Your reply must keep the following text intact for this to work:"
-msgstr "Email reply của bạn cần có đoạn text sau:"
+#: templates/registration/activation_email.html
+#, python-format
+msgid "Sincerely,"
+msgstr "Thân mến,"
 
-#: templates/registration/activation_email.html:17
-msgid "See you soon!"
-msgstr "Hẹn gặp lại!"
-
-#: templates/registration/activation_email.html:19
-msgid ""
-"If you have problems activating your account, feel free to shoot us a "
-"message at: "
-msgstr ""
-"Nếu bạn có vấn đề với việc kích hoạt tài khoản, hãy liên hệ với chúng mình "
-"qua: "
+#: templates/registration/activation_email.html
+#, python-format
+msgid "Get in touch with us"
+msgstr "Liên hệ với chúng mình"
 
 #: templates/registration/activation_email_subject.txt:1
 #, python-format
-msgid "Activate your %(SITE_NAME)s account)"
-msgstr "Kích hoạt tài khoản %(SITE_NAME)s"
+msgid "Welcome to QHHOJ - Activate Your Account"
+msgstr "Chào mừng đến với QHHOJ - Vui lòng kích hoạt tài khoản của bạn"
 
 #: templates/registration/login.html:35
 msgid "Invalid username or password."
@@ -6598,14 +6586,6 @@ msgid ""
 msgstr ""
 "Cảm ơn bạn đã đăng ký. Một email đã được gửi đến cho bạn để xác nhận đăng ký "
 "của bạn."
-
-#: templates/registration/registration_complete.html:4
-msgid ""
-"See you soon! If you have problems activating your account, feel free to "
-"shoot us a message at: "
-msgstr ""
-"Nếu bạn có vấn đề với việc kích hoạt tài khoản, hãy liên hệ với chúng mình "
-"qua: "
 
 #: templates/registration/registration_form.html:143
 #: templates/registration/registration_form.html:197

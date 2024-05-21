@@ -1,19 +1,39 @@
-<b>{{ _('Thanks for registering on the %(site_name)s! We\'re glad to have you.', site_name=site.name) }}</b>
-<br><br>
-{{ _('Please activate your %(site_name)s account in the next %(expiration_days)d days.', expiration_days=expiration_days, site_name=SITE_NAME) }}
-<br><br>
-{{ _('Please click on the following link to activate your account:') }}
-<p style="margin-left:1em">
-      <a href="http://{{ site.domain }}/accounts/activate/{{ activation_key }}/">http://{{ site.domain }}/accounts/activate/{{ activation_key }}</a>
-</p>
-
-{{ _('Alternatively, you can reply to this message to activate your account.') }}
-{{ _('Your reply must keep the following text intact for this to work:') }}
-
-<pre style="margin-left:1em">
-{{ activation_key }}
-</pre>
-
-{{ _('See you soon!') }}
 <br>
-{{ _('If you have problems activating your account, feel free to shoot us a message at: ') }}{% if misc_config.discord_invite_link and misc_config.discord_invite_shieldio %}<a href="{{ misc_config.discord_invite_link }}"><img src="{{ misc_config.discord_invite_shieldio }}"></a>{% endif %}
+<div
+      style="max-width: 600px; min-width: 350px; margin: 0 auto; padding: 0px; background-color: #ffffff; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 10px; border: solid rgba(0, 0, 0, 0.1); font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6;">
+      <div style="background-color: black; height: 150px; border-radius: 10px 10px 0 0; text-align: center;">
+            <img src="https://github.com/qhhoj/online-judge/blob/master/logo.png?raw=true" alt="{{ site.name }}" style="max-width: 300px; height: auto; margin-top: 40px">
+      </div>
+      <div style="text-align: center; margin: 0 auto; padding: 10px 30px 30px 30px;">
+            <div style="margin-bottom: 10px; text-align: left; text-align: justify; text-justify: inter-word;">
+                  <h2>{{ _("Activate your account") }}</h2>
+                  <p>{{ _("Hello there,") }}</p>
+                  <p>{{ _("Thanks for registering on %(site_name)s. Please click on the button below to activate your account in the next %(expiration_days)d days. If you did not create an account on %(site_short_name)s, you can ignore this message.", site_name="QHHOJ - Mission Impossible", expiration_days=expiration_days, site_short_name="QHHOJ") }}</p>
+            </div>
+            <div style="text-align: center; margin-top: 40px; margin-bottom: 40px;">
+                  <a href="https://{{ site.domain }}/accounts/activate/{{ activation_key }}/"
+                        style="display: inline-block; padding: 10px 20px; background-color: rgb(158, 74, 61); color: #ffffff; text-decoration: none; border-radius: 4px;">{{
+                        _("Activate your account") }}</a>
+            </div>
+            <div style="margin-bottom: 5px; text-align: left;">
+                  <p>{{ _("If you have problems activating your account, feel free to reply to this email.") }}</p>
+                  <p>{{ _("Sincerely,") }}</p>
+                  <h4 style="margin-top: -5px; color: rgba(0, 0, 0, 0.5);">QHHOJ</h4>
+            </div>
+      </div>
+      <div
+            style="margin-bottom: 20px; text-align: center; border-top: solid rgba(0, 0, 0, 0.1); padding: 0x 30px 30px 0px;">
+            <p>
+            <h5 style="color: rgba(0, 0, 0, 0.3);">{{ _("Get in touch with us") }}</h5>
+            <div style="margin-top: -20px;">
+                  <a href="https://qhhoj.com">
+                        <img src="https://i.imgur.com/XXHN17e.png" style="width: 40px; padding: 10px">
+                  </a>
+                  <a href="https://github.com/qhhoj/online-judge">
+                        <img src="https://i.imgur.com/2tapj7K.png" style="width: 40px; padding: 10px">
+                  </a>
+            </div>
+            <h5 style="color: rgba(0, 0, 0, 0.3); margin-top: 0px;">QHHOJ - Mission Impossible</h5>
+            </p>
+      </div>
+</div>
