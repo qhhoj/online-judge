@@ -233,7 +233,7 @@
                                 {% endfor %}
                             </td>
                         {% endif %}
-                        <td class="p">{{ problem.points|floatformat(2) }}</td>
+                        <td class="p">{{ problem.points|floatformat(0) }}</td>
                         <td class="ac-rate">{{ problem.ac_rate|floatformat(1) }}%</td>
                         <td class="users">
                             <a href="{{ url('ranked_submissions', problem.code) }}">

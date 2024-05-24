@@ -187,7 +187,7 @@
                         ({{ _('%(points)s/%(total)s points', points=points, total=total) }})
                     {% endwith %}
                 {% else %}
-                    {% with points=submission.points|floatformat(3), total=submission.problem.points|floatformat(3) %}
+                    {% with points=submission.points|floatformat(0), total=submission.problem.points|floatformat(0) %}
                         ({{ _('%(points)s/%(total)s points', points=points, total=total) }})
                     {% endwith %}
                 {% endif %}

@@ -77,7 +77,7 @@ class Submission(models.Model):
     date = models.DateTimeField(verbose_name=_('submission time'), auto_now_add=True, db_index=True)
     time = models.FloatField(verbose_name=_('execution time'), null=True)
     memory = models.FloatField(verbose_name=_('memory usage'), null=True)
-    points = models.FloatField(verbose_name=_('points granted'), null=True)
+    points = models.IntegerField(verbose_name=_('points granted'), null=True)
     language = models.ForeignKey(Language, verbose_name=_('submission language'),
                                  on_delete=models.CASCADE, db_index=False)
     status = models.CharField(verbose_name=_('status'), max_length=2, choices=STATUS, default='QU', db_index=True)
