@@ -6518,57 +6518,30 @@ msgid ""
 "you registered with, and check your spam folder."
 msgstr "Nếu bạn không nhận được email, hãy kiểm tra hòm thư rác."
 
-#: templates/registration/password_reset_done.html:6
-#: templates/registration/password_reset_email.html:11
-msgid ""
-"See you soon! If you have problems resetting your password, feel free to "
-"shoot us a message at: "
-msgstr ""
-"Nếu bạn có vấn đề với việc đặt lại mật khẩu, hãy liên hệ với chúng mình qua: "
-
-#: templates/registration/password_reset_email.html:6
+#: templates/registration/password_reset_email.html
 #, python-format
-msgid "Forgot your password on the %(site_name)s? Don't worry!"
-msgstr "Bạn quên mất mật khẩu trên %(site_name)s? Đừng lo lắng!"
+msgid "We received a request to reset the password for the QHHOJ account associated with this email address - \"%(username)s\". Please click on the button below to reset your password. If you did not request to have your password reset, you can ignore this message."
+msgstr "Chúng mình nhận được yêu cầu đặt lại mật khẩu cho tài khoản QHHOJ liên kết với email của bạn - \"%(username)s\". Hãy nhấn vào nút bấm phía bên dưới để đặt lại mật khẩu cho tài khoản của bạn. Nếu bạn không gửi yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này."
 
-#: templates/registration/password_reset_email.html:7
+#: templates/registration/password_reset_email.html
 #, python-format
-msgid ""
-"To reset the password for your account \"%(username)s\", click the button "
-"below."
-msgstr ""
-"Để đặt lại mật khẩu của tài khoản \"%(username)s\", nhấn vào link phía dưới."
+msgid "Greetings,"
+msgstr "Xin chào,"
 
-#: templates/registration/password_reset_email.txt:1
+#: templates/registration/password_reset_email.html
 #, python-format
-msgid ""
-"You're receiving this email because you requested a password reset for your "
-"user account at %(site_name)s."
-msgstr ""
-"Bạn nhận được email này bởi vì bạn đã yêu cầu đặt lại mật khẩu cho tài khoản "
-"của mình tại %(site_name)s."
+msgid "Reset your password"
+msgstr "Đặt lại mật khẩu"
 
-#: templates/registration/password_reset_email.txt:3
-msgid "Please go to the following page and choose a new password:"
-msgstr "Hãy đi đến trang sau và chọn một mật khẩu mới:"
-
-#: templates/registration/password_reset_email.txt:7
-msgid "Your username, in case you've forgotten:"
-msgstr "Tên người dùng của bạn, trong trường hợp bạn quên:"
-
-#: templates/registration/password_reset_email.txt:9
-msgid "Thanks for using our site!"
-msgstr "Cảm ơn đã sử dụng hệ thống của chúng tôi!"
-
-#: templates/registration/password_reset_email.txt:11
+#: templates/registration/password_reset_email.html
 #, python-format
-msgid "The %(site_name)s team"
-msgstr "Đội ngũ %(site_name)s"
+msgid "If you have problems resetting your password, feel free to reply to this email."
+msgstr "Nếu bạn còn gặp vấn đề với việc đặt lại mật khẩu, đừng ngần ngại phản hồi email này để chúng mình biết nhé!"
 
 #: templates/registration/password_reset_subject.txt:1
 #, python-format
-msgid "Password reset on %(site_name)s"
-msgstr "Đặt lại mật khẩu tại %(site_name)s"
+msgid "Your Account on QHHOJ - Reset Your Password"
+msgstr "Tài khoản QHHOJ - Đặt lại mật khẩu"
 
 #: templates/registration/profile_creation.html:44
 #: templates/registration/username_select.html:7
