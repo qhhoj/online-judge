@@ -99,6 +99,34 @@
         </script>
     {% endcompress %}
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const loader = document.getElementById('loader');
+
+            // Show loader when navigating away from the current page
+            window.addEventListener('beforeunload', function() {
+                loader.style.display = 'flex';
+            });
+        
+            // Handle link clicks to show loader
+            document.querySelectorAll('a').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loader.style.display = 'flex';
+                    const href = this.href;
+                    
+                    setTimeout(function() {
+                        window.location.href = href;
+                    }, 500);
+                });
+            });
+        
+            window.onload = function() {
+                loader.style.display = 'none';
+            };
+        });
+    </script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-jgrowl/1.4.8/jquery.jgrowl.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-jgrowl/1.4.8/jquery.jgrowl.min.js"></script>
 
@@ -256,6 +284,9 @@
     <!-- DO NOT MODIFY -->
     <!-- End Facebook Pixel Code -->
 </head>
+<div id="loader">
+    <div class="spinner"></div>
+</div>
 <body>
     <script>
         fbq('track', 'ViewContent');
@@ -267,7 +298,7 @@
 </svg>
 <nav id="navigation" class="unselectable">
     <div id="nav-container">
-        <a id="navicon" href="javascript:void(0)"><i class="fa fa-bars"></i></a>
+        <div id="navicon"><i class="fa fa-bars"></i></div>
         <ul id="nav-list">
             {% if request.organization is not defined %}
                 <li class="home-nav-element"><a href="{{ url('home') }}">{% include "site-logo-fragment.html" %}</a></li>
