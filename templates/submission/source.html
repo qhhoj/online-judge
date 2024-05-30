@@ -97,9 +97,9 @@
                 <td class="source-ln">
                     <div>
                         {% for line in raw_source.split('\n') %}
-                            <a href="#line-{{ loop.index }}" name="line-{{ loop.index }}">
+                            <div name="line-{{ loop.index }}">
                                 <pre class="line">{{ loop.index }}</pre>
-                            </a>
+                            </div>
                         {% endfor %}
                     </div>
                 </td>
