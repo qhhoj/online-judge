@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Giới thiệu - {{ SITE_LONG_NAME }}{% endblock %}
+{% block og_title %}
+<meta property="og:title" content="Giới thiệu - {{ SITE_LONG_NAME }}">
+{% endblock %}
+
+{% block content_title %} Giới thiệu {% endblock %}
+
+{% block meta %}
+<link rel="stylesheet" type="text/css" href="{{ static('about.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="body content-description">
+    <div>
+        <p><strong>QHHOJ - Mission Impossible</strong> là hệ thống online judge chính thức của <strong>Trường THPT
+                Chuyên Quốc Học Huế</strong>, được xây dựng dựa trên các dự án mã nguồn mở <a rel="nofollow"
+                href="https://github.com/DMOJ/online-judge">DMOJ</a> và <a rel="nofollow"
+                href="https://github.com/VNOI-Admin/OJ">VNOJ</a>. <strong>QHHOJ</strong> được tạo ra với mục đích phục
+            vụ cho việc dạy và học môn Tin học tại <strong>Trường THPT Chuyên Quốc Học Huế</strong>, cũng như hướng tới
+            mở rộng thành một sân chơi lớn dành cho học sinh ở khu vực Miền Trung và trên khắp cả nước với hệ thống bài
+            tập phong phú từ nhiều nguồn khác nhau. Các bạn có thể theo dõi dự án tại <a rel="nofollow"
+                href="https://github.com/qhhoj">GitHub chính thức của QHHOJ</a>.</p>
+
+        <h5>Về đội ngũ admin <strong>QHHOJ</strong>:</h5>
+
+        <div class="h-scrollable-table">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="text-align:center;"><strong>Phan Bình Nguyên Lâm</strong></th>
+                        <th style="text-align:center;"><strong>Tôn Thất Nhật Minh</strong></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align:center;"><img src="/martor/fabbfb0d-44ce-422a-9bf7-e881da6f9111.jpg"
+                                width="200"></td>
+                        <td style="text-align:center;"><img src="/martor/b98c283c-706d-45d8-b860-6163fb15c445.jpg"
+                                width="200"></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;"><strong>LamTer</strong><br><em><a rel="nofollow"
+                                    href="mailto:lamter@qhhoj.com">lamter@qhhoj.com</a></em>
+                        </td>
+                        <td style="text-align:center;"><strong>MinhTon</strong><br><em><a rel="nofollow"
+                                    href="mailto:minhton@qhhoj.com">minhton@qhhoj.com</a></em>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;"><a rel="nofollow"
+                                href="/martor/5035ab98-454f-4aa1-b0e5-0388e6dad5e5.jpg">Top 1 non-APIO 2024</a> <br>
+                            Giải Nhì kì thi <strong>HSGQG môn Tin học năm 2024</strong> <br> Tham dự kỳ thi <strong>TST môn tin học năm 2024</strong> <br> Có tên trong danh sách miễn
+                            thi <strong>TN THPTQG 2024</strong></td>
+                        <td style="text-align:center;">Các dự án cá nhân: <a rel="nofollow"
+                                href="https://github.com/minh-ton">https://github.com/minh-ton</a></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;"><strong>Câu nói tâm đắc:</strong> <br> <em>"Nếu một người đàn ông
+                                mở cửa xe cho vợ</em> <br> <em>thì đó là xe mới hoặc là vợ mới"</em> <br></td>
+                        <td style="text-align:center;"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h5>Thông tin liên hệ:</h5>
+
+        <p>Mọi ý kiến đóng góp, thắc mắc xin gửi về </p>
+
+        <ul>
+            <li>Email: <a rel="nofollow" href="mailto:qhhoj@qhhoj.com">qhhoj@qhhoj.com</a></li>
+            <li>GitHub: <a rel="nofollow" href="https://github.com/qhhoj">https://github.com/qhhoj</a></li>
+            <li>Facebook: <a rel="nofollow" href="https://www.facebook.com/qhhoj">https://facebook.com/qhhoj</a></li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block bodyend %}
+{% if REQUIRE_JAX %}
+{% include "mathjax-load.html" %}
+{% endif %}
+{% endblock %}
