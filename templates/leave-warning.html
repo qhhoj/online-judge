@@ -1,9 +1,21 @@
 <script src="{{ static('vnoj/jquery.dirty.min.js') }}"></script>
 <script type="text/javascript">
     $(function() {
+        var isFormDirty = false;
+
         $('form').dirty({
             preventLeaving: true,
             leavingMessage: '{{ _('Changes you made may not be saved.') }}',
+            onDirty: function() {
+                isFormDirty = true;
+            },
+            onClean: function() {
+                isFormDirty = false;
+            }
         });
+
+        window.isFormDirty = function() {
+            return isFormDirty;
+        };
     });
 </script>

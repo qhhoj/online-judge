@@ -99,12 +99,22 @@
         </script>
     {% endcompress %}
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-jgrowl/1.4.8/jquery.jgrowl.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-jgrowl/1.4.8/jquery.jgrowl.min.js"></script>
+
+    {% block js_media %}{% endblock %}
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const loader = document.getElementById('loader');
 
             // Show loader when navigating away from the current page
             window.addEventListener('beforeunload', function() {
+                alert(window.isFormDirty && window.isFormDirty());
+                if (window.isFormDirty && window.isFormDirty()) {
+                    loader.style.display = 'none';
+                    return;
+                }
                 loader.style.display = 'flex';
             });
         
@@ -130,10 +140,6 @@
         });
     </script>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-jgrowl/1.4.8/jquery.jgrowl.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-jgrowl/1.4.8/jquery.jgrowl.min.js"></script>
-
-    {% block js_media %}{% endblock %}
     {% if EVENT_LAST_MSG %}
         <script>
             window.event_dispatcher = new WSEventDispatcher(
