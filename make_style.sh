@@ -12,3 +12,4 @@ build_style() {
 
 build_style 'default' 'resources'
 build_style 'dark' 'resources/dark'
+npm run tailwind-build
