@@ -1,5 +1,5 @@
 {
-  "name": "@vnoi-admin/oj",
+  "name": "@qhhoj/online-judge",
   "type": "module",
   "scripts": {
     "tailwind-watch": "tailwindcss -i resources/style.scss -o resources/style.css --watch",
