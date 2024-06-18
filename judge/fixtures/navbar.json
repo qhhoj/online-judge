@@ -42,9 +42,25 @@
             "regex": "^/user",
             "parent": null,
             "lft": 1,
-            "rght": 2,
+            "rght": 4,
             "tree_id": 3,
             "level": 0
+        }
+    },
+    {
+        "model": "judge.navigationbar",
+        "pk": 11,
+        "fields": {
+            "order": 1,
+            "key": "org",
+            "label": "Organizations",
+            "path": "/organizations/",
+            "regex": "^/organizations/$",
+            "parent": 3,
+            "lft": 2,
+            "rght": 3,
+            "tree_id": 3,
+            "level": 1
         }
     },
     {
@@ -55,7 +71,7 @@
             "key": "contest",
             "label": "Contests",
             "path": "/contests/",
-            "regex": "^/contest",
+            "regex": "^/contest(?!s/tag/official-contests)[\\w\\d-]*",
             "parent": null,
             "lft": 1,
             "rght": 2,
@@ -65,17 +81,33 @@
     },
     {
         "model": "judge.navigationbar",
-        "pk": 5,
+        "pk": 12,
         "fields": {
             "order": 5,
+            "key": "official",
+            "label": "Official Contests",
+            "path": "/contests/tag/official-contests/list",
+            "regex": "^/contests/tag/official-contests[\\w\\d-]*",
+            "parent": null,
+            "lft": 1,
+            "rght": 2,
+            "tree_id": 5,
+            "level": 0
+        }
+    },
+    {
+        "model": "judge.navigationbar",
+        "pk": 5,
+        "fields": {
+            "order": 6,
             "key": "about",
             "label": "About",
             "path": "/about/",
             "regex": "^/about/$",
             "parent": null,
             "lft": 1,
-            "rght": 8,
-            "tree_id": 5,
+            "rght": 6,
+            "tree_id": 6,
             "level": 0
         }
     },
@@ -83,31 +115,15 @@
         "model": "judge.navigationbar",
         "pk": 6,
         "fields": {
-            "order": 6,
+            "order": 7,
             "key": "status",
             "label": "Judges",
             "path": "/status/",
             "regex": "^/status/$|^/judge/",
-            "parent": 5,
+            "parent": 6,
             "lft": 2,
             "rght": 3,
-            "tree_id": 5,
-            "level": 1
-        }
-    },
-    {
-        "model": "judge.navigationbar",
-        "pk": 7,
-        "fields": {
-            "order": 7,
-            "key": "checkers",
-            "label": "Custom Checkers",
-            "path": "/custom_checkers/",
-            "regex": "^/custom_checkers/$",
-            "parent": 5,
-            "lft": 4,
-            "rght": 5,
-            "tree_id": 5,
+            "tree_id": 6,
             "level": 1
         }
     },
@@ -120,11 +136,27 @@
             "label": "Github",
             "path": "https://github.com/qhhoj/online-judge",
             "regex": "^https://github.com/qhhoj/online-judge$",
-            "parent": 5,
-            "lft": 6,
-            "rght": 7,
-            "tree_id": 5,
+            "parent": 6,
+            "lft": 4,
+            "rght": 5,
+            "tree_id": 6,
             "level": 1
+        }
+    },
+    {
+        "model": "judge.navigationbar",
+        "pk": 10,
+        "fields": {
+            "order": 9,
+            "key": "rickroll",
+            "label": "I'm feeling lucky",
+            "path": "https://youtu.be/qcnd4-vqaQ8?si=dD0ktWuanuEGtxXm&t=61",
+            "regex": "^https://youtu.be/qcnd4-vqaQ8?si=dD0ktWuanuEGtxXm&t=61$",
+            "parent": null,
+            "lft": 1,
+            "rght": 2,
+            "tree_id": 7,
+            "level": 0
         }
     }
 ]
