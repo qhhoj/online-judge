@@ -18,6 +18,7 @@ from judge.sitemap import sitemaps
 from judge.views import TitledTemplateView, api, blog, comment, contests, language, license, mailgun, organization, \
     preview, problem, problem_manage, ranked_submission, register, stats, status, submission, tag, tasks, ticket, \
     two_factor, user, widgets
+from judge.views.URL import redirect_url, shorten_url
 from judge.views.about import AboutView
 from judge.views.problem_data import ProblemDataView, ProblemSubmissionDiff, \
     problem_data_file, problem_init_view
@@ -419,6 +420,11 @@ urlpatterns = [
         path('success', tasks.demo_success),
         path('failure', tasks.demo_failure),
         path('progress', tasks.demo_progress),
+    ])),
+
+    path('url/', include([
+        path('', shorten_url, name='shorten_url'),
+        path('<str:short_code>/', redirect_url, name='redirect_url'),
     ])),
 ]
 

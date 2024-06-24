@@ -17,7 +17,7 @@ from judge.admin.ticket import TicketAdmin
 from judge.models import Badge, BlogPost, Comment, CommentLock, Contest, ContestParticipation, \
     ContestTag, Judge, Language, License, MiscConfig, NavigationBar, Organization, \
     OrganizationRequest, Problem, ProblemGroup, ProblemType, Profile, Submission, Tag, \
-    TagGroup, TagProblem, Ticket
+    TagGroup, TagProblem, Ticket, URL
 
 admin.site.register(BlogPost, BlogPostAdmin)
 admin.site.register(Comment, CommentAdmin)
@@ -47,3 +47,4 @@ admin.site.register(TagGroup, TagGroupAdmin)
 admin.site.register(TagProblem, TagProblemAdmin)
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
+admin.site.register(URL)
