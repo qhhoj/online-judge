@@ -283,6 +283,8 @@ JQUERY_JS = '//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'
 FONTAWESOME_CSS = '//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'
 DMOJ_CANONICAL = 'qhhoj.com'
 
+SHORT_URL_LENGTH = 10
+
 # Application definition
 
 INSTALLED_APPS = ()

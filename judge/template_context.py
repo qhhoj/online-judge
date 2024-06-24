@@ -79,7 +79,8 @@ def misc_config(request):
 def site_name(request):
     return {'SITE_NAME': settings.SITE_NAME,
             'SITE_LONG_NAME': settings.SITE_LONG_NAME,
-            'SITE_ADMIN_EMAIL': settings.SITE_ADMIN_EMAIL}
+            'SITE_ADMIN_EMAIL': settings.SITE_ADMIN_EMAIL,
+            'SITE_FULL_URL': settings.SITE_FULL_URL}
 
 
 def site_theme(request):

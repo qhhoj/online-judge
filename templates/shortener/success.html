@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}URL Shortener - {{ SITE_LONG_NAME }}{% endblock %}
+{% block og_title %}
+<meta property="og:title" content="URL Shortener - {{ SITE_LONG_NAME }}">
+{% endblock %}
+{% block content_title %} URL Shortener {% endblock %}
+
+{% block media %}
+
+{% endblock %}
+
+{% block body %}
+    <p>Your shortened URL is: <a href="{{ context.short_code }}"> {{ SITE_FULL_URL }}/url/{{ context.short_code }} </a></p>
+{% endblock %}
