@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Redirecting...</title>
+    <script>
+        function startCountdown() {
+            var count = 3;
+            var countdownElement = document.getElementById('countdown');
+            var interval = setInterval(function() {
+                countdownElement.innerText = count;
+                count--;
+                if (count < 0) {
+                    clearInterval(interval);
+                    window.location.replace("{{ original_url }}");
+                }
+            }, 1000);
+        }
+        window.onload = startCountdown;
+    </script>
+</head>
+<body>
+    <h1>Redirecting in <span id="countdown">3</span> seconds...</h1>
+</body>
+</html>

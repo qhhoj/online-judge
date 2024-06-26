@@ -1,4 +1,4 @@
-from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
+from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import render
 
 from judge.forms import URLForm
@@ -21,6 +21,6 @@ def shorten_url(request):
 def redirect_url(request, short_code):
     try:
         url = URL.objects.get(short_code=short_code)
-        return HttpResponseRedirect(url.original_url)
+        return render(request, 'shortener/wait_redirect.html', {'original_url': url.original_url})
     except URL.DoesNotExist:
         return HttpResponseForbidden('URL not exist')
