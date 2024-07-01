@@ -248,9 +248,75 @@
         <clipPath id="rating-clip"><circle cx="8" cy="8" r="7"/></clipPath>
     </defs>
 </svg>
+
+
+<div class="drawer">
+    <input id="nav-drawer" type="checkbox" class="drawer-toggle" />
+    <div class="drawer-content">
+      <!-- Page content here -->
+      <label for="nav-drawer" role='button' id="btn btn-primary drawer-button">
+        <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        class="inline-block h-10 w-10 stroke-current">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+    </label>
+    </div>
+    <div class="drawer-side scroll-auto">
+      <label for="nav-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+      <ul class="menu bg-primary text-primary-content min-h-full w-80 p-4">
+        <li class="home-nav-element my-5"><a href="{{ url('home')}}">{% include "site-logo-fragment.html" %}</a></li>
+        {% for node in mptt_tree(nav_bar) recursive %}
+                    <li>
+                        {% if not node.hidden or request.user.is_superuser %}
+                            <a href="{{ node.path }}" class="nav-{{ node.key }}{% if node.key in nav_tab %} active{% endif %} capitalize text-lg">
+                                <i class="fa fa-home fa-2x" aria-hidden="true"></i>
+                                {{ _(node.label|title) }}
+                                {% if not node.is_leaf_node() %}
+                                    <div class="nav-expand"></div>
+                                {% endif %}
+                            </a>
+                            {% with children=node.get_children() %}
+                                {% if children %}<ul>{{ loop(children) }}</ul>{% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    </li>
+                {% endfor %}
+
+                <div class="flex-grow">
+                    <br>
+                </div>
+
+                {% if request.user.is_authenticated %}
+                <ul class="inset-x-0 bottom-0">
+                    <li>
+                        <div class="avatar">
+                            <div class="ring-primary ring-offset-base-100 w-8 rounded-full ring ring-offset-2">
+                              <img src="{{ gravatar(request.user) }}" />
+                         </div>
+                          <p class="relative flex text-lg">
+                            {{ _('Hello,') }}&nbsp;{{  _('%(username)s.', username=bold(request.user.first_name or request.profile.display_name)) }}
+                        </p>
+                </ul>
+            {% else %}
+                <span class="anon">
+                    <a href="{{ url('auth_login') }}?next={{ LOGIN_RETURN_PATH|urlencode }}"><b>{{ _('Log in') }}</b></a>
+                    &nbsp;{{ _('or') }}&nbsp;
+                    <a href="{{ url('registration_register') }}"><b>{{ _('Sign up') }}</b></a>
+                </span>
+            {% endif %}
+      </ul>
+    </div>
+  </div>
+
 <nav id="navigation" class="unselectable">
     <div id="nav-container">
-        <a id="navicon"><i class="fa fa-bars"></i></a>
         <ul id="nav-list">
             {% if request.organization is not defined %}
                 <li class="home-nav-element"><a href="{{ url('home') }}">{% include "site-logo-fragment.html" %}</a></li>
