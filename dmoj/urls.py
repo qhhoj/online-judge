@@ -1,6 +1,7 @@
 import os
 
 from django.conf import settings
+from django.conf.urls.static import static as url_static
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.contrib.sitemaps.views import sitemap
@@ -426,6 +427,8 @@ urlpatterns = [
         path('', shorten_url, name='shorten_url'),
         path('<str:short_code>/', redirect_url, name='redirect_url'),
     ])),
+
+    path('__reload__/', include('django_browser_reload.urls')),
 ]
 
 favicon_paths = ['apple-touch-icon-180x180.png', 'apple-touch-icon-114x114.png', 'android-chrome-72x72.png',
@@ -470,6 +473,9 @@ if settings.VNOJ_ENABLE_API:
             path('judges', api.api_v2.APIJudgeList.as_view()),
         ])),
     )
+
+if settings.DEBUG:
+    urlpatterns += url_static('/martor/', document_root='/qhhdata/MEDIAROOT/martor/')
 
 try:
     with open(os.path.join(os.path.dirname(__file__), 'local_urls.py')) as f:

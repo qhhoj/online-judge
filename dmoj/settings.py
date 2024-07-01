@@ -407,6 +407,7 @@ INSTALLED_APPS += (
     'martor',
     'adminsortable2',
     'django_cleanup.apps.CleanupConfig',
+    'django_browser_reload',
 )
 
 MIDDLEWARE = (
@@ -429,6 +430,7 @@ MIDDLEWARE = (
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
     'judge.social_auth.SocialAuthExceptionMiddleware',
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
+    'django_browser_reload.middleware.BrowserReloadMiddleware',
 )
 
 IMPERSONATE_REQUIRE_SUPERUSER = True
