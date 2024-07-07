@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
+
+@font-face {
+    font-family: 'Lato';
+    src: local('Lato'), url('fonts/Lato-Regular_2.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Lato';
+    src: local('Lato'), url('fonts/Lato-Bold_2.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Lato';
+    src: local('Lato'), url('fonts/Lato-Italic_1.ttf') format('truetype');
+
+}
+
+@font-face {
+    font-family: 'Lato';
+    src: local('Lato'), url('fonts/Lato-Italic_1.ttf') format('truetype');
+}
+
 @tailwind utilities;

@@ -172,6 +172,13 @@
             {% endif %}
         });
         </script>
+        <script>
+            $('#qhhoj-lang-change').on('change',function() {
+                var _val = $(this).is(':checked') ? 'vi' : 'en';
+                $("input[name=language]").val(_val)
+                $("#set_language").submit()
+            });
+        </script>
     {% endif %}
 
     {% if request.user.is_authenticated %}
@@ -249,42 +256,77 @@
     </defs>
 </svg>
 
-
 <div class="drawer">
     <input id="nav-drawer" type="checkbox" class="drawer-toggle" />
     <div class="drawer-content">
-      <!-- Page content here -->
-      <label for="nav-drawer" role='button' id="btn btn-primary drawer-button">
-        <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        class="inline-block h-10 w-10 stroke-current">
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M4 6h16M4 12h16M4 18h16"></path>
-      </svg>
-    </label>
+        <label for="nav-drawer" role='button' id="btn btn-primary drawer-button">
+            <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            class="inline-block h-10 w-10 stroke-current">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </label>
+        <noscript>
+            <div id="noscript">{{ _('This site works best with JavaScript enabled.') }}</div>
+        </noscript>
+        <br>
+        <main id="content">
+            {% if misc_config.top_notification %}
+                {{ render_django(misc_config.top_notification) }}
+            {% endif %}
+            {% block title_row %}
+                <h2 style="display:inline">
+                    {% block content_title %}
+                        {% if content_title %}{{ content_title }}{% else %}{{ title }}{% endif %}
+                    {% endblock %}
+                </h2>
+            {% endblock %}
+            {% block header %}{% endblock %}
+            {% block title_ruler %}
+                <hr>
+            {% endblock %}
+            <div id="content-body">{% block body %}{% endblock %}</div>
+        </main>
+    
+        {% if misc_config.announcement %}
+            <div id="announcement">{{ misc_config.announcement|safe }}</div>
+        {% endif %}
+    
+        {% block bodyend %}{% endblock %}
     </div>
     <div class="drawer-side scroll-auto">
       <label for="nav-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-      <ul class="menu bg-primary text-primary-content min-h-full w-80 p-4">
+      <ul class="menu bg-base-200 text-base-content min-h-full w-80 p-4">
         <li class="home-nav-element my-5"><a href="{{ url('home')}}">{% include "site-logo-fragment.html" %}</a></li>
         {% for node in mptt_tree(nav_bar) recursive %}
                     <li>
                         {% if not node.hidden or request.user.is_superuser %}
-                            <a href="{{ node.path }}" class="nav-{{ node.key }}{% if node.key in nav_tab %} active{% endif %} capitalize text-lg">
-                                <i class="fa fa-home fa-2x" aria-hidden="true"></i>
-                                {{ _(node.label|title) }}
-                                {% if not node.is_leaf_node() %}
-                                    <div class="nav-expand"></div>
+                                {% if node.is_leaf_node() %}
+                                    <a href="{{ node.path }}" class="nav-{{ node.key }}{% if node.key in nav_tab %} active{% endif %} capitalize text-lg font-bold">
+                                        <i class="{{ node.fa_icon }}" aria-hidden="true"></i>
+                                        {{ _(node.label|title) }}
+                                    </a>
+                                {% else %}
+                                    <details>
+                                        <summary>
+                                            <a href="{{ node.path }}" class="nav-{{ node.key }}{% if node.key in nav_tab %} active{% endif %} capitalize text-lg font-bold">
+                                                <i class="{{ node.fa_icon }}" aria-hidden="true"></i>
+                                                <a href="{{ node.path }}" class="capitalize text-lg font-bold">{{ _(node.label|title) }}</a>
+                                            </a>
+                                        </summary>
+                                        <ul>
+                                            {% with children=node.get_children() %}
+                                                {% if children %}<li>{{ loop(children) }}</li>{% endif %}
+                                            {% endwith %}
+                                        </ul>
+                                    </details>
                                 {% endif %}
-                            </a>
-                            {% with children=node.get_children() %}
-                                {% if children %}<ul>{{ loop(children) }}</ul>{% endif %}
-                            {% endwith %}
                         {% endif %}
                     </li>
                 {% endfor %}
@@ -296,19 +338,67 @@
                 {% if request.user.is_authenticated %}
                 <ul class="inset-x-0 bottom-0">
                     <li>
-                        <div class="avatar">
-                            <div class="ring-primary ring-offset-base-100 w-8 rounded-full ring ring-offset-2">
-                              <img src="{{ gravatar(request.user) }}" />
-                         </div>
-                          <p class="relative flex text-lg">
-                            {{ _('Hello,') }}&nbsp;{{  _('%(username)s.', username=bold(request.user.first_name or request.profile.display_name)) }}
-                        </p>
+                        <a href=
+                            {% if request.resolver_match.view_name == "problem_detail" and problem %}
+                                "{{ url('new_problem_ticket', problem.code) }}"
+                            {% else %}
+                                "/tickets/new?issue_url={{ request.build_absolute_uri()|urlencode }}"
+                            {% endif %}
+                            class="capitalize text-lg font-bold">
+                            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                            Report issues
+                        </a>
+                    </li>
+                    <li>
+                        <details>
+                            <summary>
+                                <a class="relative flex -ml-2" href="{{ url('user_page') }}">
+                                    <div class="avatar">
+                                        <div class="ring-accent ring-offset-base-100 w-8 rounded-full ring ring-offset-2">
+                                        <img src="{{ gravatar(request.user) }}" />
+                                    </div>
+                                    <p class="text-lg ml-2 mt-1">
+                                        &nbsp;{{ _('Hello,') }}&nbsp;{{  _('%(username)s.', username=bold(request.user.first_name or request.profile.display_name)) }}
+                                    </p>
+                                </a>
+                            </summary>
+                            <ul>
+                                {% if request.user.is_staff or request.user.is_superuser %}
+                                    <li><a href="{{ url('admin:index') }}" class="capitalize text-lg font-bold">{{ _('Admin') }}</a></li>
+                                {% endif %}
+                                <li><a href="{{ url('user_edit_profile') }}" class="capitalize text-lg font-bold">{{ _('Edit profile') }}</a></li>
+                                {% if request.user.is_impersonate %}
+                                    <li><a href="{{ url('impersonate-stop') }}">{{ _('Stop impersonating') }}</a></li>
+                                {% else %}
+                                    <li>
+                                        <form action="{{ url('auth_logout') }}" method="POST">
+                                            {% csrf_token %}
+                                            <button type="submit" class="capitalize text-lg font-bold text-red-500">{{ _('Log out') }}</button>
+                                        </form>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </details>
+                    </li>
+                    <li>
+                        <label class="flex cursor-pointer gap-2">
+                            <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M35,30 L45,70 L55,30" stroke="black" stroke-width="2" fill="none" />
+                                <rect x="60" y="30" width="2" height="40" fill="black" />
+                            </svg>                                                       
+                            <input type="checkbox" class="toggle" id="qhhoj-lang-change"/>
+                            <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M35,30 L35,70 M35,30 L55,30 M35,50 L50,50 M35,70 L55,70" stroke="black" stroke-width="2" fill="none" />
+                                <path d="M65,30 L65,70 M65,30 L85,70 M85,70 L85,30" stroke="black" stroke-width="2" fill="none" />
+                            </svg>
+                                      
+                        </label>
+                    </li>
                 </ul>
             {% else %}
-                <span class="anon">
-                    <a href="{{ url('auth_login') }}?next={{ LOGIN_RETURN_PATH|urlencode }}"><b>{{ _('Log in') }}</b></a>
-                    &nbsp;{{ _('or') }}&nbsp;
-                    <a href="{{ url('registration_register') }}"><b>{{ _('Sign up') }}</b></a>
+                <span class="anon place-self-center">
+                    <a href="{{ url('auth_login') }}?next={{ LOGIN_RETURN_PATH|urlencode }}"><button class="btn btn-primary font-bold text-xl">{{ _('Log in') }}</button></a>
+                    <a href="{{ url('registration_register') }}"><button class="btn btn-accent font-bold text-xl">{{ _('Sign up') }}</button></a>                 
                 </span>
             {% endif %}
       </ul>
@@ -317,44 +407,6 @@
 
 <nav id="navigation" class="unselectable">
     <div id="nav-container">
-        <ul id="nav-list">
-            {% if request.organization is not defined %}
-                <li class="home-nav-element"><a href="{{ url('home') }}">{% include "site-logo-fragment.html" %}</a></li>
-                <li class="home-nav-element"><span class="nav-divider"></span></li>
-                <li class="home-menu-item"><a href="{{ url('home') }}" class="nav-home">{{ _('Home') }}</a></li>
-                {% for node in mptt_tree(nav_bar) recursive %}
-                    <li>
-                        {% if not node.hidden or request.user.is_superuser %}
-                            <a href="{{ node.path }}" class="nav-{{ node.key }}{% if node.key in nav_tab %} active{% endif %}">
-                                {{ _(node.label) }}
-                                {% if not node.is_leaf_node() %}
-                                    <div class="nav-expand">&gt;</div>
-                                {% endif %}
-                            </a>
-                            {% with children=node.get_children() %}
-                                {% if children %}<ul>{{ loop(children) }}</ul>{% endif %}
-                            {% endwith %}
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            {% else %}
-                {% macro make_navbar_item(key, url, text) %}
-                    <li>
-                        <a href="{{ url }}" class="nav-{{ key }}"><span>
-                            {{ text }}
-                        </a>
-                    </li>
-                {% endmacro %}
-                {% set org = request.organization %}
-                <li class="home-nav-element"><a href="{{ url('organization_home', org.slug) }}">{% include "site-logo-fragment.html" %}</a></li>
-                <li class="home-nav-element"><span class="nav-divider"></span></li>
-                {{ make_navbar_item('problem-list', url('problem_list_organization', org.slug), _('PRoblems')) }}
-                {{ make_navbar_item('submission-list', url('submission_list_organization', org.slug), _('Submissions')) }}
-                {{ make_navbar_item('contest-list',  url('contest_list_organization', org.slug), _('Contests')) }}
-                {{ make_navbar_item('users',org.get_users_url(), _('Users')) }}
-            {% endif %}
-        </ul>
-
         <span id="user-links">
             <a href=
                 {% if request.resolver_match.view_name == "problem_detail" and problem %}
@@ -366,12 +418,6 @@
                 <span title="{{ _('Report issue') }}">
                     <i class="fa fa-exclamation-triangle" style="color: yellow;"></i>
                 </span>
-            </a>
-            <a id="flag_vi" href="#" onclick="submmit_language('vi')" style="margin-right: 5px; margin-top: 4px;">
-                <img src="{{ static('icons/vi_flag.svg') }}" alt="VI" height="24">
-            </a>
-            <a id="flag_en" href="#" onclick="submmit_language('en')" style="margin-right: 5px; margin-top: 4px;">
-                <img src="{{ static('icons/gb_flag.svg') }}" alt="EN" height="24">
             </a>
             {% if request.user.is_authenticated %}
                 <ul>
@@ -434,33 +480,7 @@
     </div>
 {% endif %}
 <div id="page-container">
-    <noscript>
-        <div id="noscript">{{ _('This site works best with JavaScript enabled.') }}</div>
-    </noscript>
-    <br>
-    <main id="content">
-        {% if misc_config.top_notification %}
-            {{ render_django(misc_config.top_notification) }}
-        {% endif %}
-        {% block title_row %}
-            <h2 style="display:inline">
-                {% block content_title %}
-                    {% if content_title %}{{ content_title }}{% else %}{{ title }}{% endif %}
-                {% endblock %}
-            </h2>
-        {% endblock %}
-        {% block header %}{% endblock %}
-        {% block title_ruler %}
-            <hr>
-        {% endblock %}
-        <div id="content-body">{% block body %}{% endblock %}</div>
-    </main>
-
-    {% if misc_config.announcement %}
-        <div id="announcement">{{ misc_config.announcement|safe }}</div>
-    {% endif %}
-
-    {% block bodyend %}{% endblock %}
+    
 
     <footer class="footer footer-center bg-primary text-primary-content p-10">
         <aside>

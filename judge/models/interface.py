@@ -42,6 +42,7 @@ class NavigationBar(MPTTModel):
     class MPTTMeta:
         order_insertion_by = ['order']
 
+    fa_icon = models.CharField(max_length=40, verbose_name=_('icon'), default='fa-solid fa-poo')
     order = models.PositiveIntegerField(db_index=True, verbose_name=_('order'))
     key = models.CharField(max_length=10, unique=True, verbose_name=_('identifier'))
     label = models.CharField(max_length=20, verbose_name=_('label'))

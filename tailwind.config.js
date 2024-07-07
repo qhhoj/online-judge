@@ -2,7 +2,11 @@
 export default {
   content: ["templates/**/*.{html,js}"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        'sans': ['Lato', 'Roboto', 'Helvetica', 'Arial', 'sans-serif']
+      }
+    },
   },
   plugins: [require('daisyui'),],
   daisyui: {

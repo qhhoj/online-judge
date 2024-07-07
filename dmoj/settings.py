@@ -278,9 +278,9 @@ TERMS_OF_SERVICE_URL = None
 DEFAULT_USER_LANGUAGE = 'CPP17'
 
 INLINE_JQUERY = True
-INLINE_FONTAWESOME = True
+INLINE_FONTAWESOME = False
 JQUERY_JS = '//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'
-FONTAWESOME_CSS = '//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'
+FONTAWESOME_CSS = '//cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css'
 DMOJ_CANONICAL = 'qhhoj.com'
 
 SHORT_URL_LENGTH = 10
