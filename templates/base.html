@@ -276,13 +276,13 @@
             {% if misc_config.top_notification %}
                 {{ render_django(misc_config.top_notification) }}
             {% endif %}
-            {# {% block title_row %} #}
-                {# <h2 style="display:inline"> #}
-                    {# {% block content_title %} #}
-                        {# {% if content_title %}{{ content_title }}{% else %}{{ title }}{% endif %} #}
-                    {# {% endblock %} #}
-                {# </h2> #}
-            {# {% endblock %} #}
+            {% block title_row %}
+                <h2 style="display:inline">
+                    {% block content_title %}
+                        {% if content_title %}{{ content_title }}{% endif %}
+                    {% endblock %}
+                </h2>
+            {% endblock %}
             {% block header %}{% endblock %}
             {% block title_ruler %}
                 <hr>

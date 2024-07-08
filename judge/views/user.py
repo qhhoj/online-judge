@@ -234,7 +234,7 @@ class UserBan(UserMixin, TitleMixin, SingleObjectFormView):
     form_class = UserBanForm
 
     def get_title(self):
-        return _('Ban {0}').format(self.object.user.username)
+        return _('{0}').format(self.object.user.username)
 
     def form_valid(self, form):
         user = self.object
