@@ -74,10 +74,6 @@
         <script src="{{ JQUERY_JS }}"></script>
     {% endif %}
 
-    {% if not request.user.is_superuser %}
-        <script disable-devtool-auto src='https://cdn.jsdelivr.net/npm/disable-devtool@latest'></script>
-    {% endif %}
-
     {% compress js %}
         <script>{{ inlinei18n(LANGUAGE_CODE)|safe }}</script>
         {% if INLINE_JQUERY %}
@@ -175,8 +171,8 @@
         <script>
             $('#qhhoj-lang-change').on('change',function() {
                 var _val = $(this).is(':checked') ? 'vi' : 'en';
-                $("input[name=language]").val(_val)
-                $("#set_language").submit()
+                console.log(_val);
+                submmit_language(_val);
             });
         </script>
     {% endif %}
@@ -280,13 +276,13 @@
             {% if misc_config.top_notification %}
                 {{ render_django(misc_config.top_notification) }}
             {% endif %}
-            {% block title_row %}
-                <h2 style="display:inline">
-                    {% block content_title %}
-                        {% if content_title %}{{ content_title }}{% else %}{{ title }}{% endif %}
-                    {% endblock %}
-                </h2>
-            {% endblock %}
+            {# {% block title_row %} #}
+                {# <h2 style="display:inline"> #}
+                    {# {% block content_title %} #}
+                        {# {% if content_title %}{{ content_title }}{% else %}{{ title }}{% endif %} #}
+                    {# {% endblock %} #}
+                {# </h2> #}
+            {# {% endblock %} #}
             {% block header %}{% endblock %}
             {% block title_ruler %}
                 <hr>
@@ -349,6 +345,14 @@
                             Report issues
                         </a>
                     </li>
+                    {% if request.user.is_impersonate %}
+                    <li>
+                        <a class="text-lg font-bold text-red-500">
+                        <i class="fa-solid fa-user-secret" aria-hidden="true"></i>
+                            You are impersonating
+                        </a>
+                    </li>
+                    {% endif %}
                     <li>
                         <details>
                             <summary>
@@ -368,7 +372,7 @@
                                 {% endif %}
                                 <li><a href="{{ url('user_edit_profile') }}" class="capitalize text-lg font-bold">{{ _('Edit profile') }}</a></li>
                                 {% if request.user.is_impersonate %}
-                                    <li><a href="{{ url('impersonate-stop') }}">{{ _('Stop impersonating') }}</a></li>
+                                    <li><a href="{{ url('impersonate-stop') }}" class="capitalize text-lg font-bold text-red-500">{{ _('Stop impersonating') }}</a></li>
                                 {% else %}
                                     <li>
                                         <form action="{{ url('auth_logout') }}" method="POST">
@@ -405,58 +409,6 @@
     </div>
   </div>
 
-<nav id="navigation" class="unselectable">
-    <div id="nav-container">
-        <span id="user-links">
-            <a href=
-                {% if request.resolver_match.view_name == "problem_detail" and problem %}
-                    "{{ url('new_problem_ticket', problem.code) }}"
-                {% else %}
-                    "/tickets/new?issue_url={{ request.build_absolute_uri()|urlencode }}"
-                {% endif %}
-            style="margin-right: 5px;">
-                <span title="{{ _('Report issue') }}">
-                    <i class="fa fa-exclamation-triangle" style="color: yellow;"></i>
-                </span>
-            </a>
-            {% if request.user.is_authenticated %}
-                <ul>
-                    <li>
-                        <a href="{{ url('user_page') }}">
-                            <span>
-                                <img src="{{ gravatar(request.user, 32) }}" height="24" width="24">{# -#}
-                                <span>{{ _('Hello, %(username)s.', username=bold(request.user.first_name or request.profile.display_name)) }}</span>
-                            </span>
-                        </a>
-                        <ul style="width: 150px">
-                            {% if request.user.is_staff or request.user.is_superuser %}
-                                <li><a href="{{ url('admin:index') }}">{{ _('Admin') }}</a></li>
-                            {% endif %}
-                            <li><a href="{{ url('user_edit_profile') }}">{{ _('Edit profile') }}</a></li>
-                            {% if request.user.is_impersonate %}
-                                <li><a href="{{ url('impersonate-stop') }}">{{ _('Stop impersonating') }}</a></li>
-                            {% else %}
-                                <li>
-                                    <form action="{{ url('auth_logout') }}" method="POST">
-                                        {% csrf_token %}
-                                        <button type="submit">{{ _('Log out') }}</button>
-                                    </form>
-                                </li>
-                            {% endif %}
-                        </ul>
-                    </li>
-                </ul>
-            {% else %}
-                <span class="anon">
-                    <a href="{{ url('auth_login') }}?next={{ LOGIN_RETURN_PATH|urlencode }}"><b>{{ _('Log in') }}</b></a>
-                    &nbsp;{{ _('or') }}&nbsp;
-                    <a href="{{ url('registration_register') }}"><b>{{ _('Sign up') }}</b></a>
-                </span>
-            {% endif %}
-        </span>
-    </div>
-    <div id="nav-shadow"></div>
-</nav>
 {% if request.in_contest %}
     {% set current_contest = request.participation.contest %}
     <div id="contest-info">

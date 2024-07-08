@@ -1,4 +1,19 @@
 {% extends "base.html" %}
 {% block body %}
     <p>{{ _('Registration is currently closed. Please contact an administrator.') }}</p>
+    <div class="hero bg-base-200 min-h-screen">
+        <div class="hero-content text-center">
+          <div class="max-w-md">
+            <div class="card bg-base-100 w-96 shadow-xl">
+                <div class="card-body">
+                  <h2 class="card-title">{{ _("Registration Closed!") }}</h2>
+                  <p class="text-left">{{ _('Registration is currently closed. Please contact an administrator.') }}</p>
+                  <div class="card-actions justify-end">
+                    <a href="{{ SITE_FULL_URL }}" class="btn btn-primary">OK</a>
+                  </div>
+                </div>
+              </div>
+          </div>
+        </div>
+    </div>
 {% endblock %}

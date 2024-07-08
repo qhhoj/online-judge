@@ -154,7 +154,7 @@ class UserPage(TitleMixin, UserMixin, DetailView):
 
 class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
-    extra_context = {'title': gettext_lazy('Login')}
+    extra_context = {}
     authentication_form = CustomAuthenticationForm
     redirect_authenticated_user = True
 
