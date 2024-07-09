@@ -1,42 +1,36 @@
 {% extends "base.html" %}
 
-{% block media %}
-    <style>
-        #problem-clone-panel {
-            position: relative;
-            margin: 5em auto auto -10em;
-            top: 40%;
-            left: 50%;
-        }
-
-        #problem-code-container {
-            margin: 0.5em 0;
-        }
-
-        #id_code {
-            width: 100%;
-        }
-
-        ul.errorlist {
-            list-style-type: none;
-            padding-left: 0;
-            text-align: center;
-        }
-    </style>
-{% endblock %}
-
 {% block body %}
-    <form id="problem-clone-panel" action="" method="post" class="form-area">
-        {% csrf_token %}
-        {% if form.errors %}
-            <div id="form-errors">
-                {{ form.code.errors }}
+    <section class="bg-gray-50 dark:bg-gray-900">
+        <div class="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+            <a href="#" class="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
+                <img class="w-96 mr-2" src="https://i.imgur.com/wGkjdB1.png" alt="logo">
+            </a>
+            <div class="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+                <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
+                    <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
+                        Clone problem
+                    </h1>
+                    <form class="space-y-4 md:space-y-6" action="" method="post">
+                        {% csrf_token %}
+                        {% if form.errors %}
+                            <div class="form-errors text-error">
+                                {% for error in form.code.errors %}
+                                    <p> {{ error }} </p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cloned problem code</label>
+                            {{ form.code.as_widget(attrs={
+                                'name': 'code',
+                                'class': 'bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
+                                'placeholder': 'your_new_problem_code',
+                            }) }}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">Clone!</button>
+                    </form>
+                </div>
             </div>
-        {% endif %}
-
-        <div><label class="inline-header grayed">{{ _('Enter a new code for the cloned problem:') }}</label></div>
-        <div id="problem-code-container"><span class="fullwidth">{{ form.code }}</span></div>
-        <hr>
-        <button style="float:right;" type="submit">{{ _('Clone!') }}</button>
-    </form>
+        </div>
 {% endblock %}
