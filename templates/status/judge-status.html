@@ -18,8 +18,6 @@
 
 {% block body %}
     <div class="h-scrollable-table">
-        <table id="judge-status" class="table striped">
-            {% include "status/judge-status-table.html" %}
-        </table>
+        {% include "status/judge-status-table.html" %}
     </div>
 {% endblock %}

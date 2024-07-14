@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
 <head>
-    <title>{% block title %}{{ title }} - {{ SITE_LONG_NAME }}{% endblock %}</title>
+    <title>{% block title %}{{ _(title) }} - {{ SITE_LONG_NAME }}{% endblock %}</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     {% if misc_config.meta_keywords %}
         <meta name="keywords" content="{{ misc_config.meta_keywords }}">
@@ -306,7 +306,7 @@
                                 {% if node.is_leaf_node() %}
                                     <a href="{{ node.path }}" class="nav-{{ node.key }}{% if node.key in nav_tab %} active{% endif %} capitalize text-lg font-bold">
                                         <i class="{{ node.fa_icon }}" aria-hidden="true"></i>
-                                        {{ _(node.label|title) }}
+                                        {{ _(node.label) }}
                                     </a>
                                 {% else %}
                                     <details>
@@ -342,14 +342,14 @@
                             {% endif %}
                             class="capitalize text-lg font-bold">
                             <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-                            Report issues
+                            {{ _('Report issue') }}
                         </a>
                     </li>
                     {% if request.user.is_impersonate %}
                     <li>
                         <a class="text-lg font-bold text-red-500">
                         <i class="fa-solid fa-user-secret" aria-hidden="true"></i>
-                            You are impersonating
+                            {{ _("You are impersonating") }}
                         </a>
                     </li>
                     {% endif %}
@@ -385,17 +385,13 @@
                         </details>
                     </li>
                     <li>
-                        <label class="flex cursor-pointer gap-2">
-                            <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M35,30 L45,70 L55,30" stroke="black" stroke-width="2" fill="none" />
-                                <rect x="60" y="30" width="2" height="40" fill="black" />
-                            </svg>                                                       
-                            <input type="checkbox" class="toggle" id="qhhoj-lang-change"/>
-                            <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M35,30 L35,70 M35,30 L55,30 M35,50 L50,50 M35,70 L55,70" stroke="black" stroke-width="2" fill="none" />
-                                <path d="M65,30 L65,70 M65,30 L85,70 M85,70 L85,30" stroke="black" stroke-width="2" fill="none" />
-                            </svg>
-                                      
+                        <label class="flex justify-between p-4">
+                            <a id="flag_vi" href="#" onclick="submmit_language('vi')" class="flex items-center">
+                                <img src="{{ static('icons/vi_flag.svg') }}" alt="VI" class="w-12 h-12">
+                            </a>
+                            <a id="flag_en" href="#" onclick="submmit_language('en')" class="flex items-center">
+                                <img src="{{ static('icons/gb_flag.svg') }}" alt="EN" class="w-12 h-12">
+                            </a>                                     
                         </label>
                     </li>
                 </ul>
@@ -480,6 +476,11 @@
             </a>
             </div>
         </nav>
+        <form id="set_language" action="{{ url('set_language') }}" method="post" style="display: inline">
+            {% csrf_token %}
+            <input name="next" type="hidden" value="{{ request.get_full_path() }}">
+            <input name="language" type="hidden" value="{{LANGUAGE_CODE}}">
+        </form>
     </footer>
 </div>
 <script>

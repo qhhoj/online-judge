@@ -65,8 +65,8 @@ msgid "Activation Successful!"
 msgstr "Kích hoạt thành công"
 
 #: dmoj/urls.py:47
-msgid "Registration Completed"
-msgstr "Đăng ký thành công"
+msgid "Registration Completed!"
+msgstr "Đăng ký thành công!"
 
 #: dmoj/urls.py:51
 msgid "Registration Not Allowed"
@@ -1354,8 +1354,8 @@ msgstr ""
 "discord, facebook)."
 
 #: judge/models/contest.py:156 judge/models/profile.py:58
-msgid "access code"
-msgstr "mã truy cập"
+msgid "Access code"
+msgstr "Mã truy cập"
 
 #: judge/models/contest.py:157
 msgid ""
@@ -7581,3 +7581,45 @@ msgstr "Đã chấm xong"
 #: templates/base.html
 msgid "Hide all notifications"
 msgstr "Ẩn tất cả thông báo"
+
+msgid "Hello,"
+msgstr "Chào mừng,"
+
+msgid "Cloned problem code"
+msgstr "Mã bài nhân bản"
+
+msgid "Authentication"
+msgstr "Xác thực"
+
+msgid "What is always approaching but never arrive?"
+msgstr "Thứ gì luôn tiến tới nhưng không bao giờ tới nơi?"
+
+msgid "You are impersonating"
+msgstr "Bạn đang mạo danh"
+
+msgid "Cloned contest key"
+msgstr "Mã kỳ thi nhân bản"
+
+msgid "Don’t have an account yet?"
+msgstr "Chưa có tài khoản?"
+
+msgid "Remember me"
+msgstr "Lưu tài khoản"
+
+msgid "Reset Password Confirmation"
+msgstr "Xác nhận đặt lại mật khẩu"
+
+msgid "Ban reason"
+msgstr "Lý do ban"
+
+msgid "Sign in"
+msgstr "Đăng nhập"
+
+msgid "Already have an account?"
+msgstr "Đã có tài khoản?"
+
+msgid "Sign in to your account"
+msgstr "Đăng nhập vào tài khoản của bạn"
+
+msgid "Sign up your QHHOJ account"
+msgstr "Đăng ký tài khoản QHHOJ"

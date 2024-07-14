@@ -66,7 +66,7 @@ msgid "Activation Successful!"
 msgstr ""
 
 #: dmoj/urls.py:46
-msgid "Registration Completed"
+msgid "Registration Completed!"
 msgstr ""
 
 #: dmoj/urls.py:50
@@ -1308,7 +1308,7 @@ msgid "Plain-text, shown in meta description tag, e.g. for social media."
 msgstr ""
 
 #: judge/models/contest.py:156 judge/models/profile.py:58
-msgid "access code"
+msgid "Access code"
 msgstr ""
 
 #: judge/models/contest.py:157
@@ -7275,4 +7275,46 @@ msgstr ""
 
 #: templates/base.html
 msgid "Hide all notifications"
+msgstr ""
+
+msgid "Hello,"
+msgstr ""
+
+msgid "Cloned problem code"
+msgstr ""
+
+msgid "Authentication"
+msgstr ""
+
+msgid "What is always approaching but never arrive?"
+msgstr ""
+
+msgid "You are impersonating"
+msgstr ""
+
+msgid "Cloned contest key"
+msgstr ""
+
+msgid "Don’t have an account yet?"
+msgstr ""
+
+msgid "Remember me"
+msgstr ""
+
+msgid "Reset Password Confirmation"
+msgstr ""
+
+msgid "Ban reason"
+msgstr ""
+
+msgid "Sign in"
+msgstr ""
+
+msgid "Already have an account?"
+msgstr ""
+
+msgid "Sign in to your account"
+msgstr ""
+
+msgid "Sign up your QHHOJ account"
 msgstr ""
