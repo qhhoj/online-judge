@@ -8,26 +8,28 @@
 {% endblock %}
 
 {% block body %}
-    <table id="judge-versions" class="table">
+<div class="overflow-x-auto">
+    <table id="judge-versions" class="table w-full text-sm text-left text-gray-500">
         <tr>
             <th></th>
             {% for judge in judges %}
-                <th>{{ judge }}</th>
+                <th scope="col" class="px-4 py-3 border-r font-bold text-lg">{{ judge }}</th>
             {% endfor %}
         </tr>
         {% for language in languages %}
-            <tr>
-                <th>{{ language.name }}</th>
+            <tr class="border-b hover:bg-light-blue-pink-gradient">
+                <th class="px-4 py-2 font-extrabold text-gray-900 whitespace-nowrap border-r">{{ language.name }}</th>
                 {% for judge in judges %}
                     {% set versions = matrix[judge][language.id] %}
                     <td class="version version-
                         {%- if not versions -%}
-                            blank
+                            slate-500
                         {%- elif versions.is_latest -%}
-                            latest
+                            red-500
                         {%- else -%}
-                            outdated
+                            red-500
                         {%- endif %}">
+
                         {%- for version in versions -%}
                             {{ version.name }}{% if version.version %}&nbsp;{{ version.version }}{% endif %}
                             {% if not loop.last %}<br>{% endif %}
@@ -39,4 +41,5 @@
             </tr>
         {% endfor %}
     </table>
+</div>
 {% endblock %}

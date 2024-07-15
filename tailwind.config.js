@@ -10,6 +10,15 @@ export default {
         'light-blue-pink-gradient': 'radial-gradient(circle, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%)',
         'dark-blue-pink-gradient': 'radial-gradient(circle, rgba(63,94,251,1) 0%, rgba(252,70,107,1) 100%);',
       },
+      colors: {
+        'newbie': 'gray',
+        'pupil': 'green',
+        'specialist': 'cyan',
+        'expert': 'blue',
+        'cm': '#a0a',
+        'im': 'orange',
+        'gm': 'red',
+      }
     },
   },
   plugins: [require('@tailwindcss/typography'), require('daisyui'),],

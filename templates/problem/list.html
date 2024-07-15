@@ -121,6 +121,26 @@
 {% endblock %}
 
 {% block body %}
+    <script>
+        function getValueClass(value) {
+          if (value < 1200) return 'newbie';
+          if (value < 1400) return 'pupil';
+          if (value < 1600) return 'specialist';
+          if (value < 1900) return 'expert';
+          if (value < 2200) return 'cm';
+          if (value < 2400) return 'im';
+          return 'gm';
+        }
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const elements = document.querySelectorAll('.p');
+            elements.forEach((element) => {
+                const value = parseFloat(element.textContent);
+                element.classList.add('text-' + getValueClass(value));
+            });
+        });
+    </script>
+
     {% if page_obj.has_other_pages() %}
         <div class="top-pagination-bar">{% include "list-pages.html" %}</div>
     {% endif %}
@@ -144,41 +164,41 @@
                 {% endif %}
             </div>
         </div>
-        <div id="content-left" class="problems h-scrollable-table">
-            <table id="problem-table" class="table striped">
-                <thead>
+        <div class="overflow-x-auto problems h-scrollable-table">
+            <table class="w-full text-lg text-left text-gray-500">
+                <thead class="text-xl text-white uppercase bg-primary">
                 <tr>
                     {% if request.user.is_authenticated %}
-                        <th class="solved">
+                        <th scope="col" class="solved px-4 py-3 w-24 border-r text-center">
                             <a href="{{ sort_links.solved }}">
                                 <i class="fa fa-check"></i>{{ sort_order.solved }}
                             </a>
                         </th>
                     {% endif %}
-                    <th class="problem-code">
+                    <th scope="col" class="problem-code px-4 py-3 border-r">
                         <a href="{{ sort_links.code }}">{{ _('ID') }}{{ sort_order.code}}</a>
                     </th>
-                    <th class="problem-name">
+                    <th scope="col" class="problem-name px-4 py-3 border-r">
                         <a href="{{ sort_links.name }}">{{ _('Problem') }}{{ sort_order.name }}</a>
                     </th>
-                    <th class="category">
+                    <th scope="col" class="category px-4 py-3 border-r">
                         <a href="{{ sort_links.group }}">{{ _('Category') }}{{ sort_order.group }}</a>
                     </th>
                     {% if show_types %}
-                        <th class="types">
+                        <th class="types px-4 py-3 border-r">
                             <a href="{{ sort_links.type }}">{{ _('Types') }}{{ sort_order.type }}</a>
                         </th>
                     {% endif %}
-                    <th class="points">
+                    <th scope="col" class="points px-4 py-3 border-r w-36 text-center">
                         <a href="{{ sort_links.points }}">{{ _('Points') }}{{ sort_order.points }}</a>
                     </th>
-                    <th class="ac-rate">
+                    <th scope="col" class="ac-rate px-4 py-3 border-r w-36 text-center">
                         <a href="{{ sort_links.ac_rate }}">{{ _('%% AC') }}{{ sort_order.ac_rate }}</a>
                     </th>
-                    <th class="users">
+                    <th scope="col" class="users px-4 py-3 border-r w-36 text-center">
                         <a href="{{ sort_links.user_count }}">{{ _('# AC') }}{{ sort_order.user_count }}</a>
                     </th>
-                    <th class="editorial" title="{{ _('Editorial') }}">
+                    <th scope="col" class="editorial px-4 py-3 w-24 text-center" title="{{ _('Editorial') }}">
                         <a href="{{ sort_links.editorial }}">
                             <i class="fa fa-book"></i>{{ sort_order.editorial }}
                         </a>
@@ -187,45 +207,45 @@
                 </thead>
                 <tbody>
                 {% for problem in problems %}
-                    <tr>
+                    <tr class="border-b hover:bg-light-blue-pink-gradient">
                         {% if request.user.is_authenticated %}
                             {% if problem.id in completed_problem_ids %}
-                                <td class="solved" solved="1">
+                                <td class="solved text-center text-gray-900 whitespace-nowrap border-r" solved="1">
                                     <a href="{{ url('user_submissions', problem.code, request.user.username) }}">
                                         {% if problem.is_public %}
-                                            <i class="solved-problem-color fa fa-check-circle"></i>
+                                            <i class="fa fa-check-circle text-emerald-500"></i>
                                         {% else %}
-                                            <i class="solved-problem-color fa fa-lock"></i>
+                                            <i class="fa fa-lock text-emerald-500"></i>
                                         {% endif %}
                                     </a>
                                 </td>
                             {% elif problem.id in attempted_problems %}
-                                <td class="solved" solved="0">
+                                <td class="solved text-center text-gray-900 whitespace-nowrap border-r" solved="0">
                                     <a href="{{ url('user_submissions', problem.code, request.user.username) }}">
                                         {% if problem.is_public %}
-                                            <i class="attempted-problem-color fa fa-times-circle"></i>
+                                            <i class="fa fa-times-circle text-orange-500"></i>
                                         {% else %}
-                                            <i class="attempted-problem-color fa fa-lock"></i>
+                                            <i class="fa fa-lock text-orange-500"></i>
                                         {% endif %}
                                     </a>
                                 </td>
                             {% else %}
-                                <td class="solved" solved="-1">
+                                <td class="solved text-center text-gray-900 whitespace-nowrap border-r" solved="-1">
                                     {% if problem.is_public %}
-                                        <i class="unsolved-problem-color fa"></i>
+                                        <i class="fa"></i>
                                     {% else %}
-                                        <i class="unsolved-problem-color fa fa-lock"></i>
+                                        <i class="fa fa-lock text-red-500"></i>
                                     {% endif %}
                                 </td>
                             {% endif %}
                         {% endif %}
-                        <td class="problem-code">
+                        <td class="problem-code px-4 py-2 font-medium text-gray-900 whitespace-nowrap border-r">
                             <a href="{{ url('problem_detail', problem.code) }}">{{ problem.code}}</a>
                         </td>
-                        <td class="problem-name">
+                        <td class="problem-name px-4 py-2 font-bold text-gray-900 whitespace-nowrap border-r">
                             <a href="{{ url('problem_detail', problem.code) }}">{{ problem.i18n_name or problem.name }}</a>
                         </td>
-                        <td class="category">{{ problem.group.full_name }}</td>
+                        <td class="category px-4 py-2 font-medium text-gray-900 whitespace-nowrap border-r">{{ problem.group.full_name }}</td>
                         {% if show_types %}
                             <td class="types">
                                 {% for type in problem.types_list %}
@@ -233,20 +253,29 @@
                                 {% endfor %}
                             </td>
                         {% endif %}
-                        <td class="p">{{ problem.points|floatformat(0) }}</td>
-                        <td class="ac-rate">{{ problem.ac_rate|floatformat(1) }}%</td>
-                        <td class="users">
+                        <td class="p px-4 py-2 font-bold whitespace-nowrap border-r text-center 
+                        {% if problem.points < 1200 %} text-newbie
+                        {% elif problem.points < 1400 %} text-pupil
+                        {% elif problem.points < 1600 %} text-specialist
+                        {% elif problem.points < 1900 %} text-expert
+                        {% elif problem.points < 2200 %} text-cm
+                        {% elif problem.points < 2400 %} text-im
+                        {% else %} text-gm
+                        {% endif %}
+                        ">{{ problem.points|floatformat(0) }}</td>
+                        <td class="ac-rate px-4 py-2 font-medium text-gray-900 whitespace-nowrap border-r text-center">{{ problem.ac_rate|floatformat(1) }}%</td>
+                        <td class="users px-4 py-2 font-medium text-gray-900 whitespace-nowrap border-r text-center">
                             <a href="{{ url('ranked_submissions', problem.code) }}">
                                 {{ problem.user_count }}
                             </a>
                         </td>
-                        <td>
+                        <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap text-center">
                             {% if problem.has_public_editorial %}
                                 <a href="{{ url('problem_editorial', problem.code) }}">
-                                    <i class="has-editorial-color fa fa-check-circle"></i>
+                                    <i class="fa fa-circle-check text-emerald-500"></i>
                                 </a>
                             {% else %}
-                                <i class="no-editorial-color fa fa-minus-circle"></i>
+                                <i class="fa fa-circle-minus text-red-500"></i>
                             {% endif %}
                         </td>
                     </tr>
@@ -255,6 +284,7 @@
             </table>
         </div>
     </div>
+
    {% if page_obj.has_other_pages() %}
        <div class="bottom-pagination-bar">{% include "list-pages.html" %}</div>
    {% endif %}
