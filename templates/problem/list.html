@@ -262,6 +262,7 @@
                         {% elif problem.points < 2400 %} text-im
                         {% else %} text-gm
                         {% endif %}
+                        {% if problem.points > 2899 %} first-letter:text-black {% endif %}
                         ">{{ problem.points|floatformat(0) }}</td>
                         <td class="ac-rate px-4 py-2 font-medium text-gray-900 whitespace-nowrap border-r text-center">{{ problem.ac_rate|floatformat(1) }}%</td>
                         <td class="users px-4 py-2 font-medium text-gray-900 whitespace-nowrap border-r text-center">
