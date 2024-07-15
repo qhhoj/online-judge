@@ -27,35 +27,34 @@
 {% endblock %}
 
 {% block body %}
-    <div class="h-scrollable-table">
-        <table class="table striped">
-            <thead>
-            <tr>
-                <th>{{ _('ID') }}</th>
-                <th>{{ _('Name') }}</th>
-                <th>{{ _('Runtime Info') }}</th>
-            </tr>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-500">
+            <thead class="text-xs text-white uppercase bg-primary">
+                <tr>
+                    <th scope="col" class="px-4 py-3 border-r">{{ _("ID") }}</th>
+                    <th scope="col" class="px-4 py-3 border-r">{{ _("Name") }}</th>
+                    <th scope="col" class="px-4 py-3">{{ _("Runtime Info") }}</th>
+                </tr>
             </thead>
             <tbody>
-            {% for language in languages %}
-                {# All online languages have runtime_versions, even if we're not going to display them #}
-                {% if language.runtime_versions %}
-                    <tr>
-                        <td>{{ language.short_display_name }}</td>
-                        <td class="language">{{ language.name }}</td>
-                        <td class="info">
-                            <code>{{ runtime_versions(language.runtime_versions()) }}</code>
-                            {% if language.description %}
-                                <div class="content-description">
-                                    {% cache 86400 'language_html' language.id %}
-                                        {{ language.description|markdown('language') }}
-                                    {% endcache %}
-                                </div>
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endif %}
-            {% endfor %}
+                {% for language in languages %}
+                    {% if language.runtime_versions %}
+                        <tr class="border-b hover:bg-light-blue-pink-gradient">
+                            <td class="px-4 py-2 font-extrabold text-gray-900 whitespace-nowrap border-r">{{ language.short_display_name }}</td>
+                            <td class="language px-4 py-2 text-gray-900 whitespace-nowrap border-r">{{ language.name }}</td>
+                            <td class="info px-4 py-2 font-medium text-gray-900 whitespace-nowrap border-r">
+                                <code>{{ runtime_versions(language.runtime_versions()) }}</code>
+                                {% if language.description %}
+                                    <div>
+                                        {% cache 86400 'language_html' language.id %}
+                                            {{ language.description|markdown('language') }}
+                                        {% endcache %}
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
             </tbody>
         </table>
     </div>

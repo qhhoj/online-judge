@@ -34,24 +34,32 @@
 {% endblock %}
 
 {% block body %}
-    <h3>{{ _('Problem Status Distribution') }}</h3>
-    <div id="problem-status-count" class="chart">
-        <canvas></canvas>
+    <div class="max-w-1/2 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mb-10 drop-shadow">
+        <h3 class="font-bold text-2xl text-center m-2">{{ _('Problem Status Distribution') }}</h3>
+        <div id="problem-status-count" class="chart mt-1">
+            <canvas></canvas>
+        </div>
     </div>
 
-    <h3>{{ _('Problem AC Rate') }}</h3>
-    <div id="problem-ac-rate" class="chart">
-        <canvas></canvas>
+    <div class="max-w-1/2 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mb-4 drop-shadow">
+        <h3 class="font-bold text-2xl text-center m-2">{{ _('Problem AC Rate') }}</h3>
+        <div id="problem-ac-rate" class="chart">
+            <canvas></canvas>
+        </div>
     </div>
 
-    <h3>{{ _('Submissions by Language') }}</h3>
-    <div id="language-count" class="chart">
-        <canvas width="400" height="300"></canvas>
-        <ul class="legend"></ul>
+    <div class="max-w-1/2 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mb-4 drop-shadow">
+        <h3 class="font-bold text-2xl text-center">{{ _('Submissions by Language') }}</h3>
+        <div id="language-count" class="chart self-center">
+            <canvas width="400" height="300"></canvas>
+            <ul class="legend"></ul>
+        </div>
     </div>
 
-    <h3>{{ _('Language AC Rate') }}</h3>
-    <div id="language-ac-rate" class="chart">
-        <canvas></canvas>
+    <div class="max-w-1/2 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mb-4 drop-shadow">
+        <h3 class="font-bold text-2xl text-center">{{ _('Language AC Rate') }}</h3>
+        <div id="language-ac-rate" class="chart mt-1">
+            <canvas></canvas>
+        </div>
     </div>
 {% endblock %}
