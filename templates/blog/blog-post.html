@@ -1,33 +1,13 @@
 {% set logged_in = request.user.is_authenticated %}
 {% set profile = request.profile if logged_in else None %}
-<section class="{% if post.sticky %}sticky {% endif %} max-w-1/2 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mb-4 drop-shadow" id="post-{{ post.id }}">
+<div class="flex flex-row justify-center items-center">
+<section class="{% if post.sticky %}sticky {% endif %}w-[40rem] p-6 bg-white border-b-[2px] border-gray-300 dark:bg-gray-800 dark:border-gray-700 mb-4" id="post-{{ post.id }}">
     <div style="display: flex; gap: 0.5em;">
-        <!-- <div class="vote">
-            {% if logged_in %}
-                <a href="javascript:blog_upvote({{ post.id }})"
-                class="upvote-link fa fa-chevron-up fa-fw{% if post.vote_score == 1 %} voted{% endif %}"></a>
-            {% else %}
-                <a href="javascript:alert('{{ _('Please log in to vote')|escapejs }}')" title="{{ _('Please log in to vote') }}"
-                class="upvote-link fa fa-chevron-up fa-fw"></a>
-            {% endif %}
-            <br>
-            <div id="post-score" class="comment-score">{{ post.score }}</div>
-            {% if logged_in %}
-                <a href="javascript:blog_downvote({{ post.id }})"
-                class="downvote-link fa fa-chevron-down fa-fw{% if post.vote_score == -1 %} voted{% endif %}"></a>
-            {% else %}
-                <a href="javascript:alert('{{ _('Please log in to vote')|escapejs }}')" title="{{ _('Please log in to vote') }}"
-                class="downvote-link fa fa-chevron-down fa-fw"></a>
-            {% endif %}
-        </div> -->
         <div>
             {% with authors=post.authors.all() %}
-                <span class="relative flex">
-                    {%- if authors -%}
-                        <img src="{{ gravatar(link_users(authors)) }}" class="w-10 h-10 rounded-lg mr-2">
-                    {%- endif -%}
+                <span class="relative flex place-items-center">
                     <span class="relative flex-container">
-                        <h2 class="text-xl font-bold place-self-center">
+                        <h2 class="text-3xl font-bold place-self-center hover:drop-shadow-2xl">
                             <a href="{{ url('blog_post', post.id, post.slug) }}">{% if not post.visible %}<i class="fa fa-lock" style="color: red"></i> {% endif %}{{ post.title }}</a>
                         </h2>
                         <p class="flex-item">
@@ -46,27 +26,39 @@
             {% endwith %}
         </div>
     </div>
-    <div class="summary content-description blog-body">
+    <div class="summary prose content-description blog-body max-h-[30rem] text-ellipsis overflow-hidden mb-4">
         {% cache 86400 'post_summary' post.id %}
-            <div class="markdown">
-                {{ post.summary|default(post.content, true)|markdown('blog', 'svg', lazy_load=True)|reference|str|safe }}
-            </div>
+            {{ post.summary|default(post.content, true)|markdown('blog', 'svg', lazy_load=True)|reference|str|safe }}
         {% endcache %}
-        {%- if post.summary -%}
-            <p><a href="{{ url('blog_post', post.id, post.slug) }}">{{ _('Continue reading...') }}</a></p>
-        {%- endif -%}
     </div>
     <div class="meta">
-        <div class="time">
-            <div style="float: right">
-                <span class="comment-data">
-                    <a href="{{ url('blog_post', post.id, post.slug) }}#comments" class="comment-count-link">
-                        <i class="fa fa-comments comment-icon"></i><span class="comment-count">
-                            {{- post_comment_counts[post.id] or 0 -}}
-                        </span>
-                    </a>
+        <div class="relative flex bg-gradient-to-r from-cyan-500 to-blue-500">
+            {% if logged_in %}
+                {% if post.vote_score == 1 %}
+                    <a href="javascript:blog_upvote({{ post.id }})">
+                {% else %}
+                    <a href="javascript:blog_downvote({{ post.id }})">
+                {% endif %}
+            {% else %}
+                <a href="javascript:alert('{{ _('Please log in to vote')|escapejs }}')" title="{{ _('Please log in to vote') }}">
+            {% endif %}
+            <button type="button" class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-center text-white {% if logged_in or post.vote_score == 1 %} bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 {% else %} bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 {% endif %} mr-2 mt-2">
+                {% if logged_in and post.vote_score == 1 %}Loved{% else %}Love{% endif %}
+                <span class="inline-flex items-center justify-center w-4 h-4 ms-2 text-xs font-semibold {% if logged_in or post.vote_score == 1 %} text-red-800 bg-red-200 {% else %} text-blue-800 bg-blue-200{% endif %} rounded-full">
+                    {{- post.score or 0 -}}
+            </span>
+            </button>
+            {% if logged_in %}</a>{% endif %}
+
+            <a href="{{ url('blog_post', post.id, post.slug) }}#comments">
+                <button type="button" class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 mr-2 mt-2">
+                    Comments
+                    <span class="inline-flex items-center justify-center w-4 h-4 ms-2 text-xs font-semibold text-blue-800 bg-blue-200 rounded-full">
+                        {{- post_comment_counts[post.id] or 0 -}}
                 </span>
-            </div>
+                </button>
+            </a>
         </div>
     </div>
 </section>
+</div>

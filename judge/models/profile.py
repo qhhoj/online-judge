@@ -389,7 +389,7 @@ class Profile(models.Model):
     @classmethod
     def get_user_css_class(cls, display_rank, rating, rating_colors=settings.DMOJ_RATING_COLORS):
         if rating_colors:
-            return 'rating %s %s' % (rating_class(rating) if rating is not None else 'rate-none', display_rank)
+            return 'rating text-%s %s' % (rating_class(rating) if rating is not None else 'rate-none', display_rank)
         return display_rank
 
     @cached_property

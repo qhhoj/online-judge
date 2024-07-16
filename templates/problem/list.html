@@ -121,26 +121,6 @@
 {% endblock %}
 
 {% block body %}
-    <script>
-        function getValueClass(value) {
-          if (value < 1200) return 'newbie';
-          if (value < 1400) return 'pupil';
-          if (value < 1600) return 'specialist';
-          if (value < 1900) return 'expert';
-          if (value < 2200) return 'cm';
-          if (value < 2400) return 'im';
-          return 'gm';
-        }
-
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const elements = document.querySelectorAll('.p');
-            elements.forEach((element) => {
-                const value = parseFloat(element.textContent);
-                element.classList.add('text-' + getValueClass(value));
-            });
-        });
-    </script>
-
     {% if page_obj.has_other_pages() %}
         <div class="top-pagination-bar">{% include "list-pages.html" %}</div>
     {% endif %}
@@ -169,33 +149,33 @@
                 <thead class="text-xl text-white uppercase bg-primary">
                 <tr>
                     {% if request.user.is_authenticated %}
-                        <th scope="col" class="solved px-4 py-3 w-24 border-r text-center">
+                        <th scope="col" class="solved px-4 py-3 w-24 border text-center">
                             <a href="{{ sort_links.solved }}">
                                 <i class="fa fa-check"></i>{{ sort_order.solved }}
                             </a>
                         </th>
                     {% endif %}
-                    <th scope="col" class="problem-code px-4 py-3 border-r">
+                    <th scope="col" class="problem-code px-4 py-3 border">
                         <a href="{{ sort_links.code }}">{{ _('ID') }}{{ sort_order.code}}</a>
                     </th>
-                    <th scope="col" class="problem-name px-4 py-3 border-r">
+                    <th scope="col" class="problem-name px-4 py-3 border">
                         <a href="{{ sort_links.name }}">{{ _('Problem') }}{{ sort_order.name }}</a>
                     </th>
-                    <th scope="col" class="category px-4 py-3 border-r">
+                    <th scope="col" class="category px-4 py-3 border">
                         <a href="{{ sort_links.group }}">{{ _('Category') }}{{ sort_order.group }}</a>
                     </th>
                     {% if show_types %}
-                        <th class="types px-4 py-3 border-r">
+                        <th class="types px-4 py-3 border">
                             <a href="{{ sort_links.type }}">{{ _('Types') }}{{ sort_order.type }}</a>
                         </th>
                     {% endif %}
-                    <th scope="col" class="points px-4 py-3 border-r w-36 text-center">
+                    <th scope="col" class="points px-4 py-3 border w-36 text-center">
                         <a href="{{ sort_links.points }}">{{ _('Points') }}{{ sort_order.points }}</a>
                     </th>
-                    <th scope="col" class="ac-rate px-4 py-3 border-r w-36 text-center">
+                    <th scope="col" class="ac-rate px-4 py-3 border w-36 text-center">
                         <a href="{{ sort_links.ac_rate }}">{{ _('%% AC') }}{{ sort_order.ac_rate }}</a>
                     </th>
-                    <th scope="col" class="users px-4 py-3 border-r w-36 text-center">
+                    <th scope="col" class="users px-4 py-3 border w-36 text-center">
                         <a href="{{ sort_links.user_count }}">{{ _('# AC') }}{{ sort_order.user_count }}</a>
                     </th>
                     <th scope="col" class="editorial px-4 py-3 w-24 text-center" title="{{ _('Editorial') }}">
@@ -207,10 +187,10 @@
                 </thead>
                 <tbody>
                 {% for problem in problems %}
-                    <tr class="border-b hover:bg-light-blue-pink-gradient">
+                    <tr class="border hover:bg-light-blue-pink-gradient">
                         {% if request.user.is_authenticated %}
                             {% if problem.id in completed_problem_ids %}
-                                <td class="solved text-center text-gray-900 whitespace-nowrap border-r" solved="1">
+                                <td class="solved text-center text-gray-900 whitespace-nowrap border" solved="1">
                                     <a href="{{ url('user_submissions', problem.code, request.user.username) }}">
                                         {% if problem.is_public %}
                                             <i class="fa fa-check-circle text-emerald-500"></i>
@@ -220,7 +200,7 @@
                                     </a>
                                 </td>
                             {% elif problem.id in attempted_problems %}
-                                <td class="solved text-center text-gray-900 whitespace-nowrap border-r" solved="0">
+                                <td class="solved text-center text-gray-900 whitespace-nowrap border" solved="0">
                                     <a href="{{ url('user_submissions', problem.code, request.user.username) }}">
                                         {% if problem.is_public %}
                                             <i class="fa fa-times-circle text-orange-500"></i>
@@ -230,7 +210,7 @@
                                     </a>
                                 </td>
                             {% else %}
-                                <td class="solved text-center text-gray-900 whitespace-nowrap border-r" solved="-1">
+                                <td class="solved text-center text-gray-900 whitespace-nowrap border" solved="-1">
                                     {% if problem.is_public %}
                                         <i class="fa"></i>
                                     {% else %}
@@ -239,13 +219,13 @@
                                 </td>
                             {% endif %}
                         {% endif %}
-                        <td class="problem-code px-4 py-2 font-medium text-gray-900 whitespace-nowrap border-r">
+                        <td class="problem-code px-4 py-2 font-medium text-gray-900 whitespace-nowrap border">
                             <a href="{{ url('problem_detail', problem.code) }}">{{ problem.code}}</a>
                         </td>
-                        <td class="problem-name px-4 py-2 font-bold text-gray-900 whitespace-nowrap border-r">
+                        <td class="problem-name px-4 py-2 font-bold text-gray-900 whitespace-nowrap border">
                             <a href="{{ url('problem_detail', problem.code) }}">{{ problem.i18n_name or problem.name }}</a>
                         </td>
-                        <td class="category px-4 py-2 font-medium text-gray-900 whitespace-nowrap border-r">{{ problem.group.full_name }}</td>
+                        <td class="category px-4 py-2 font-medium text-gray-900 whitespace-nowrap border">{{ problem.group.full_name }}</td>
                         {% if show_types %}
                             <td class="types">
                                 {% for type in problem.types_list %}
@@ -253,19 +233,21 @@
                                 {% endfor %}
                             </td>
                         {% endif %}
-                        <td class="p px-4 py-2 font-bold whitespace-nowrap border-r text-center 
-                        {% if problem.points < 1200 %} text-newbie
-                        {% elif problem.points < 1400 %} text-pupil
-                        {% elif problem.points < 1600 %} text-specialist
-                        {% elif problem.points < 1900 %} text-expert
-                        {% elif problem.points < 2200 %} text-cm
-                        {% elif problem.points < 2400 %} text-im
-                        {% else %} text-gm
+                        <td class="p px-4 py-2 font-bold whitespace-nowrap border text-center 
+                        {% if problem.points < 1200 %} text-rate-newbie
+                        {% elif problem.points < 1400 %} text-rate-pupil
+                        {% elif problem.points < 1600 %} text-rate-specialist
+                        {% elif problem.points < 1900 %} text-rate-expert
+                        {% elif problem.points < 2200 %} text-rate-candinate-master
+                        {% elif problem.points < 2300 %} text-rate-master
+                        {% elif problem.points < 2400 %} text-rate-international-master
+                        {% elif problem.points < 2600 %} text-rate-grandmaster
+                        {% elif problem.points < 2900 %} text-rate-international-master
+                        {% else %} text-rate-legendary-grandmaster
                         {% endif %}
-                        {% if problem.points > 2899 %} first-letter:text-black {% endif %}
                         ">{{ problem.points|floatformat(0) }}</td>
-                        <td class="ac-rate px-4 py-2 font-medium text-gray-900 whitespace-nowrap border-r text-center">{{ problem.ac_rate|floatformat(1) }}%</td>
-                        <td class="users px-4 py-2 font-medium text-gray-900 whitespace-nowrap border-r text-center">
+                        <td class="ac-rate px-4 py-2 font-medium text-gray-900 whitespace-nowrap border text-center">{{ problem.ac_rate|floatformat(1) }}%</td>
+                        <td class="users px-4 py-2 font-medium text-gray-900 whitespace-nowrap border text-center">
                             <a href="{{ url('ranked_submissions', problem.code) }}">
                                 {{ problem.user_count }}
                             </a>

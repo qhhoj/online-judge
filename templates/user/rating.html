@@ -1,9 +1,33 @@
 {% spaceless %}
-    <span class="rate-group" title="{{ rating_name(rating) }}">
-        <svg class="rate-box {{ rating_class(rating) }}" viewBox="0 0 16 16">
-            <circle cx="8" cy="8" r="7"></circle>
-            <path clip-path="url(#rating-clip)" d="M0 16v-{{ (rating_progress(rating) * 16)|round(2) }}h16 0v16z"></path>
+    <span class="rate-group whitespace-nowrap inline-block
+        {% if rating.rating|default(rating) < 1200 %} text-rate-newbie
+        {% elif rating.rating|default(rating) < 1400 %} text-rate-pupil
+        {% elif rating.rating|default(rating) < 1600 %} text-rate-specialist
+        {% elif rating.rating|default(rating) < 1900 %} text-rate-expert
+        {% elif rating.rating|default(rating) < 2200 %} text-rate-candinate-master
+        {% elif rating.rating|default(rating) < 2300 %} text-rate-master
+        {% elif rating.rating|default(rating) < 2400 %} text-rate-international-master
+        {% elif rating.rating|default(rating) < 2600 %} text-rate-grandmaster
+        {% elif rating.rating|default(rating) < 2900 %} text-rate-international-master
+        {% else %} text-rate-legendary-grandmaster
+        {% endif %}
+    " title="{{ rating_name(rating) }}">
+        <svg class="rate-box w-5 mr-1 align-middle inline-block {{ rating_class(rating) }}" viewBox="0 0 16 16" stroke="currentColor">
+            <circle cx="8" cy="8" r="7" fill="none" stroke-width="2"></circle>
+            <path clip-path="url(#rating-clip)" d="M0 16v-{{ (rating_progress(rating) * 16)|round(2) }}h16 0v16z" class="fill-current 
+                {% if rating.rating|default(rating) < 1200 %} text-rate-newbie
+                {% elif rating.rating|default(rating) < 1400 %} text-rate-pupil
+                {% elif rating.rating|default(rating) < 1600 %} text-rate-specialist
+                {% elif rating.rating|default(rating) < 1900 %} text-rate-expert
+                {% elif rating.rating|default(rating) < 2200 %} text-rate-candinate-master
+                {% elif rating.rating|default(rating) < 2300 %} text-rate-master
+                {% elif rating.rating|default(rating) < 2400 %} text-rate-international-master
+                {% elif rating.rating|default(rating) < 2600 %} text-rate-grandmaster
+                {% elif rating.rating|default(rating) < 2900 %} text-rate-international-master
+                {% else %} text-rate-legendary-grandmaster
+                {% endif %}
+            "></path>
         </svg>
-        <span class="rating {{ rating_class(rating) }}">{{ rating.rating|default(rating) }}</span>
+        <span class="font-bold rating inline-block align-middle text-{{ rating_class(rating) }}">{{ rating.rating|default(rating) }}</span>
     </span>
 {% endspaceless %}

@@ -16,25 +16,28 @@
 {% endblock %}
 
 {% macro org_table(name, queryset) %}
-    <h4>{{ name }}</h4>
-    <table class="organization-table table striped">
-        <thead>
-            <tr>
-                <th style="width:70%">{{ _('Name') }}</th>
-                <th style="width:15%">{{ _('Points') }}</th>
-                <th>{{ _('Members') }}</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for org in queryset %}
-            <tr>
-                <td class="organization-name"><a href="{{ org.get_absolute_url() }}">{{ org.name }}</a></td>
-                <td><a href="{{ org.get_users_url() }}">{{ org.performance_points|floatformat(2) }}</a></td>
-                <td><a href="{{ org.get_users_url() }}">{{ org.member_count }}</a></td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <h3 class="text-2xl font-bold mb-4">{{ name }}</h3>
+    <div class="overflow-x-auto">
+        <table class="organization-table table w-full text-lg text-left text-gray-500">
+            <thead class="text-xl text-white uppercase bg-primary border">
+                <tr>
+                    <th scope="col" class="problem-code px-4 py-3 border" style="width:70%">{{ _('Name') }}</th>
+                    <th scope="col" class="problem-code px-4 py-3 border text-center" style="width:15%">{{ _('Points') }}</th>
+                    <th scope="col" class="problem-code px-4 py-3 border text-center">{{ _('Members') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for org in queryset %}
+                <tr class="border hover:bg-light-blue-pink-gradient">
+                    <td class="organization-name font-bold text-gray-900 whitespace-nowrap border"><a href="{{ org.get_absolute_url() }}">{{ org.name }}</a></td>
+                    <td class="text-gray-900 whitespace-nowrap border text-center"><a href="{{ org.get_users_url() }}">{{ org.performance_points|floatformat(2) }}</a></td>
+                    <td class="text-gray-900 whitespace-nowrap border text-center"><a href="{{ org.get_users_url() }}">{{ org.member_count }}</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div class="mb-10"></div>
+    </div>
 {% endmacro %}
 
 {% block body %}

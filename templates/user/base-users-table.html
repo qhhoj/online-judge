@@ -1,12 +1,13 @@
 {% spaceless %}
-<table {% if table_id %}id="{{ table_id }}"{% endif %} class="users-table table striped">
-    <thead>
+<div class="overflow-x-auto">
+<table {% if table_id %}id="{{ table_id }}"{% endif %} class="users-table table striped w-full text-lg text-left text-gray-500">
+    <thead class="text-xl text-white uppercase bg-primary">
         <tr>
-            <th class="header rank" style="width: 5%;">{{ rank_header or _("Rank") }}</th>
+            <th scope="col" class="header rank px-4 py-3 border text-center w-24">{{ rank_header or _("Rank") }}</th>
             {% block after_rank_head %}{% endblock %}
-            <th class="header username">{{ _('Username') }}</th>
+            <th scope="col" class="header username px-4 py-3 border">{{ _('Username') }}</th>
             {% block before_point_head %}{% endblock %}
-            <th class="header points">
+            <th scope="col" class="header points px-4 py-3 border text-center w-24">
                 {%- block point_head %}
                     {% if sort_links %}<a href="{{ sort_links.performance_points }}">{% endif -%}
                     {{ _('Points') }}
@@ -19,10 +20,10 @@
 
     <tbody>
     {% for rank, user in users %}
-        <tr id="user-{{ user.user.username }}" {% block row_extra scoped %}{% endblock %}>
-            <td>{{ rank }}</td>
+        <tr id="user-{{ user.user.username }}" {% block row_extra scoped %}{% endblock %} class="border hover:bg-light-blue-pink-gradient">
+            <td class="text-gray-900 whitespace-nowrap border text-center">{{ rank }}</td>
             {% block after_rank scoped %}{% endblock %}
-            <td class="user-name">
+            <td class="user-name text-gray-900 whitespace-nowrap border">
                 <div>
                     <div style="float:left">
                         {% block user_name_display scoped %} {{ link_user(user) }} {% endblock %}
@@ -49,7 +50,7 @@
                 </div>
             {% block before_point scoped %}{% endblock %}
             {% block point scoped %}
-                <td title="{{ user.performance_points|floatformat(2) }}" class="user-points">
+                <td title="{{ user.performance_points|floatformat(2) }}" class="user-points text-gray-900 whitespace-nowrap border text-center">
                     {{- user.performance_points|floatformat(2) -}}
                 </td>
             {% endblock %}
@@ -59,4 +60,5 @@
     {% block after_user_list scoped %}{% endblock %}
     </tbody>
 </table>
+</div>
 {% endspaceless %}

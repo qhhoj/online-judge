@@ -42,7 +42,7 @@
 
 {% block body %}
     {% block before_posts %}{% endblock %}
-    <div id="mobile" class="tabs">
+    <!-- <div id="mobile" class="tabs">
         <ul>
             <li id="blog-tab" class="tab active"><a href="#">
                 <i class="tab-icon fa fa-info-circle"></i> {{ _('Blog') }}
@@ -141,61 +141,84 @@
                     </div>
                 </div>
             {% endif %}
-
-            {% if top_pp_users %}
-                {% include "blog/top-pp.html" %}
-            {% endif %}
-            {% if top_contrib %}
-                {% include "blog/top-contrib.html" %}
-            {% endif %}
-            <div class="blog-sidebox sidebox">
-                <h3 style="display: flex; justify-content: space-between; white-space: nowrap;">
-                    <span style="margin-right: 10px;">
-                        {{ _('Comment stream') }}
-                    </span>
-                    {% if misc_config.discord_invite_link and misc_config.discord_invite_shieldio %}
-                        <span style="margin: 0.1em 0.3em -6px;">
-                            <a href="{{ misc_config.discord_invite_link }}">
-                                <img style="max-width: none;" src="{{ misc_config.discord_invite_shieldio }}" alt="Discord">
-                            </a>
+        </div>
+    </div> -->
+    <div class="blog-content sidebox">
+        {% include "blog/blog-list-tabs.html" %}
+        <div class="sidebox-content" style="border: unset;">
+            <div class="flex flex-row justify-center items-center">
+                <section class="w-[40rem] p-6 bg-white border-b-[2px] border-gray-300 dark:bg-gray-800 dark:border-gray-700 mb-4">
+                    {% if current_contests %}
+                        <span class="relative flex place-items-center mb-4">
+                            <span class="relative flex-container">
+                                <h2 class="text-3xl font-bold place-self-center hover:underline mb-4">
+                                    <a>{{ _('Ongoing contests') }}</a>
+                                </h2>
+                                
+                                <div class="carousel rounded-box border border-gray-200 w-[37rem]">
+                                    <div class="carousel-item flex flex-row justify-center items-center">
+                                        {% for contest in current_contests %}
+                                        <div class="max-w-sm p-6 bg-white dark:bg-gray-800 dark:border-gray-700 mx-2 w-full h-full flex flex-col">
+                                            <a href="{{ url('contest_view', contest.key) }}">
+                                                <h5 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white self-start">{{ contest.name }}</h5>
+                                            </a>
+                                            <p class="mb-3 font-normal text-gray-700 dark:text-gray-400 flex-grow">{{ _('Ends in %(countdown)s.', countdown=as_countdown(contest.time_before_end)) }}</p>
+                                            <a href="{{ url('contest_view', contest.key) }}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-fit">
+                                                Go to Contest
+                                                <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+                                                </svg>
+                                            </a> 
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </span>
                         </span>
                     {% endif %}
-                </h3>
-                <div class="sidebox-content">
-                    <ul>
-                        {% for comment in comments %}
-                            <li>
-                                <span style="padding-left:0.25em" class="poster">
-                                    {{ link_user(comment.author) }}
-                                </span> &rarr;
-                                <a href="{{ comment.link }}#comment-{{ comment.id }}">{{ comment.page_title }}</a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                    <span class="rssatom">
-                        <a href="{{ url('comment_rss') }}"><span><i class="fa fa-rss"></i></span> RSS</a>
-                        /
-                        <a href="{{ url('comment_atom') }}">Atom</a>
-                    </span>
-                </div>
+                </section>
             </div>
-            <div class="blog-sidebox sidebox">
-                <h3>{{ _('New problems') }} <i class="fa fa-puzzle-piece"></i>
-                </h3>
-                <div class="sidebox-content">
-                    <ul class="problem-list">
-                        {% for problem in new_problems %}
-                            <li><a href="{{ url('problem_detail', problem.code) }}">{{ problem.name }}</a></li>
-                        {% endfor %}
-                    </ul>
-                    <span class="rssatom">
-                        <a href="{{ url('problem_rss') }}"><span><i class="fa fa-rss"></i></span> RSS</a>
-                        /
-                        <a href="{{ url('problem_atom') }}">Atom</a>
-                    </span>
+
+            <div class="sidebox-content" style="border: unset;">
+                <div class="flex flex-row justify-center items-center">
+                    <section class="w-[40rem] p-6 bg-white border-b-[2px] border-gray-300 dark:bg-gray-800 dark:border-gray-700 mb-4">
+                        {% if future_contests %}
+                            <span class="relative flex place-items-center mb-4">
+                                <span class="relative flex-container">
+                                    <h2 class="text-3xl font-bold place-self-center hover:underline mb-4">
+                                        <a>{{ _('Upcoming contests') }}</a>
+                                    </h2>
+                                    
+                                    <div class="carousel rounded-box border border-gray-200 w-[37rem]">
+                                        <div class="carousel-item flex flex-row justify-center items-center">
+                                            {% for contest in future_contests %}
+                                            <div class="max-w-sm p-6 bg-white dark:bg-gray-800 dark:border-gray-700 mx-2 w-full h-full flex flex-col">
+                                                <a href="{{ url('contest_view', contest.key) }}">
+                                                    <h5 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white self-start">{{ contest.name }}</h5>
+                                                </a>
+                                                <p class="mb-3 font-normal text-gray-700 dark:text-gray-400 flex-grow">{{ _('Starting in %(countdown)s.', countdown=as_countdown(contest.time_before_start)) }}</p>
+                                                <a href="{{ url('contest_view', contest.key) }}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-fit">
+                                                    Go to Contest
+                                                    <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+                                                    </svg>
+                                                </a> 
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </span>
+                            </span>
+                        {% endif %}
+                    </section>
                 </div>
-            </div>
+            {% for post in posts %}
+                {% include "blog/blog-post.html" %}
+            {% endfor %}
         </div>
+        {% if page_obj.has_other_pages() %}
+            <div class="bottom-pagination-bar">{% include "list-pages.html" %}</div>
+        {% endif %}
     </div>
     {% block after_posts %}{% endblock %}
 {% endblock %}

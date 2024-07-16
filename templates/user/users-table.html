@@ -1,12 +1,12 @@
 {% extends "user/base-users-table.html" %}
 
 {% block after_rank_head %}
-    <th class="header rank" style="width: 5%;">
+    <th class="header rank px-4 py-3 border-r text-center w-24 text-center">
         {% if sort_links %}<a href="{{ sort_links.rating }}">{% endif -%}
         <span class="rate-group">
-            <svg class="rate-box rate-primary0" viewBox="0 0 16 16">
-                <circle cx="8" cy="8" r="7"></circle>
-                <path clip-path="url(#rating-clip)" d="M0 16v-4.8h16 0v16z"></path>
+            <svg class="rate-box w-5 mr-1 align-middle inline-block text-white" viewBox="0 0 16 16" stroke='currentColor'>
+                <circle cx="8" cy="8" r="7" fill="none" stroke-width="2"></circle>
+                <path clip-path="url(#rating-clip)" d="M0 16v-4.8h16 0v16z" class="fill-current text-white"></path>
             </svg>
         </span>
         {%- if sort_links %}{{ sort_order.rating }}</a>{% endif %}
@@ -14,11 +14,11 @@
 {% endblock %}
 
 {% block after_rank %}
-    <td>{% if user.rating %}{{ rating_number(user) }}{% endif %}</td>
+    <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap border-r text-center">{% if user.rating %}{{ rating_number(user) }}{% endif %}</td>
 {% endblock %}
 
 {% block after_point_head %}
-    <th class="problems">
+    <th class="problems px-4 py-3 border-r text-center w-24">
         {% if sort_links %}<a href="{{ sort_links.problem_count }}">{% endif -%}
         {{ _('Problems count') }}
         {%- if sort_links %}{{ sort_order.problem_count }}</a>{% endif %}
@@ -26,5 +26,5 @@
 {% endblock %}
 
 {% block after_point %}
-    <td>{{ user.problem_count }}</td>
+    <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap border-r text-center">{{ user.problem_count }}</td>
 {% endblock %}

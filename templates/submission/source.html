@@ -1,28 +1,4 @@
 {% extends "submission/info-base.html" %}
-{% block media %}
-    <style>
-        .line {
-            position: relative;
-        }
-
-        .highlighter {
-            position: absolute;
-            width: 9999px;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
-        }
-
-        a:active .line .highlighter {
-            background: rgba(255, 212, 0, 0.48);
-        }
-
-        .copy-clipboard {
-            margin-top: 0 !important;
-        }
-    </style>
-{% endblock %}
 
 {% block js_media %}
     {% compress js %}
@@ -90,21 +66,29 @@
         </div>
     {% endif %}
     <br>
-    <hr>
-    <div class="source-wrap">
-        <table>
-            <tr>
-                <td class="source-ln">
-                    <div>
-                        {% for line in raw_source.split('\n') %}
-                            <a href="#line-{{ loop.index }}" name="line-{{ loop.index }}">
-                                <pre class="line">{{ loop.index }}</pre>
-                            </a>
-                        {% endfor %}
-                    </div>
-                </td>
-                <td class="source-code">{{ highlighted_source }}</td>
-            </tr>
-        </table>
+    
+    <div class="w-full">
+        <div class="w-full h-11 rounded-t-lg bg-gray-200 flex justify-start items-center space-x-1.5 px-3">
+            <span class="w-3 h-3 rounded-full bg-red-400"></span>
+            <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+            <span class="w-3 h-3 rounded-full bg-green-400"></span>
+            <p class="absolute left-1/2 transform translate-x-1/2 text-center font-bold">Source Editor</P>
+        </div>
+        <div class="bg-gray-100 border-t-0 w-full">
+            <table class="mx-3">
+                <tr>
+                    <td class="source-ln border-r-4 pl-4 py-4">
+                        <div>
+                            {% for line in raw_source.split('\n') %}
+                                <a href="#line-{{ loop.index }}" name="line-{{ loop.index }}">
+                                    <pre class="line">{{ loop.index }}</pre>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td class="source-code pl-4">{{ highlighted_source }}</td>
+                </tr>
+            </table>
+        </div>
     </div>
 {% endblock %}

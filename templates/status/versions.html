@@ -13,12 +13,12 @@
         <tr>
             <th></th>
             {% for judge in judges %}
-                <th scope="col" class="px-4 py-3 border-r font-bold text-lg">{{ judge }}</th>
+                <th scope="col" class="px-4 py-3 border font-bold text-lg">{{ judge }}</th>
             {% endfor %}
         </tr>
         {% for language in languages %}
-            <tr class="border-b hover:bg-light-blue-pink-gradient">
-                <th class="px-4 py-2 font-extrabold text-gray-900 whitespace-nowrap border-r">{{ language.name }}</th>
+            <tr class="border hover:bg-light-blue-pink-gradient">
+                <th class="px-4 py-2 font-extrabold text-gray-900 whitespace-nowrap border">{{ language.name }}</th>
                 {% for judge in judges %}
                     {% set versions = matrix[judge][language.id] %}
                     <td class="version version-

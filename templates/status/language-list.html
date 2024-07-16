@@ -1,23 +1,4 @@
 {% extends "base.html" %}
-{% block media %}
-    <style>
-        .table td.language {
-            white-space: nowrap;
-        }
-
-        .table td.info .content-description {
-            margin: -1em 1em -1em 1em;
-        }
-
-        td.info {
-            width: 100%;
-        }
-
-        .table td {
-            text-align: left;
-        }
-    </style>
-{% endblock %}
 
 {% block title_ruler %}{% endblock %}
 
@@ -28,21 +9,21 @@
 
 {% block body %}
     <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left text-gray-500">
+        <table class="w-full text-lg text-left text-gray-500">
             <thead class="text-xs text-white uppercase bg-primary">
                 <tr>
-                    <th scope="col" class="px-4 py-3 border-r">{{ _("ID") }}</th>
-                    <th scope="col" class="px-4 py-3 border-r">{{ _("Name") }}</th>
+                    <th scope="col" class="px-4 py-3 border">{{ _("ID") }}</th>
+                    <th scope="col" class="px-4 py-3 border">{{ _("Name") }}</th>
                     <th scope="col" class="px-4 py-3">{{ _("Runtime Info") }}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for language in languages %}
                     {% if language.runtime_versions %}
-                        <tr class="border-b hover:bg-light-blue-pink-gradient">
-                            <td class="px-4 py-2 font-extrabold text-gray-900 whitespace-nowrap border-r">{{ language.short_display_name }}</td>
-                            <td class="language px-4 py-2 text-gray-900 whitespace-nowrap border-r">{{ language.name }}</td>
-                            <td class="info px-4 py-2 font-medium text-gray-900 whitespace-nowrap border-r">
+                        <tr class="border hover:bg-light-blue-pink-gradient">
+                            <td class="px-4 py-2 font-extrabold text-gray-900 whitespace-nowrap border">{{ language.short_display_name }}</td>
+                            <td class="language px-4 py-2 text-gray-900 whitespace-nowrap border">{{ language.name }}</td>
+                            <td class="info px-4 py-2 font-medium text-gray-900 whitespace-nowrap border">
                                 <code>{{ runtime_versions(language.runtime_versions()) }}</code>
                                 {% if language.description %}
                                     <div>

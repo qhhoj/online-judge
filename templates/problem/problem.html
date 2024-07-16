@@ -359,7 +359,9 @@
             {{ _('This problem cannot be accessed by normal users until it is approved by an admin or staff. Please make sure that all the data for this problem is correct.') }}
         </div>
     {% endif %}
-    {% include "problem/problem-detail.html" %}
+    <article class="prose">
+        {% include "problem/problem-detail.html" %}
+    </article>
 {% endblock %}
 
 {% block post_description_end %}
