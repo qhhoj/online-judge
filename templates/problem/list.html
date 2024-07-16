@@ -145,7 +145,7 @@
             </div>
         </div>
         <div class="overflow-x-auto problems h-scrollable-table">
-            <table class="w-full text-lg text-left text-gray-500">
+            <table class="w-full text-lg text-left text-gray-500 table-fixed">
                 <thead class="text-xl text-white uppercase bg-primary">
                 <tr>
                     {% if request.user.is_authenticated %}
@@ -155,13 +155,13 @@
                             </a>
                         </th>
                     {% endif %}
-                    <th scope="col" class="problem-code px-4 py-3 border">
+                    <th scope="col" class="problem-code px-4 py-3 border w-40 text-center">
                         <a href="{{ sort_links.code }}">{{ _('ID') }}{{ sort_order.code}}</a>
                     </th>
                     <th scope="col" class="problem-name px-4 py-3 border">
                         <a href="{{ sort_links.name }}">{{ _('Problem') }}{{ sort_order.name }}</a>
                     </th>
-                    <th scope="col" class="category px-4 py-3 border">
+                    <th scope="col" class="category px-4 py-3 border w-40 text-center">
                         <a href="{{ sort_links.group }}">{{ _('Category') }}{{ sort_order.group }}</a>
                     </th>
                     {% if show_types %}
@@ -169,16 +169,16 @@
                             <a href="{{ sort_links.type }}">{{ _('Types') }}{{ sort_order.type }}</a>
                         </th>
                     {% endif %}
-                    <th scope="col" class="points px-4 py-3 border w-36 text-center">
+                    <th scope="col" class="points px-4 py-3 border w-32 text-center">
                         <a href="{{ sort_links.points }}">{{ _('Points') }}{{ sort_order.points }}</a>
                     </th>
-                    <th scope="col" class="ac-rate px-4 py-3 border w-36 text-center">
+                    <th scope="col" class="ac-rate px-4 py-3 border w-24 text-center">
                         <a href="{{ sort_links.ac_rate }}">{{ _('%% AC') }}{{ sort_order.ac_rate }}</a>
                     </th>
-                    <th scope="col" class="users px-4 py-3 border w-36 text-center">
+                    <th scope="col" class="users px-4 py-3 border w-20 text-center">
                         <a href="{{ sort_links.user_count }}">{{ _('# AC') }}{{ sort_order.user_count }}</a>
                     </th>
-                    <th scope="col" class="editorial px-4 py-3 w-24 text-center" title="{{ _('Editorial') }}">
+                    <th scope="col" class="editorial px-4 py-3 w-16 text-center" title="{{ _('Editorial') }}">
                         <a href="{{ sort_links.editorial }}">
                             <i class="fa fa-book"></i>{{ sort_order.editorial }}
                         </a>
@@ -219,13 +219,13 @@
                                 </td>
                             {% endif %}
                         {% endif %}
-                        <td class="problem-code px-4 py-2 font-medium text-gray-900 whitespace-nowrap border">
+                        <td class="problem-code px-4 py-2 font-medium text-gray-900 whitespace-nowrap truncate border">
                             <a href="{{ url('problem_detail', problem.code) }}">{{ problem.code}}</a>
                         </td>
-                        <td class="problem-name px-4 py-2 font-bold text-gray-900 whitespace-nowrap border">
+                        <td class="problem-name px-4 py-2 font-bold text-gray-900 whitespace-nowrap text-wrap border">
                             <a href="{{ url('problem_detail', problem.code) }}">{{ problem.i18n_name or problem.name }}</a>
                         </td>
-                        <td class="category px-4 py-2 font-medium text-gray-900 whitespace-nowrap border">{{ problem.group.full_name }}</td>
+                        <td class="category px-4 py-2 font-medium text-gray-900 whitespace-nowrap text-wrap border">{{ problem.group.full_name }}</td>
                         {% if show_types %}
                             <td class="types">
                                 {% for type in problem.types_list %}

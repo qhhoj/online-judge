@@ -1,6 +1,6 @@
 {% set can_view, can_edit = submission_layout(submission, profile_id, request.user, completed_problem_ids, editable_problem_ids, tester_problem_ids) %}
-<div class="sub-result {{ submission.result_class }}">
-    <div class="score">
+<div class="sub-result {{ submission.result_class }} w-20 min-w-20 text-center border-r align-middle">
+    <div class="score text-black pt-3">
         {%- if submission.is_graded -%}
             {%- if submission.status in ('IE', 'CE', 'AB') -%}
                 ---
@@ -8,20 +8,20 @@
                 {{ submission.case_points|floatformat(-3) }} / {{ submission.case_total|floatformat(0) }}
             {%- endif -%}
         {%- else -%}
-            <i class="fa fa-spinner fa-pulse grading-spinner"></i>
+            <i class="fa fa-spinner fa-pulse grading-spinner text-primary-content"></i>
         {%- endif -%}
     </div>
 
-    <div class="state">
+    <div class="state font-bold pt-5 text-xs">
         <span title="{{ submission.long_status }}" class="status">{{ submission.short_status }}</span> |
         <span class="language">{{ submission.language.short_display_name }}</span>
     </div>
 </div>
 {% set can_view_testcase_status = request.user.is_superuser or submission.problem.testcase_result_visibility_mode == 'A' %}
-<div class="sub-main">
+<div class="sub-main flex flex-row place-items-center pl-5 justify-between">
     <div class="sub-info{% if submission.status == 'G' %} sub-info-grading{% endif %}">
         {% if show_problem %}
-            <div class="name">
+            <div class="name font-bold">
                 <a href="{{ url('problem_detail', submission.problem.code) }}">{{ problem_name }}</a>
             </div>
         {% endif %}
@@ -49,7 +49,7 @@
     {% endif %}
 
     {% if can_view %}
-        <div class="sub-prop"><div>
+        <div class="sub-prop block isolate"><div>
             <a href="{{ url('submission_status', submission.id) }}">
                 <i class="fa fa-eye fa-fw"></i><span class="label">{{ _('view') }}</span>
             </a> ·

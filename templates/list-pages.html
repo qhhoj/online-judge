@@ -1,31 +1,33 @@
-<ul class="pagination">
+<nav aria-label="page navigation">
+<ul class="inline-flex -space-x-px text-sm">
     {% if page_obj.has_previous() %}
         {% if page_obj.previous_page_number() == 1 and first_page_href != None %}
-            <li><a href="{{ first_page_href }}">«</a></li>
+            <li><a href="{{ first_page_href }}" class="flex items-center justify-center px-3 h-8 ms-0 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700">Previous</a></li>
         {% else %}
-            <li><a href="{{ page_prefix or '' }}{{ page_obj.previous_page_number() }}{{ page_suffix or '' }}">«</a></li>
+            <li><a href="{{ page_prefix or '' }}{{ page_obj.previous_page_number() }}{{ page_suffix or '' }}" class="flex items-center justify-center px-3 h-8 ms-0 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700">Previous</a></li>
         {% endif %}
     {% else %}
-        <li class="disabled-page"><span>«</span></li>
+        <li class="disabled-page" class="flex items-center justify-center px-3 h-8 ms-0 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700"><span>Previous</span></li>
     {% endif %}
 
     {% for page in page_obj.page_range %}
         {% if not page %}
-            <li class="disabled-page"><span>...</span></li>
+            <li class="disabled-page"><a class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700">...</a></li>
         {% else %}
-            <li{% if page == page_obj.number %} class="active-page"{% endif %}><a href="
+            <li><a href="
                 {%- if page == 1 and first_page_href != None -%}
                     {{ first_page_href }}
                 {%- else -%}
                     {{ page_prefix or '' }}{{ page }}{{ page_suffix or '' }}
                 {%- endif -%}
-            ">{{ page }}</a></li>
+            " class="flex items-center justify-center px-3 h-8 leading-tight {% if page == page_obj.number %} text-blue-600 {% else %} text-gray-500 {% endif %} bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" {% if page == page_obj.number %} aria-current="page"{% endif %}>{{ page }}</a></li>
         {% endif %}
     {% endfor %}
 
     {% if page_obj.has_next() %}
-        <li><a href="{{ page_prefix or '' }}{{ page_obj.next_page_number() }}{{ page_suffix or '' }}">»</a></li>
+        <li><a href="{{ page_prefix or '' }}{{ page_obj.next_page_number() }}{{ page_suffix or '' }}" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700">Next</a></li>
     {% else %}
-        <li class="disabled-page"><span>»</span></li>
+        <li class="disabled-page" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700"><span>Next</span></li>
     {% endif %}
 </ul>
+</nav>
