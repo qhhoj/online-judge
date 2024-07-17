@@ -528,26 +528,26 @@
     {% endif %}
     {{ super() }}
     {% if is_ICPC_format %}
-    <table id="cell_legend" class="table" style="width: 10em; margin-left: 0">
-        <thead>
+    <table id="cell_legend text-lg text-left" class="table w-36 ml-0">
+        <thead class="text-xl uppercase bg-primary text-white">
             <tr>
-                <th scope="col">{{_('Cell colours')}}</th>
+                <th scope="col" class="px-4 py-3 border">{{_('Cell colours')}}</th>
             </tr>
         </thead>
-        <tbody>
-            <tr class="first-solve">
+        <tbody class="border font-bold text-base">
+            <tr class="first-solve text-gray-900 whitespace-nowrap border">
                 <td>{{_('Solved first')}}</td>
             </tr>
-            <tr class="full-score">
+            <tr class="full-score text-gray-900 whitespace-nowrap border">
                 <td>{{_('Solved')}}</td>
             </tr>
-            <tr class="failed-score">
+            <tr class="failed-score text-gray-900 whitespace-nowrap border">
                 <td>{{_('Tried, incorrect')}}</td>
             </tr>
-            <tr class="pending">
+            <tr class="pending text-gray-900 whitespace-nowrap border">
                 <td>{{_('Tried, pending')}}</td>
             </tr>
-            <tr>
+            <tr class="text-gray-900 whitespace-nowrap border">
                 <td>{{_('Untried')}}</td>
             </tr>
         </tbody>

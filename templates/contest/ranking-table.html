@@ -36,13 +36,13 @@
 {% block user_name_data %}
     {% if not contest.ended %}
         {% if not user.participation.ended %}
-            <div class="start-time active">
+            <div class="start-time active" style="display: none;">
                 {% with abs=_('Started on {time}'), rel=_('Started {time}') %}
                     {{ relative_time(user.participation.start, abs=abs, rel=rel) }}
                 {% endwith %}
             </div>
         {% else %}
-            <div class="start-time">{{ _('Participation ended.') }}</div>
+            <div class="start-time" style="display: none;">{{ _('Participation ended.') }}</div>
         {% endif %}
     {% endif %}
 {% endblock %}
@@ -57,25 +57,25 @@
 
 {% block after_point_head %}
     {% if is_ICPC_format %}
-        <th class="penalty">{{ _('Penalty') }}</th>
+        <th scope='col' class="penalty px-4 py-3 text-center border w-24">{{ _('Penalty') }}</th>
     {% endif %}
     {% for problem in problems %}
-        <th class="points header"><a href="{{ url('problem_detail', problem.problem.code) }}">
+        <th class="points header px-4 py-3 text-center border w-24"><a href="{{ url('problem_detail', problem.problem.code) }}">
             {{- contest.get_label_for_problem(loop.index0) -}}
             {%- if not is_ICPC_format %}
-            <div class="point-denominator">{{ problem.points }}</div>
+            <div class="point-denominator border-t">{{ problem.points }}</div>
             {% endif %}
             <div class="problem-code" style="display: none;">{{ problem.problem.code }}</div>
         </a></th>
     {% endfor %}
     {% if has_rating %}
-        <th class="rating-column">{{ _('Rating') }}</th>
+        <th class="rating-column px-4 py-3 text-center border w-24">{{ _('Rating') }}</th>
     {% endif %}
 {% endblock %}
 
 {% block row_extra %}
     {% if user.participation.is_disqualified -%}
-        class="disqualified"
+        class="disqualified border bg-red-300"
     {%- endif %}
 {% endblock %}
 
@@ -84,7 +84,7 @@
         {{ cell }}
     {% endfor %}
     {% if has_rating %}
-        <td class="rating-column">
+        <td class="rating-column whitespace-nowrap border text-center">
             {% if user.participation_rating %}
                 {% cache 86400 'rating_number' user.participation_rating %}
                     {{ rating_number(user.participation_rating) }}
@@ -99,13 +99,13 @@
 {% endblock %}
 
 {% block after_user_list %}
-    <tr>
-        <td colspan={% if is_ICPC_format %}4{% else %}3{% endif %}>Total AC</td>
+    <tr class="border text-gray-900">
+        <td colspan={% if is_ICPC_format %}4{% else %}3{% endif %} class="border font-bold text-xl">Total AC</td>
         {% for problem in problems %}
-            <td class="total-ac" id='{{- contest.get_label_for_problem(loop.index0) }}-total'>{{ total_ac.get(str(problem.id), 0) }}</td>
+            <td class="total-ac border text-center font-bold" id='{{- contest.get_label_for_problem(loop.index0) }}-total'>{{ total_ac.get(str(problem.id), 0) }}</td>
         {% endfor %}
         {% if has_rating %}
-            <td></td>
+            <td class="border"></td>
         {% endif %}
     </tr>
 {% endblock %}

@@ -105,7 +105,8 @@ class ECOOContestFormat(DefaultContestFormat):
                                 bonus=floatformat(format_data['bonus'])) if format_data['bonus'] else ''
 
             return format_html(
-                '<td class="{state}"><a href="{url}">{points}{bonus}<div class="solving-time">{time}</div></a></td>',
+                '<td class="{state} border whitespace-nowrarp text-center">'
+                '<a href="{url}" class="text-black">{points}{bonus}<div class="solving-time">{time}</div></a></td>',
                 state=(('pretest-' if self.contest.run_pretests_only and contest_problem.is_pretested else '') +
                        ('first-solve ' if first_solves.get(str(contest_problem.id), None) == participation.id else '') +
                        self.best_solution_state(format_data['points'], contest_problem.points)),
@@ -116,11 +117,12 @@ class ECOOContestFormat(DefaultContestFormat):
                 time=nice_repr(timedelta(seconds=format_data['time']), 'noday'),
             )
         else:
-            return mark_safe('<td></td>')
+            return mark_safe('<td class="border"></td>')
 
     def display_participation_result(self, participation, frozen=False):
         return format_html(
-            '<td class="user-points"><a href="{url}">{points}<div class="solving-time">{cumtime}</div></a></td>',
+            '<td class="user-points border whitespace-nowrap text-center">'
+            '<a href="{url}">{points}<div class="solving-time">{cumtime}</div></a></td>',
             url=reverse('contest_all_user_submissions',
                         args=[self.contest.key, participation.user.user.username]),
             points=floatformat(participation.score, -self.contest.points_precision),

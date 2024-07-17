@@ -145,40 +145,40 @@
             </div>
         </div>
         <div class="overflow-x-auto problems h-scrollable-table">
-            <table class="w-full text-lg text-left text-gray-500 table-fixed">
-                <thead class="text-xl text-white uppercase bg-primary">
+            <table class="w-full text-base text-left text-gray-500 table-fixed">
+                <thead class="text-lg text-white uppercase bg-primary">
                 <tr>
                     {% if request.user.is_authenticated %}
-                        <th scope="col" class="solved px-4 py-3 w-24 border text-center">
+                        <th scope="col" class="solved px-4 py-2 w-24 border text-center">
                             <a href="{{ sort_links.solved }}">
                                 <i class="fa fa-check"></i>{{ sort_order.solved }}
                             </a>
                         </th>
                     {% endif %}
-                    <th scope="col" class="problem-code px-4 py-3 border w-40 text-center">
+                    <th scope="col" class="problem-code px-4 py-2 border w-48 text-center">
                         <a href="{{ sort_links.code }}">{{ _('ID') }}{{ sort_order.code}}</a>
                     </th>
-                    <th scope="col" class="problem-name px-4 py-3 border">
+                    <th scope="col" class="problem-name px-4 py-2 border">
                         <a href="{{ sort_links.name }}">{{ _('Problem') }}{{ sort_order.name }}</a>
                     </th>
-                    <th scope="col" class="category px-4 py-3 border w-40 text-center">
+                    <th scope="col" class="category px-4 py-2 border w-40 text-center">
                         <a href="{{ sort_links.group }}">{{ _('Category') }}{{ sort_order.group }}</a>
                     </th>
                     {% if show_types %}
-                        <th class="types px-4 py-3 border">
+                        <th class="types px-4 py-2 border">
                             <a href="{{ sort_links.type }}">{{ _('Types') }}{{ sort_order.type }}</a>
                         </th>
                     {% endif %}
-                    <th scope="col" class="points px-4 py-3 border w-32 text-center">
+                    <th scope="col" class="points px-4 py-2 border w-32 text-center">
                         <a href="{{ sort_links.points }}">{{ _('Points') }}{{ sort_order.points }}</a>
                     </th>
-                    <th scope="col" class="ac-rate px-4 py-3 border w-24 text-center">
+                    <th scope="col" class="ac-rate px-4 py-2 border w-24 text-center">
                         <a href="{{ sort_links.ac_rate }}">{{ _('%% AC') }}{{ sort_order.ac_rate }}</a>
                     </th>
-                    <th scope="col" class="users px-4 py-3 border w-20 text-center">
+                    <th scope="col" class="users px-4 py-2 border w-20 text-center">
                         <a href="{{ sort_links.user_count }}">{{ _('# AC') }}{{ sort_order.user_count }}</a>
                     </th>
-                    <th scope="col" class="editorial px-4 py-3 w-16 text-center" title="{{ _('Editorial') }}">
+                    <th scope="col" class="editorial px-4 py-2 w-16 text-center" title="{{ _('Editorial') }}">
                         <a href="{{ sort_links.editorial }}">
                             <i class="fa fa-book"></i>{{ sort_order.editorial }}
                         </a>

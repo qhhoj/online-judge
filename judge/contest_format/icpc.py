@@ -197,15 +197,16 @@ class ICPCContestFormat(DefaultContestFormat):
 
             if not format_data[prefix + 'points']:
                 return format_html(
-                    '<td class="{state}"><a href="{url}">{tries}</a></td>',
+                    '<td class="{state} border whitespace-nowarp text-center font-normal">'
+                    '<a href="{url}">{tries}</a></td>',
                     state=state,
                     url=url,
                     tries=tries,
                 )
 
             return format_html(
-                ('<td class="{state}">'
-                 '<a href="{url}"><div class="solving-time-minute">{minute}</div>'
+                ('<td class="{state} border whitespace-nowarp text-center font-normal">'
+                 '<a href="{url}"><div class="solving-time-minute font-normal">{minute}</div>'
                  '<div class="solving-time">{time}</div>{tries}</a></td>'),
                 state=state,
                 url=url,
@@ -214,7 +215,7 @@ class ICPCContestFormat(DefaultContestFormat):
                 time=nice_repr(timedelta(seconds=format_data['time']), 'noday'),
             )
         else:
-            return mark_safe('<td></td>')
+            return mark_safe('<td class="border"></td>')
 
     def display_participation_result(self, participation, frozen=False):
         if frozen:
@@ -224,8 +225,9 @@ class ICPCContestFormat(DefaultContestFormat):
             points = participation.score
             cumtime = participation.cumtime
         return format_html(
-            ('<td class="user-points"><a href="{url}">{points}</a></td>'
-             '<td class="user-penalty">{cumtime}</td>'),
+            ('<td class="user-points border whitespace-nowrap text-center text-lg">'
+             '<a href="{url}" class="text-black">{points}</a></td>'
+             '<td class="user-penalty text-center text-lg font-medium text-black">{cumtime}</td>'),
             url=reverse('contest_all_user_submissions',
                         args=[self.contest.key, participation.user.user.username]),
             points=floatformat(points, -self.contest.points_precision),

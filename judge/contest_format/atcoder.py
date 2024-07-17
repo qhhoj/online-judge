@@ -101,7 +101,8 @@ class AtCoderContestFormat(DefaultContestFormat):
             penalty = format_html('<small style="color:red"> ({penalty})</small>',
                                   penalty=floatformat(format_data['penalty'])) if format_data['penalty'] else ''
             return format_html(
-                '<td class="{state}"><a href="{url}">{points}{penalty}<div class="solving-time">{time}</div></a></td>',
+                '<td class="{state} border whitespace-nowrap text-center text-lg"><a href="{url}" '
+                'class="text-black">{points}{penalty}<div class="solving-time text-gray-500">{time}</div></a></td>',
                 state=(('pretest-' if self.contest.run_pretests_only and contest_problem.is_pretested else '') +
                        ('first-solve ' if first_solves.get(str(contest_problem.id), None) == participation.id else '') +
                        self.best_solution_state(format_data['points'], contest_problem.points)),

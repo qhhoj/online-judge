@@ -190,58 +190,58 @@
             {% if can_edit and can_download_data %}
                 <a class="button" style="float:right" href="{{ url('contest_prepare_data', contest.key) }}">{{ _('Download data') }}</a>
             {% endif %}
-            <table class="table striped">
-                <thead>
+            <table class="table striped w-full text-lg text-left text-gray-900 table-fixed border">
+                <thead class="text-xl text-white uppercase bg-primary border">
                 <tr>
-                    <th>#</th>
+                    <th class="px-4 py-3 text-center w-24 border">#</th>
                     {% if request.user.is_authenticated %}
-                        <th><i class="fa fa-check"></i></th>
+                        <th class="px-4 py-3 text-center w-24 border"><i class="fa fa-check"></i></th>
                     {% endif %}
-                    <th>{{ _('Problem') }}</th>
+                    <th class="px-4 py-3 border">{{ _('Problem') }}</th>
                     {% if not is_ICPC_format %}
-                        <th>{{ _('Points') }}</th>
+                        <th class="px-4 py-3 border text-center w-36">{{ _('Points') }}</th>
                     {% endif %}
                     {% if metadata.has_public_editorials %}
-                        <th>{{ _('Editorials') }}</th>
+                        <th class="px-4 py-3 border text-center w-24">{{ _('Editorials') }}</th>
                     {% endif %}
                 </tr>
                 </thead>
                 <tbody>
                 {% for problem in contest_problems %}
-                    <tr>
-                        <td style="width: 1em;">{{contest.get_label_for_problem(loop.index0)}}</td>
+                    <tr class="border hover:bg-light-blue-pink-gradient">
+                        <td class="whitespace-nowrap text-center border font-medium">{{contest.get_label_for_problem(loop.index0)}}</td>
                         {% if request.user.is_authenticated %}
                             {% if problem.id in completed_problem_ids %}
-                                <td style="width: 1em;">
+                                <td class="whitespace-nowrap text-center border">
                                     <a href="{{ url('user_submissions', problem.code, request.user.username) }}">
                                         {% if problem.is_public %}
-                                            <i class="solved-problem-color fa fa-check-circle"></i>
+                                            <i class="solved-problem-color fa fa-check-circle text-emerald-500"></i>
                                         {% else %}
-                                            <i class="solved-problem-color fa fa-lock"></i>
+                                            <i class="solved-problem-color fa fa-lock text-emerald-500"></i>
                                         {% endif %}
                                     </a>
                                 </td>
                             {% elif problem.id in attempted_problem_ids %}
-                                <td style="width: 1em;">
+                                <td class="whitespace-nowrap text-center border">
                                     <a href="{{ url('user_submissions', problem.code, request.user.username) }}">
                                         {% if problem.is_public %}
-                                            <i class="attempted-problem-color fa fa-times-circle"></i>
+                                            <i class="attempted-problem-color fa fa-times-circle text-orange-500"></i>
                                         {% else %}
-                                            <i class="attempted-problem-color fa fa-lock"></i>
+                                            <i class="attempted-problem-color fa fa-lock text-orange-500"></i>
                                         {% endif %}
                                     </a>
                                 </td>
                             {% else %}
-                                <td style="width: 1em;">
+                                <td class="whitespace-nowrap text-center border">
                                     {% if problem.is_public %}
                                         <i class="unsolved-problem-color fa"></i>
                                     {% else %}
-                                        <i class="unsolved-problem-color fa fa-lock"></i>
+                                        <i class="unsolved-problem-color fa fa-lock text-red-500"></i>
                                     {% endif %}
                                 </td>
                             {% endif %}
                         {% endif %}
-                        <td style="text-align: left; padding-left: 2em;">
+                        <td class="whitespace-nowrap border pl-4 font-bold">
                             {% if can_view_all_problems or problem.is_public %}
                                 <a href="{{ url('problem_detail', problem.code) }}">{{ problem.i18n_name or problem.name }}</a>
                             {% else %}
@@ -249,7 +249,7 @@
                             {% endif %}
                         </td>
                         {% if not is_ICPC_format %}
-                            <td>{{ problem.points|floatformat(-2) }}</td>
+                            <td td class="whitespace-nowrap text-center border font-medium">{{ problem.points|floatformat(-2) }}</td>
                         {% endif %}
                         {% if metadata.has_public_editorials %}
                             <td>
@@ -263,47 +263,53 @@
                 </tbody>
             </table>
             {% if can_view_all_problems %}
-            <a class="button" style="width: fit-content" href="{{ url('contest_all_problems', contest.key) }}">{{ _('All problems') }}</a>
+            <a class="button" href="{{ url('contest_all_problems', contest.key) }}">
+                <button type='button' class="text-white text-lg font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col">
+                    <i class="fa-solid fa-cubes-stacked" aria-hidden="true"></i>
+                    {{ _('All problems') }}
+                </button>
+            </a>
             {% endif %}
         </div>
         {% if has_announcements or can_edit %}
         <div class="contest-clartifications">
             <h2 style="margin-bottom: 0.2em"><i class="fa fa-check"></i> {{ _('Announcements') }}</h2>
-            <table id="contest-clartifications" class="table">
-                <thead>
+            <table id="contest-clartifications" class="table w-full text-gray-900 table-left table-fixed">
+                <thead class="text-xl uppercase text-white bg-primary">
                     <tr>
-                        <th>{{ _('When') }}</th>
-                        <th>{{ _('Title') }}</th>
-                        <th>{{ _('Description') }}</th>
+                        <th scope="col" class="px-4 py-3 border w-48">{{ _('When') }}</th>
+                        <th scope="col" class="px-4 py-3 border w-1/5">{{ _('Title') }}</th>
+                        <th scope="col" class="px-4 py-3 border">{{ _('Description') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                 {% for announcement in announcements %}
-                    <tr>
-                        <td style="width: 15%;">{{ announcement.date|date(_("F j, Y, G:i")) }}</td>
-                        <td style="width: 20%; text-align: left; padding-left: 2em;">
+                    <tr class="border hover:bg-light-blue-pink-gradient">
+                        <td class="whitespace-nowrap border font-medium" style="width: 15%;">{{ announcement.date|date(_("F j, Y, G:i")) }}</td>
+                        <td class="whitespace-nowrap border font-bold pl-8">
                             {{ announcement.title }}
                         </td>
-                        <td style="text-align: left; padding-left: 2em;">
+                        <td class="whitespace-nowrap border pl-8 prose">
                             {{ announcement.description|markdown('announcement', MATH_ENGINE)|reference }}
                         </td>
                     </tr>
                 {% endfor %}
-                {% if can_edit %}
-                    <tr>
-                        <td colspan="3">
-                            <a class="button" href="{{ url('contest_announce', contest.key) }}">{{ _('Add an announcement') }}</a>
-                        </td>
-                    </tr>
-                {% endif %}
                 </tbody>
             </table>
+            {% if can_edit %}
+                <a class="button" href="{{ url('contest_announce', contest.key) }}">
+                    <button type='button' class="text-white text-lg font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                        {{ _('Add an announcement') }}
+                    </button>
+                </a>
+            {% endif %}
         </div>
         {% endif %}
-        {% if has_clarifications %}
+        {% if has_clarifications or can_edit %}
         <div class="contest-clartifications">
             <h2 style="margin-bottom: 0.2em"><i class="fa fa-check"></i> {{ _('Clarifications') }}</h2>
-            <table id="contest-clartifications" class="table">
+            <table id="contest-clartifications" class="table w-full text-gray-900 table-left table-fixed">
                 <thead>
                     <tr>
                         <th>{{ _('When') }}</th>
@@ -338,11 +344,11 @@
         {% endcache %}
     </div>
 
-    <hr>
-    <span class="social">
-        {{ post_to_facebook(request, contest, '<i class="fa fa-facebook-official"></i>') }}
-        {{ post_to_twitter(request, SITE_NAME + ':', contest, '<i class="fa fa-twitter"></i>') }}
-    </span>
+    {# <hr> #}
+    {# <span class="social"> #}
+    {#     {{ post_to_facebook(request, contest, '<i class="fa fa-facebook-official"></i>') }} #}
+    {#     {{ post_to_twitter(request, SITE_NAME + ':', contest, '<i class="fa fa-twitter"></i>') }} #}
+    {# </span> #}
 
 
     {% if not comment_lock %}

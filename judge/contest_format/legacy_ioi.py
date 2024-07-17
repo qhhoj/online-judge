@@ -106,7 +106,8 @@ class LegacyIOIContestFormat(DefaultContestFormat):
         if format_data:
             show_time = self.config['cumtime'] or self.config.get('last_score_altering', False)
             return format_html(
-                '<td class="{state}"><a href="{url}">{points}<div class="solving-time">{time}</div></a></td>',
+                '<td class="{state} border text-center"><a href="{url}">{points}'
+                '<div class="solving-time">{time}</div></a></td>',
                 state=(('pretest-' if self.contest.run_pretests_only and contest_problem.is_pretested else '') +
                        ('first-solve ' if first_solves.get(str(contest_problem.id), None) == participation.id else '') +
                        self.best_solution_state(format_data['points'], contest_problem.points)),
@@ -116,12 +117,13 @@ class LegacyIOIContestFormat(DefaultContestFormat):
                 time=nice_repr(timedelta(seconds=format_data['time']), 'noday') if show_time else '',
             )
         else:
-            return mark_safe('<td></td>')
+            return mark_safe('<td class="border"></td>')
 
     def display_participation_result(self, participation, frozen=False):
         show_time = self.config['cumtime'] or self.config.get('last_score_altering', False)
         return format_html(
-            '<td class="user-points"><a href="{url}">{points}<div class="solving-time">{cumtime}</div></a></td>',
+            '<td class="user-points border whitespace-nowrap text-center text-lg"><a href="{url}" class="text-black">'
+            '{points}<div class="solving-time text-gray-500">{cumtime}</div></a></td>',
             url=reverse('contest_all_user_submissions',
                         args=[self.contest.key, participation.user.user.username]),
             points=floatformat(participation.score, -self.contest.points_precision),

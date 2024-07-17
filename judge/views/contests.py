@@ -850,7 +850,7 @@ def make_contest_ranking_profile(contest, participation, contest_problems, first
         try:
             return contest.format.display_user_problem(participation, contest_problem, first_solves, frozen)
         except (KeyError, TypeError, ValueError):
-            return mark_safe('<td>???</td>')
+            return mark_safe('<td class="border text-center whitespace-nowrap text-black font-bold text-lg">???</td>')
 
     user = participation.user
     return ContestRankingProfile(
