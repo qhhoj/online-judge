@@ -107,7 +107,7 @@ class ProfileTestCase(CommonDataMixin, TestCase):
                 self.assertIsNone(self.profile.current_contest)
 
     def test_css_class(self):
-        self.assertEqual(self.profile.css_class, 'rating rate-none user')
+        self.assertEqual(self.profile.css_class, 'rating text-rate-none user')
 
     def test_get_user_css_class(self):
         self.assertEqual(
