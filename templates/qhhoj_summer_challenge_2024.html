@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}QHHOJ Summer Challenge 2024{% endblock %}
+{% block og_title %}
+<meta property="og:title" content="QHHOJ Summer Challenge 2024">
+{% endblock %}
+
+{% block content_title %} QHHOJ Summer Challenge 2024 {% endblock %}
+
+{% block meta %}
+<link rel="stylesheet" type="text/css" href="{{ static('about.css') }}">
+{% endblock %}
+
+{% block body %}
+<div id="tripetto-113h6c2"></div>
+<script src="https://cdn.jsdelivr.net/npm/@tripetto/runner"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tripetto/runner-chat"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tripetto/studio"></script>
+<script>
+TripettoStudio.form({
+    runner: TripettoChat,
+    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiT0Qvamo0Yko2dlpRQkJMaEx2THE3aEhXN0Zidy9EZStaOU5ReksyTTc2WT0iLCJkZWZpbml0aW9uIjoidWswMmN6b1l6Z2ZxT2x0cjZjSjZCSXVnR3h1MjZHOVU5czl6OHNPbWJXOD0iLCJ0eXBlIjoiY29sbGVjdCJ9.w47FKM25HbXE8u9C32xZHGiiI5hSTarfi8rPpb-0W1k",
+    element: "tripetto-113h6c2"
+});
+</script>
+{% endblock %}
+
+{% block bodyend %}
+{% if REQUIRE_JAX %}
+{% include "mathjax-load.html" %}
+{% endif %}
+{% endblock %}

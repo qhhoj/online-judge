@@ -19,7 +19,7 @@ from judge.views import TitledTemplateView, api, blog, comment, contests, langua
     preview, problem, problem_manage, ranked_submission, register, stats, status, submission, tag, tasks, ticket, \
     two_factor, user, widgets
 from judge.views.URL import redirect_url, shorten_url
-from judge.views.about import AboutView
+from judge.views.flatpages import FlatPageViewGenerator
 from judge.views.problem_data import ProblemDataView, ProblemSubmissionDiff, \
     problem_data_file, problem_init_view
 from judge.views.register import ActivationView, RegistrationView
@@ -108,7 +108,10 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
     path('accounts/', include(register_patterns)),
     path('', include('social_django.urls')),
-    path('about/', AboutView.as_view(), name='about'),
+    path('about/', FlatPageViewGenerator('about.html').as_view(), name='about'),
+    path('qhhoj_summer_challenge_2024_register/',
+         FlatPageViewGenerator('qhhoj_summer_challenge_2024.html').as_view(),
+         name='QHHOJ_SUMMER''_CHALLENGE_2024'),
 
     path('problems', include([
         path('/', problem.ProblemList.as_view(), name='problem_list'),
