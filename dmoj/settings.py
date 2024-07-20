@@ -691,7 +691,8 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'resources'),
+    DMOJ_RESOURCES,
+    ('flowbite', os.path.join(BASE_DIR, 'node_modules', 'flowbite')),
 ]
 STATIC_URL = '/static/'
 

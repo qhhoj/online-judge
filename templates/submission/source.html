@@ -35,6 +35,25 @@
         </script>
     {% endcompress %}
     {% block content_js_media %}{% endblock %}
+
+    <script>
+        window.addEventListener('load', () => {
+            const clipboard = FlowbiteInstances.getInstance('CopyClipboard', 'code-source');
+            const $defaultMessage = document.getElementById('default-message');
+            const $successMessage = document.getElementById('success-message');
+    
+            clipboard.updateOnCopyCallback((clipboard) => {
+                $defaultMessage.classList.add('hidden');
+                $successMessage.classList.remove('hidden');
+    
+                // reset to default state
+                setTimeout(() => {
+                    $defaultMessage.classList.remove('hidden');
+                    $successMessage.classList.add('hidden');
+                }, 2000);
+            })
+        })
+    </script>
 {% endblock %}
 
 {% block body %}
@@ -68,11 +87,21 @@
     <br>
     
     <div class="w-full">
+        <code id='code-source' class="hidden">{{ source }}</code>
         <div class="w-full h-11 rounded-t-lg bg-gray-200 flex justify-start items-center space-x-1.5 px-3">
             <span class="w-3 h-3 rounded-full bg-red-400"></span>
             <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
             <span class="w-3 h-3 rounded-full bg-green-400"></span>
             <p class="absolute left-1/2 transform translate-x-1/2 text-center font-bold">Source Editor</P>
+            <button data-copy-to-clipboard-target="code-source" data-copy-to-clipboard-content-type="innerHTML" class="absolute right-6 bg-primary hover:bg-indigo-600 focus:ring-4 focus:ring-blue-300 text-white px-3 py-1 rounded-lg">
+                <span id="default-message">Copy</span>
+                <span id="success-message" class="hidden inline-flex items-center">
+                    <svg class="w-3 h-3 text-white me-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 12">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5.917 5.724 10.5 15 1.5"/>
+                    </svg>
+                    Copied!
+                </span>
+            </button>
         </div>
         <div class="bg-gray-100 border-t-0 w-full">
             <table class="mx-3">

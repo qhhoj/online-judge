@@ -124,6 +124,7 @@ class SubmissionSource(SubmissionDetailBase):
         context = super(SubmissionSource, self).get_context_data(**kwargs)
         submission = self.object
         context['raw_source'] = submission.source.source.rstrip('\n')
+        context['source'] = submission.source.source
         context['highlighted_source'] = highlight_code(submission.source.source, submission.language.pygments)
         return context
 

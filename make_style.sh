@@ -10,6 +10,6 @@ build_style() {
   npx postcss sass_processed/style.css sass_processed/martor-description.css sass_processed/select2-dmoj.css --verbose --use autoprefixer -d $2
 }
 
-build_style 'default' 'resources'
-build_style 'dark' 'resources/dark'
+#build_style 'default' 'resources'
+#build_style 'dark' 'resources/dark'
 npm run tailwind-build
