@@ -60,11 +60,6 @@
 {% block media %}
     {{ form.media.css }}
     <link rel="stylesheet" type="text/css" href="{{ static('ui_form.css') }}">
-    <style>
-        .hidden {
-            display: none;
-        }
-    </style>
 {% endblock %}
 
 {% macro form_as_row(form) -%}
@@ -89,13 +84,13 @@
 <div>
     {% if request.user.is_staff %}
         <div class="alert alert-warning alert-dismissable">
-            <a class="close">x</a>
+            <a class="close" href="javascript:void(0)"><i class="fa-solid fa-xmark" aria-hidden="true"></i></a>
             <a href="{{ url('admin:judge_problem_change', object.id) }}">{{ _('Edit problem in admin panel for more options') }}</a>
         </div>
     {% endif %}
     {% if perms.judge.import_polygon_package %}
-        <div class="alert alert-warning alert-dismissable">
-            <a class="close">x</a>
+        <div class="alert alert-warning alert-dismissable mt-4">
+            <a class="close" href='javascript:void(0)'><i class="fa-solid fa-xmark" aria-hidden="true"></i></a>
             <a href="{{ url('problem_update_polygon', object.code) }}">{{ _('Update problem from Codeforces Polygon package') }}</a>
         </div>
     {% endif %}
