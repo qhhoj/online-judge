@@ -8,6 +8,7 @@
   "dependencies": {
     "@commander-js/extra-typings": "11.0.0",
     "commander": "11.0.0",
+    "flowbite": "^2.4.1",
     "ws": "^8.17.1"
   },
   "devDependencies": {

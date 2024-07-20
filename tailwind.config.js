@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["templates/**/*.{html,js}"],
+  content: ["templates/**/*.{html,js}", "./node_modules/flowbite/**/*.js"],
   theme: {
     extend: {
       fontFamily: {
@@ -27,7 +27,7 @@ export default {
       }
     },
   },
-  plugins: [require('@tailwindcss/typography'), require('daisyui'),],
+  plugins: [require('@tailwindcss/typography'), require('flowbite/plugin'), require('daisyui'),],
   daisyui: {
     themes: ["light", "dark"],
   },
