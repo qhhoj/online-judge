@@ -13,7 +13,7 @@
     {% if original %}
         <a style="display: none" title="{% trans "Edit profile" %}" href="{% url 'admin:judge_profile_change' original.profile.pk %}"
            class="button profilelink">
-            <i class="fa fa-lg fa-user-plus"></i>
+            <i class="fa fa-lg fa-user-plus fa-fw"></i>
             <span class="text">{% trans "Edit profile" %}</span>
         </a>
     {% endif %}

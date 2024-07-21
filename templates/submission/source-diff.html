@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 
+{% block title_ruler %}
+{% endblock %}
+
 {% block js_media %}
     {% compress js %}
         <script type="text/javascript" src="{{ static('vnoj/jsdiff/diff.min.js') }}"></script>
@@ -35,5 +38,6 @@
 {% endblock %}
 
 {% block body %}
+    <br>
     <div id="diffResult"></div>
 {% endblock %}

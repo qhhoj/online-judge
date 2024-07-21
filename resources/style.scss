@@ -478,4 +478,38 @@
         font-size: 0.75em;
         padding-bottom: -0.75em;
     }
+
+    .case-AC {
+      color: green;
+      font-weight: bold;
+    }
+  
+    .case-_AC {
+        color: #BBCC00;
+        font-weight: bold;
+    }
+    
+    .case-WA {
+        color: red;
+        font-weight: bold;
+    }
+    
+    .case-TLE, .case-SC {
+        color: gray;
+        font-weight: bold;
+    }
+    
+    .case-MLE, .case-OLE, .case-RTE, .case-IR {
+        color: orange;
+        font-weight: bold;
+    }
+    
+    .case-RJ {
+        color : #3E6291;
+        font-weight: bold;
+    }
+    
+    .case-bad {
+        text-decoration: underline;
+    }
 }

@@ -15,7 +15,7 @@ export default {
         'rate-pupil': 'green',
         'rate-specialist': '#03a89e',
         'rate-expert': '#00f',
-        'rate-candinate-master': '#a0a',
+        'rate-candidate-master': '#a0a',
         'rate-master': '#ff8c00',
         'rate-international-master': '#ff8c00',
         'rate-grandmaster': 'red',
@@ -24,6 +24,9 @@ export default {
       },
       fontFamily: {
         consolas: ['Consolas', 'monospace'],
+      },
+      maxWidth: {
+        '8xl': '100rem',
       }
     },
   },

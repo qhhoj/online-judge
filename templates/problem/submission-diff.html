@@ -60,76 +60,35 @@
     </script>
 {% endblock %}
 
-{% block media %}
-    <style>
-        #content-body {
-            overflow-x: auto;
-            padding-bottom: 0;
-        }
-
-        .sub-id {
-            width: 4em;
-            min-width: 4em;
-        }
-
-        .sub-username {
-            width: 5em;
-        }
-
-        .sub-result {
-            width: 3em;
-        }
-
-        .sub-language {
-            width: 6em;
-        }
-
-        .sub-date {
-            min-width: 8em;
-        }
-
-        .sub-case {
-            min-width: 3em;
-        }
-
-        .sub-case-status {
-            text-decoration: underline;
-        }
-
-        .highlighted {
-            background: lightBlue
-        }
-    </style>
-{% endblock %}
-
 {% block body %}
-    <table id="case-table" class="table">
-        <thead>
+    <div class="overflow-x-auto">
+    <table id="case-table" class="table text-base text-left text-gray-900">
+        <thead class="text-lg text-white uppercase bg-primary">
         <tr>
-            <th class="sub-check">{{ _('1st') }}</th>
-            <th class="sub-check">{{ _('2nd') }}</th>
-            <th class="sub-id">{{ _('ID') }}</th>
-            <th class="sub-username">{{ _('Username') }}</th>
-            <th class="sub-result">{{ _('Result') }}</th>
-            <th class="sub-language">{{ _('Language') }}</th>
-            <th class="sub-date">{{ _('Date') }}</th>
+            <th class="sub-check px-4 py-2 w-12 border text-center whitespace-nowrap">{{ _('1st') }}</th>
+            <th class="sub-check px-4 py-2 w-12 border text-center whitespace-nowrap">{{ _('2nd') }}</th>
+            <th class="sub-id px-4 py-2 w-12 border text-center whitespace-nowrap">{{ _('ID') }}</th>
+            <th class="sub-username w-36 px-4 py-2 border whitespace-nowrap">{{ _('Username') }}</th>
+            <th class="sub-result px-4 py-2 w-20 border text-center whitespace-nowrap">{{ _('Result') }}</th>
+            <th class="sub-language px-4 py-2 w-20 border text-center whitespace-nowrap">{{ _('Language') }}</th>
+            <th class="sub-date px-4 py-2 w-48 border text-center whitespace-nowrap">{{ _('Date') }}</th>
             {% for case in range(num_cases) %}
-                <th class="sub-case">{{ loop.index }}</th>
+                <th class="sub-case px-4 py-2 w-12 border text-center whitespace-nowrap">{{ loop.index }}</th>
             {% endfor %}
         </tr>
         </thead>
         <tbody>
         {% for sub in submissions %}
-            <tr sub-id={{ sub.id }}>
-                <td><input class="sub-check" type="checkbox"></td>
-                <td><input class="sub-check" type="checkbox"></td>
-                <td><a href="{{ url('submission_source', sub.id) }}">{{ sub.id }}</a></td>
-                <td>{{ link_user(sub.user) }}</td>
-                <td><span class="case-{{ sub.result }}">{{ sub.result }}</span></td>
-                <td>{{ sub.language.name }}</td>
-                <td><span class="time">{{ relative_time(sub.date) }}</span></td>
+            <tr sub-id={{ sub.id }} class="odd:bg-white even:bg-gray-50 border">
+                <td class="text-center border whitespace-nowrap"><input class="sub-check" type="checkbox"></td>
+                <td class="text-center border whitespace-nowrap"><input class="sub-check" type="checkbox"></td>
+                <td class="text-center border text-primary font-medium whitespace-nowrap"><a href="{{ url('submission_source', sub.id) }}">{{ sub.id }}</a></td>
+                <td class="px-4 border whitespace-nowrap">{{ link_user(sub.user) }}</td>
+                <td class="text-center border whitespace-nowrap"><span class="case-{{ sub.result }}">{{ sub.result }}</span></td>
+                <td class="text-center border whitespace-nowrap">{{ sub.language.name }}</td>
+                <td class="text-center border font-medium whitespace-nowrap"><span class="time">{{ relative_time(sub.date) }}</span></td>
                 {% for case in sub.test_cases.all() %}
-                    <td data-partial-output="{{ case.output }}">
+                    <td data-partial-output="{{ case.output }}" class="text-center border whitespace-nowrap">
                         {% if case.status == 'SC' %}
                             <span class="case-SC">---</span>
                         {% else %}
@@ -147,13 +106,14 @@
         {% endfor %}
         </tbody>
     </table>
+    </div>
     <div style="display: none" class="partial-output-window"><pre><code></code></pre></div>
 {% endblock %}
 
 {% block bodyend %}
-    <div style="padding-bottom: 4em;">
+    <div class="pb-4 pl-4">
         <a id="diff" class="unselectable button full" href="#" style="width: 90%; margin: auto;">
-            {{ _('Diff source code') }}
+            <button class="bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-1 rounded-lg">{{ _('Diff source code') }}</button>
         </a>
     </div>
 {% endblock %}
