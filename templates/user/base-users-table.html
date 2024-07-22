@@ -1,7 +1,7 @@
 {% spaceless %}
 <div class="overflow-x-auto">
-<table {% if table_id %}id="{{ table_id }}"{% endif %} class="users-table table striped w-full text-lg text-left text-gray-500">
-    <thead class="text-xl text-white uppercase bg-primary">
+<table {% if table_id %}id="{{ table_id }}"{% endif %} class="users-table table striped w-full text-base text-left text-gray-500">
+    <thead class="text-base text-white uppercase bg-primary">
         <tr>
             <th scope="col" class="header rank px-4 py-3 border text-center w-24">{{ rank_header or _("Rank") }}</th>
             {% block after_rank_head %}{% endblock %}
@@ -23,11 +23,11 @@
         <tr id="user-{{ user.user.username }}" {% block row_extra scoped %}{% endblock %} class="border hover:bg-light-blue-pink-gradient">
             <td class="text-gray-900 whitespace-nowrap border text-center font-medium">{{ rank }}</td>
             {% block after_rank scoped %}{% endblock %}
-            <td class="user-name text-gray-900 whitespace-nowrap border">
+            <td class="text-gray-900 whitespace-nowrap border">
                 <div>
                     <div style="float:left">
                         {% block user_name_display scoped %} {{ link_user(user) }} {% endblock %}
-                        <div class="personal-info text-gray-500 font-medium text-lg">
+                        <div class="personal-info text-gray-500 font-medium text-base">
                             {% block personal_info_display scoped %}
                                 <span>{{ user.user.first_name }}</span>
                             {% endblock %}

@@ -12,112 +12,129 @@
         {%- endif -%}
     </div>
 
-    <div class="state font-bold pt-5 text-xs">
+    <div class="state font-bold pt-1 text-xs">
         <span title="{{ submission.long_status }}" class="status">{{ submission.short_status }}</span> |
         <span class="language">{{ submission.language.short_display_name }}</span>
     </div>
 </div>
 {% set can_view_testcase_status = request.user.is_superuser or submission.problem.testcase_result_visibility_mode == 'A' %}
-<div class="sub-main flex flex-row place-items-center pl-5 justify-between">
-    <div class="sub-info{% if submission.status == 'G' %} sub-info-grading{% endif %}">
-        {% if show_problem %}
-            <div class="name font-bold">
-                <a href="{{ url('problem_detail', submission.problem.code) }}">{{ problem_name }}</a>
+<div class="sub-main flex flex-col pl-5 justify-between w-full">
+    <div class="flex flex-row grow-0">
+        <div class="sub-info{% if submission.status == 'G' %} sub-info-grading{% endif %} flex flex-col">
+            <div class="py-2">
+                {% if show_problem %}
+                <div class="name font-bold text-lg overflow-hidden">
+                    <a href="{{ url('problem_detail', submission.problem.code) }}">{{ problem_name }}</a>
+                </div>
+                {% endif %}
+                <div class="sub-usage overflow-auto">
+                    {% if submission.status in ('QU', 'P', 'G', 'CE', 'IE', 'AB') or not can_view_testcase_status %}
+                    <div class="flex flex-row">
+                        <div class="badge badge-neutral mr-1">---</div>
+                        <div class="badge badge-neutral mr-1">---</div>
+                    </div>
+                    {% else %}
+                    <div class="flex flex-row">
+                        {% if "TLE" != submission.result %}
+                        <div class="badge badge-neutral mr-1">{{ (submission.time or 0)|floatformat(2) }}s</div>
+                        {% else %}
+                        <div class="badge badge-neutral mr-1">---</div>
+                        {% endif %}
+                        <div class="badge badge-neutral mr-1">{{ (submission.memory_bytes|filesizeformat(True)).replace('i', '') }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    Submitted by {{ link_user(submission.user) }}
+                    <br>
+                    {{ relative_time(submission.date) }}
+                    {% if not request.in_contest and submission.contest_object_id %}
+                        <a href="{{ url('contest_view', submission.contest_object.key) }}"
+                        class="submission-contest">
+                            <i title="{{ submission.contest_object.name }}" class="fa fa-dot-circle-o"></i>
+                        </a>
+                    {% endif %}
+                </div>
             </div>
-        {% endif %}
-        <div>
-            {{ link_user(submission.user) }}
-            <br class="xs-br">
-            <span class="time">{{ relative_time(submission.date) }}</span>
-            {% if not request.in_contest and submission.contest_object_id %}
-                <a href="{{ url('contest_view', submission.contest_object.key) }}"
-                   class="submission-contest">
-                    <i title="{{ submission.contest_object.name }}" class="fa fa-dot-circle-o"></i>
-                </a>
+
+            {% if submission.status == 'G' and can_view_testcase_status %}
+                <div class="sub-testcase p-2 w-full">
+                    <p class="text-sm text-center">
+                    {%- if submission.current_testcase > 0 -%}
+                        {{ _('Case #%(case)s', case=submission.current_testcase) }}
+                    {%- else -%}
+                        ...
+                    {%- endif -%}
+                    </p>
+                    <progress class="progress w-full"></progress>
+                </div>
             {% endif %}
         </div>
+
+        <div class="grow"></div>
+
+        {% if can_view %}
+            <div class="relative flex grow-0 m-2 overflow-y-auto">
+                <div class="flex flex-col">
+                    <a href="{{ url('submission_status', submission.id) }}" class="btn btn-sm relative flex flex-col m-1">
+                        <i class="fa fa-eye fa-fw"></i><span class="label capitalize">{{ _('view') }}</span>
+                    </a>
+                    {% if not submission.language.file_only %}
+                        <a href="{{ url('submission_source', submission.id) }}" class="btn btn-sm relative flex flex-col m-1">
+                            <i class="fa fa-file-code fa-fw"></i><span class="label capitalize">{{ _('source') }}</span>
+                        </a>
+                    {% else %}
+                        <a href="{{ url('submission_source_download', submission.id) }}" class="btn btn-sm relative flex flex-col mx-1">
+                            <i class="fa fa-download fa-fw"></i><span class="label capitalize">{{ _('download') }}</span>
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="flex flex-col">
+                    {% if perms.judge.rejudge_submission and can_edit %}
+                        {% if not submission.is_locked %}
+                            <a href="#" onclick="rejudge_submission({{ submission.id }}, event);return false" class="btn btn-sm relative flex flex-col m-1">
+                                <i class="fa fa-refresh fa-fw"></i><span class="label capitalize">{{ _('rejudge') }}</span>
+                            </a>
+                        {% else %}
+                        <a class="btn btn-sm relative flex flex-col mx-1">
+                            <i class="fa fa-refresh fa-fw grey-icon"></i>
+                            <span class="label grey-label capitalize"
+                                title="{{ _('This submission has been locked, and cannot be rejudged.') }}">
+                                {{ _('locked') }}
+                            </span>
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                    {% if perms.judge.reject_submission and can_edit %}
+                        {% if not submission.is_locked %}
+                            <a href="#" onclick="reject_submission({{ submission.id }}, event);return false" class="btn btn-sm relative flex flex-col m-1">
+                                <i class="fa fa-minus-circle fa-fw"></i><span class="label capitalize">{{ _('reject') }}</span>
+                            </a>
+                        {% else %}
+                            <i class="fa fa-minus-circle fa-fw grey-icon"></i>
+                            <span class="label grey-label"
+                                title="{{ _('This submission has been locked, and cannot be reject.') }}">
+                                {{ _('locked') }}
+                            </span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% if can_edit %}
+                <div class="flex flex-col">
+                    {% if not submission.language.file_only %}
+                        <a href="{{ url('problem_submission_diff', submission.problem.code) }}?username={{ submission.user.user.username }}&highlight={{ submission.id }}" class="btn btn-sm relative flex flex-col m-1">
+                            <i class="fa fa-file fa-fw"></i><span class="label capitalize">{{ _('diff') }}</span>
+                        </a>
+                    {% endif %}
+                    {% if request.user.is_superuser %}
+                        <a href="{{ url('admin:judge_submission_change', submission.id) }}" class="btn btn-sm relative flex flex-col m-1">
+                            <i class="fa fa-gear fa-fw"></i><span class="label capitalize">{{ _('admin') }}</span>
+                        </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
-
-    {% if submission.status == 'G' and can_view_testcase_status %}
-        <div class="sub-testcase">
-            {%- if submission.current_testcase > 0 -%}
-                {{ _('Case #%(case)s', case=submission.current_testcase) }}
-            {%- else -%}
-                ...
-            {%- endif -%}
-        </div>
-    {% endif %}
-
-    {% if can_view %}
-        <div class="sub-prop inline-block"><div>
-            <a href="{{ url('submission_status', submission.id) }}">
-                <i class="fa fa-eye fa-fw"></i><span class="label">{{ _('view') }}</span>
-            </a> ·
-            {% if not submission.language.file_only %}
-                <a href="{{ url('submission_source', submission.id) }}">
-                    <i class="fa fa-file-code-o fa-fw"></i><span class="label">{{ _('source') }}</span>
-                </a>
-            {% else %}
-                <a href="{{ url('submission_source_download', submission.id) }}">
-                    <i class="fa fa-download fa-fw"></i><span class="label">{{ _('download') }}</span>
-                </a>
-            {% endif %}
-            {% if perms.judge.rejudge_submission and can_edit %} ·
-                {% if not submission.is_locked %}
-                    <a href="#" onclick="rejudge_submission({{ submission.id }}, event);return false">
-                        <i class="fa fa-refresh fa-fw"></i><span class="label">{{ _('rejudge') }}</span>
-                    </a>
-                {% else %}
-                    <i class="fa fa-refresh fa-fw grey-icon"></i>
-                    <span class="label grey-label"
-                          title="{{ _('This submission has been locked, and cannot be rejudged.') }}">
-                        {{ _('locked') }}
-                    </span>
-                {% endif %}
-            {% endif %}
-            {% if perms.judge.reject_submission and can_edit %} ·
-                {% if not submission.is_locked %}
-                    <a href="#" onclick="reject_submission({{ submission.id }}, event);return false">
-                        <i class="fa fa-minus-circle fa-fw"></i><span class="label">{{ _('reject') }}</span>
-                    </a>
-                {% else %}
-                    <i class="fa fa-minus-circle fa-fw grey-icon"></i>
-                    <span class="label grey-label"
-                          title="{{ _('This submission has been locked, and cannot be reject.') }}">
-                        {{ _('locked') }}
-                    </span>
-                {% endif %}
-            {% endif %}
-            {% if can_edit %}
-                {% if not submission.language.file_only %} ·
-                    <a href="{{ url('problem_submission_diff', submission.problem.code) }}?username={{ submission.user.user.username }}&highlight={{ submission.id }}">
-                        <i class="fa fa-files-o fa-fw"></i><span class="label">{{ _('diff') }}</span>
-                    </a>
-                {% endif %}
-                {% if request.user.is_superuser %} ·
-                    <a href="{{ url('admin:judge_submission_change', submission.id) }}">
-                        <i class="fa fa-cog fa-fw"></i><span class="label">{{ _('admin') }}</span>
-                    </a>
-                {% endif %}
-            {% endif %}
-        </div></div>
-    {% endif %}
-</div>
-
-
-<div class="sub-usage">
-    {% if submission.status in ('QU', 'P', 'G', 'CE', 'IE', 'AB') or not can_view_testcase_status %}
-        <div class="time">---</div>
-        <div class="memory">---</div>
-    {% else %}
-        {% if "TLE" != submission.result %}
-            <div title="{{ submission.time or 0 }}s" class="time">
-                {{ (submission.time or 0)|floatformat(2) }}s
-            </div>
-        {% else %}
-            <div class="time">---</div>
-        {% endif %}
-        {# No one actually likes IEC prefixes, Jinja2. #}
-        <div class="memory">{{ (submission.memory_bytes|filesizeformat(True)).replace('i', '') }}</div>
-    {% endif %}
 </div>

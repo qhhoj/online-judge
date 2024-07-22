@@ -1,4 +1,4 @@
-{% extends "common-content.html" %}
+{% extends "twoside-content.html" %}
 {% block content_media %}
     {% if not comment_lock %}
         {% include "comments/media-css.html" %}
@@ -123,6 +123,17 @@
 {% endblock %}
 
 {% block info_float %}
+    <div class="relative border mb-4 border-black rounded-lg">
+        <div class="border-b border-black font-bold text-primary" style="padding-bottom: 0.3em; padding-left: 0.5em; margin-top: 0.2em; margin-bottom: 0.2em;">
+            Hello
+        </div>
+        <div class="">
+            <div style="margin: 1em; font-size: 0.8em;">
+                Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+            </div>
+        </div>
+    </div>
+
     {% if request.user.is_authenticated and request.in_contest and submission_limit %}
         {% if submissions_left > 0 %}
             <a href="{{ url('problem_submit', problem.code) }}" class="unselectable button full">

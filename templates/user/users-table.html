@@ -1,7 +1,7 @@
 {% extends "user/base-users-table.html" %}
 
 {% block after_rank_head %}
-    <th class="header rank px-4 py-3 border-r text-center w-24 text-center">
+    <th class="header rank px-4 py-3 border-r w-24 text-center">
         {% if sort_links %}<a href="{{ sort_links.rating }}">{% endif -%}
         <span class="rate-group">
             <svg class="rate-box w-5 mr-1 align-middle inline-block text-white" viewBox="0 0 16 16" stroke='currentColor'>

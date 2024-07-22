@@ -70,40 +70,40 @@
 
 {% macro contest_head(contest) %}
     {% spaceless %}
-        <div>
-            <a href="{{ url('contest_view', contest.key) }}" class="contest-list-title">
+        <div class="mb-2">
+            <a href="{{ url('contest_view', contest.key) }}" class="contest-list-title font-bold text-xl">
                 {{- contest.name -}}
             </a>
         </div>
-        <div class="contest-tags">
+        <div class="contest-tags flex flex-row">
             {% if not contest.is_visible %}
-                <span style="background-color: #000000; color: #ffffff" class="contest-tag">
-                    <i class="fa fa-eye-slash"></i> {{ _('hidden') }}
+                <span style="background-color: #000000; color: #ffffff" class="contest-tag px-2 py-1 mr-2 w-fit rounded-lg">
+                    <i class="fa fa-eye-slash fa-fw"></i> {{ _('hidden') }}
                 </span>
             {% endif %}
             {% if contest.is_organization_private %}
                 {% for org in contest.organizations.all() %}
-                    <span style="background-color: #cccccc" class="contest-tag">
+                    <span style="background-color: #cccccc" class="contest-tag px-2 py-1 mr-2 w-fit rounded-lg">
                         <a href="{{ org.get_absolute_url() }}" style="color: #000000">
-                            <i class="fa fa-lock"></i> {{ org.name }}
+                            <i class="fa fa-lock fa-fw"></i> {{ org.name }}
                         </a>
                     </span>
                 {% endfor %}
             {% elif contest.is_private %}
-                <span style="background-color: #666666; color: #ffffff" class="contest-tag">
-                    <i class="fa fa-lock"></i> {{ _('private') }}
+                <span style="background-color: #666666; color: #ffffff" class="contest-tag px-2 py-1 mr-2 w-fit rounded-lg">
+                    <i class="fa fa-lock fa-fw"></i> {{ _('private') }}
                 </span>
             {% endif %}
             {% if contest.is_rated %}
-                <span style="background-color: #e54c14; color: #ffffff" class="contest-tag">
-                    <i class="fa fa-bar-chart"></i> {{ _('rated') }}
+                <span style="background-color: #e54c14; color: #ffffff" class="contest-tag px-2 py-1 mr-2 w-fit rounded-lg">
+                    <i class="fa fa-bar-chart fa-fw"></i> {{ _('rated') }}
                 </span>
             {% endif %}
             {% for tag in contest.tags.all() %}
-                <span style="background-color: {{ tag.color }}" class="contest-tag">
+                <span style="background-color: {{ tag.color }}" class="contest-tag px-2 py-1 mr-2 w-fit rounded-lg">
                     <a href="{{ url('contest_list_by_tag', tag.name) }}"
                        style="color: {{ tag.text_color }}">
-                        <i class="fa fa-tags"></i>&nbsp{{- tag.full_name -}}
+                        <i class="fa fa-tags fa-fw"></i>&nbsp{{- tag.full_name -}}
                     </a>
                 </span>
             {% endfor %}
@@ -132,9 +132,9 @@
 
 {% macro user_count(contest, user) %}
     {% if contest.can_see_own_scoreboard(user) %}
-        <a href="{{ url('contest_ranking', contest.key) }}">{{ contest.user_count }}</a>
+        <a href="{{ url('contest_ranking', contest.key) }}" class="text-primary font-medium">{{ contest.user_count }}</a>
     {% else %}
-        {{ contest.user_count }}
+        <p class="font-medium">{{ contest.user_count }}</p>
     {% endif %}
     <span title="{%- trans count=contest.virtual_count -%}
         This contest has {{count}} virtual participation
@@ -146,20 +146,22 @@
 
 {% macro contest_join(contest, request, finished_contests) %}
     {% if request.in_contest and contest.key == request.participation.contest.key %}
-        <td><span>Already joined</span></td>
+        <td class="whitespace-nowrap text-center border"><span>Already joined</span></td>
     {% else %}
-        <td>
+        <td class="whitespace-nowrap text-center border">
             {% if contest.key in finished_contests or request.profile in contest.authors.all() or request.profile in contest.curators.all() or request.profile in contest.testers.all() %}
                 <form action="{{ url('contest_join', contest.key) }}" method="post">
                     {% csrf_token %}
-                    <input type="submit" class="unselectable button full participate-button spectate-warning"
-                           value="{{ _('Spectate') }}">
+                    <button type="submit" class="unselectable button full participate-button spectate-warning bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-32 font-medium"> 
+                        {{ _('Spectate') }}
+                    </button>
                 </form>
             {% else %}
                 <form action="{{ url('contest_join', contest.key) }}" method="post">
                     {% csrf_token %}
-                    <input type="submit" class="unselectable button full participate-button join-warning"
-                        value="{{ _('Join') }}">
+                    <button type="submit" class="unselectable button full participate-button join-warning bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-32 font-medium">
+                        {{ _('Join') }}
+                    </button>
                 </form>
             {% endif %}
         </td>
@@ -167,7 +169,7 @@
 {% endmacro %}
 
 {% macro contest_register(contest, request) %}
-    <td>
+    <td class="whitespace-nowrap text-center border">
         {% if request.profile not in contest.authors.all() and request.profile not in contest.curators.all() and request.profile not in contest.testers.all() %}
             {% if request.profile and contest.id in request.profile.registered_contest_ids %}
                 <span style="color: #87ab69"><b>Already registered</b></span>
@@ -180,8 +182,9 @@
             {% else %}
                 <form action="{{ url('contest_register', contest.key) }}" method="post">
                     {% csrf_token %}
-                    <input type="submit" class="unselectable button full participate-button register-warning" style="background: linear-gradient(to bottom, #87ab69 0, #4b6043 100%) repeat-x"
-                            value="{{ _('Register') }}">
+                    <button type="submit" class="unselectable button full participate-button register-warning bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-32 font-medium">
+                        "{{ _('Register') }}
+                    </button>
                 </form>
             {% endif %}
         {% endif %}
@@ -197,20 +200,20 @@
 {% block body %}
     <div class="content-description">
         {% if active_participations %}
-            <h4>{{ _('Active contests') }}</h4>
-            <table class="contest-list table striped">
-                <thead>
+            <div style="margin-bottom: 0.2em; margin-top: 1em; float: left" class="text-xl font-bold"><i class="fa-solid fa-play fa-fw" aria-hidden="true"></i>{{ _('Active contests') }}</div>
+            <table class="table striped w-full text-base text-left text-gray-900 table-fixed border">
+                <thead class="text-lg text-white uppercase bg-primary border">
                 <tr>
-                    <th style="width:80%">{{ _('Contest') }}</th>
-                    <th>{{ _('Users') }}</th>
-                    <th style="width:20%"></th>
+                    <th class="px-4 py-3 w-2/3 border">{{ _('Contest') }}</th>
+                    <th class="px-4 py-3 text-center border">{{ _('Users') }}</th>
+                    <th class="px-4 py-3 text-center w-1/6 border"></th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for participation in active_participations %}
                     {% with contest=participation.contest %}
-                        <tr>
-                            <td>
+                        <tr class="border hover:bg-light-blue-pink-gradient">
+                            <td class="whitespace-nowrap text-left border">
                                 <div class="contest-block">
                                     {{ contest_head(contest) }}
                                     {% if contest.start_time %}
@@ -224,7 +227,7 @@
                                     {% endif %}
                                 </div>
                             </td>
-                            <td>
+                            <td class="whitespace-nowrap text-center border">
                                 {{ user_count(contest, request.user) }}
                             </td>
                             {{ contest_join(contest, request, finished_contests) }}
@@ -237,19 +240,19 @@
         {% endif %}
 
         {% if current_contests %}
-            <h4>{{ _('Ongoing contests') }}</h4>
-            <table class="contest-list table striped">
-                <thead>
+            <div style="margin-bottom: 0.2em; margin-top: 1em; float: left" class="text-xl font-bold"><i class="fa-solid fa-hourglass-half fa-fw" aria-hidden="true"></i>{{ _('Ongoing contests') }}</div>
+            <table class="table striped w-full text-base text-left text-gray-900 table-fixed border">
+                <thead class="text-lg text-white uppercase bg-primary border">
                 <tr>
-                    <th style="width:80%">{{ _('Contest') }}</th>
-                    <th>{{ _('Users') }}</th>
-                    <th style="width:15%"></th>
+                    <th class="px-4 py-3 w-2/3 border">{{ _('Contest') }}</th>
+                    <th class="px-4 py-3 text-center border">{{ _('Users') }}</th>
+                    <th class="px-4 py-3 text-center w-1/6 border"></th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for contest in current_contests %}
-                    <tr>
-                        <td>
+                    <tr class="border hover:bg-light-blue-pink-gradient">
+                        <td class="whitespace-nowrap text-left border">
                             <div class="contest-block">
                                 {{ contest_head(contest) }}
                                 {% if contest.start_time %}
@@ -261,7 +264,7 @@
                                 {% endif %}
                             </div>
                         </td>
-                        <td>
+                        <td class="whitespace-nowrap text-center border">
                             {{ user_count(contest, request.user) }}
                         </td>
                         {% if not contest.require_registration or contest.can_register %}
@@ -276,19 +279,22 @@
             <br>
         {% endif %}
 
-        <h4>{{ _('Upcoming contests') }}</h4>
+        <div style="margin-bottom: 0.2em; margin-top: 1em; float: left" class="text-xl font-bold w-full">
+            <i class="fa-solid fa-forward fa-fw" aria-hidden="true"></i>{{ _('Upcoming contests') }}
+        </div>
         {% if future_contests %}
-            <table class="contest-list table striped">
-                <thead>
+            <table class="table striped w-full text-base text-left text-gray-900 table-fixed border">
+                <thead class="text-lg text-white uppercase bg-primary border">
                 <tr>
-                    <th>{{ _('Contest') }}</th>
-                    <th style="width:20%"></th>
+                    <th class="px-4 py-3 w-2/3 border">{{ _('Contest') }}</th>
+                    <th class="px-4 py-3 text-center border">{{ _('Users') }}</th>
+                    <th class="px-4 py-3 text-center w-1/6 border"></th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for contest in future_contests %}
-                    <tr>
-                        <td>
+                    <tr class="border hover:bg-light-blue-pink-gradient">
+                        <td class="whitespace-nowrap text-left border">
                             <div class="contest-block">
                                 {{ contest_head(contest) }}
                                 {% if contest.start_time %}
@@ -300,66 +306,69 @@
                                 {% endif %}
                             </div>
                         </td>
+                        <td class="whitespace-nowrap text-center border">
+                            <p class="font-medium">0</p>
+                        </td>
                         {% if contest.require_registration %}
                             {{ contest_register(contest, request) }}
                         {% else %}
-                            <td></td>
+                            <td class="border"></td>
                         {% endif %}
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
         {% else %}
-            <i>{{ _('There are no scheduled contests at this time.') }}</i>
+            <p class="py-2">{{ _('There are no scheduled contests at this time.') }}</p>
             <br>
         {% endif %}
         <br>
 
-        <h4 id="past-contests">{{ _('Past contests') }}</h4>
+        <div id="past-contests" style="margin-bottom: 0.2em; margin-top: 1em; float: left" class="text-xl font-bold"><i class="fa-solid fa-clock-rotate-left fa-fw" aria-hidden="true"></i>{{ _('Past contests') }}</div>
         {% if page_obj or search_query %}
-            <div class="top-pagination-bar">
-                {% include "list-pages.html" %}
-                <div style="display: flex; align-items: center;">
+            <div class="flex flex-row w-full my-2">
+                <div class="grow-0">{% include "list-pages.html" %}</div>
+                <div class="grow"></div>
+                <div class="grow-0">
                     <form id="search-form" name="form" action="" method="get">
                         <input id="search" type="text" name="search" value="{{ search_query or '' }}"
-                            placeholder="{{ _('Search contest...') }}">
+                            placeholder="{{ _('Search contest...') }}" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 w-64 p-2.5">
                     </form>
                 </div>
             </div>
         {% endif %}
         {% if past_contests %}
-            <table class="contest-list table striped">
-                <thead>
+            <table class="table striped w-full text-base text-left text-gray-900 table-fixed border">
+                <thead class="text-lg text-white uppercase bg-primary border">
                 <tr>
-                    <th style="width:80%">
+                    <th class="px-4 py-3 w-2/3 border">
                         <a href="{{ sort_links.name }}" class="contest-sort-link">{{ _('Contest') }}{{ sort_order.name }}</a>
                     </th>
-                    <th>
+                    <th class="px-4 py-3 text-center border">
                         <a href="{{ sort_links.user_count }}" class="contest-sort-link">{{ _('Users') }}{{ sort_order.user_count }}</a>
                     </th>
-                    {% if not request.in_contest %}
-                        <th style="width:15%"></th>
-                    {% endif %}
+                    <th class="px-4 py-3 text-center w-1/6 border"></th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for contest in past_contests %}
-                    <tr>
-                        <td>
+                    <tr class="border hover:bg-light-blue-pink-gradient">
+                        <td class="whitespace-nowrap text-left border">
                             <div class="contest-block">
                                 {{ contest_head(contest) }}
                                 {{ time_left(contest) }}
                             </div>
                         </td>
-                        <td>
+                        <td class="whitespace-nowrap text-center border">
                             {{ user_count(contest, request.user) }}
                         </td>
                         {% if not request.in_contest %}
                             {% if not contest.disallow_virtual %}
-                                <td><form action="{{ url('contest_join', contest.key) }}" method="post">
+                                <td class="whitespace-nowrap text-center border"><form action="{{ url('contest_join', contest.key) }}" method="post">
                                     {% csrf_token %}
-                                    <input type="submit" class="unselectable button full participate-button"
-                                           value="{{ _('Virtual join') }}">
+                                    <button type="submit" class="unselectable button full participate-button bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-32 font-medium"
+                                           >{{ _('Virtual join') }}
+                                    </button>
                                 </form></td>
                             {% else %}
                                 <td></td>

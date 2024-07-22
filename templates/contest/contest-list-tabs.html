@@ -20,9 +20,9 @@
 
 {% block tabs %}
     {% if hide_private_contests is not none %}
-        <div style="padding: 0.75em 1em 0.75em 0;">
-            <input id="hide-private-contests-checkbox" type="checkbox">
-            <label for="hide-private-contests-checkbox">{{ _('Hide private contests') }}</label>
+        <div class="flex justify-center items-center mt-3 mr-5">
+            <input id="hide-private-contests-checkbox" type="checkbox" class="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mr-2">
+            <label for="hide-private-contests-checkbox" class="text-lg">{{ _('Hide private contests') }}</label>
         </div>
     {% endif %}
     {% if perms.judge.add_contest %}

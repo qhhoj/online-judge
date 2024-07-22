@@ -85,6 +85,12 @@ def render_file_input(field):
     return render_input(field, attrs)
 
 
+@registry.function
+def render_raw_input(field):
+    attrs = {}
+
+    return render_input(field, attrs)
+
 class DMOJExtension(Extension):
     def __init__(self, env):
         super(DMOJExtension, self).__init__(env)

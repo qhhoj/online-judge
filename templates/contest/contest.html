@@ -186,16 +186,16 @@
 
     {% if is_in_contest or contest.ended or request.user.is_superuser or is_editor or is_tester %}
         <div class="contest-problems">
-            <h2 style="margin-bottom: 0.2em; float:left;"><i class="fa fa-fw fa-question-circle"></i>{{ _('Problems') }} </h2>
+            <p style="margin-bottom: 0.2em; margin-top: 1em; float:left;" class="text-xl font-bold"><i class="fa-solid fa-book fa-fw" aria-hidden="true"></i>{{ _('Problems') }} </p>
             {% if can_edit and can_download_data %}
                 <a class="button" style="float:right" href="{{ url('contest_prepare_data', contest.key) }}">{{ _('Download data') }}</a>
             {% endif %}
-            <table class="table striped w-full text-lg text-left text-gray-900 table-fixed border">
-                <thead class="text-xl text-white uppercase bg-primary border">
+            <table class="table striped w-full text-base text-left text-gray-900 table-fixed border">
+                <thead class="text-lg text-white uppercase bg-primary border">
                 <tr>
-                    <th class="px-4 py-3 text-center w-24 border">#</th>
+                    <th class="px-4 py-3 text-center w-16 border">#</th>
                     {% if request.user.is_authenticated %}
-                        <th class="px-4 py-3 text-center w-24 border"><i class="fa fa-check"></i></th>
+                        <th class="px-4 py-3 text-center w-16 border"><i class="fa fa-check fa-fw"></i></th>
                     {% endif %}
                     <th class="px-4 py-3 border">{{ _('Problem') }}</th>
                     {% if not is_ICPC_format %}
@@ -215,9 +215,9 @@
                                 <td class="whitespace-nowrap text-center border">
                                     <a href="{{ url('user_submissions', problem.code, request.user.username) }}">
                                         {% if problem.is_public %}
-                                            <i class="solved-problem-color fa fa-check-circle text-emerald-500"></i>
+                                            <i class="solved-problem-color fa fa-check-circle fa-fw text-emerald-500"></i>
                                         {% else %}
-                                            <i class="solved-problem-color fa fa-lock text-emerald-500"></i>
+                                            <i class="solved-problem-color fa fa-lock fa-fw text-emerald-500"></i>
                                         {% endif %}
                                     </a>
                                 </td>
@@ -225,9 +225,9 @@
                                 <td class="whitespace-nowrap text-center border">
                                     <a href="{{ url('user_submissions', problem.code, request.user.username) }}">
                                         {% if problem.is_public %}
-                                            <i class="attempted-problem-color fa fa-times-circle text-orange-500"></i>
+                                            <i class="attempted-problem-color fa fa-times-circle fa-fw text-orange-500"></i>
                                         {% else %}
-                                            <i class="attempted-problem-color fa fa-lock text-orange-500"></i>
+                                            <i class="attempted-problem-color fa fa-lock fa-fw text-orange-500"></i>
                                         {% endif %}
                                     </a>
                                 </td>
@@ -236,12 +236,12 @@
                                     {% if problem.is_public %}
                                         <i class="unsolved-problem-color fa"></i>
                                     {% else %}
-                                        <i class="unsolved-problem-color fa fa-lock text-red-500"></i>
+                                        <i class="unsolved-problem-color fa fa-lock fa-fw text-red-500"></i>
                                     {% endif %}
                                 </td>
                             {% endif %}
                         {% endif %}
-                        <td class="whitespace-nowrap border pl-4 font-bold">
+                        <td class="whitespace-nowrap border pl-4 font-medium">
                             {% if can_view_all_problems or problem.is_public %}
                                 <a href="{{ url('problem_detail', problem.code) }}">{{ problem.i18n_name or problem.name }}</a>
                             {% else %}
@@ -264,8 +264,8 @@
             </table>
             {% if can_view_all_problems %}
             <a class="button" href="{{ url('contest_all_problems', contest.key) }}">
-                <button type='button' class="text-white text-lg font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col">
-                    <i class="fa-solid fa-cubes-stacked" aria-hidden="true"></i>
+                <button type='button' class="text-white text-lg font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-48">
+                    <i class="fa-solid fa-cubes-stacked fa-fw" aria-hidden="true"></i>
                     {{ _('All problems') }}
                 </button>
             </a>
@@ -273,9 +273,9 @@
         </div>
         {% if has_announcements or can_edit %}
         <div class="contest-clartifications">
-            <h2 style="margin-bottom: 0.2em"><i class="fa fa-check"></i> {{ _('Announcements') }}</h2>
-            <table id="contest-clartifications" class="table w-full text-gray-900 table-left table-fixed">
-                <thead class="text-xl uppercase text-white bg-primary">
+            <h2 style="margin-bottom: 0.2em; margin-top: 1em" class="text-xl font-bold"><i class="fa-solid fa-bullhorn fa-fw" aria-hidden="true"></i> {{ _('Announcements') }}</h2>
+            <table id="contest-clartifications" class="table w-full text-gray-900 table-left table-fixed text-base">
+                <thead class="text-lg uppercase text-white bg-primary">
                     <tr>
                         <th scope="col" class="px-4 py-3 border w-48">{{ _('When') }}</th>
                         <th scope="col" class="px-4 py-3 border w-1/5">{{ _('Title') }}</th>
@@ -298,8 +298,8 @@
             </table>
             {% if can_edit %}
                 <a class="button" href="{{ url('contest_announce', contest.key) }}">
-                    <button type='button' class="text-white text-lg font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col">
-                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    <button type='button' class="text-white text-lg font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-48">
+                        <i class="fa-solid fa-plus fa-fw" aria-hidden="true"></i>
                         {{ _('Add an announcement') }}
                     </button>
                 </a>
@@ -308,18 +308,18 @@
         {% endif %}
         {% if has_clarifications or can_edit %}
         <div class="contest-clartifications">
-            <h2 style="margin-bottom: 0.2em"><i class="fa fa-check"></i> {{ _('Clarifications') }}</h2>
-            <table id="contest-clartifications" class="table w-full text-gray-900 table-left table-fixed">
-                <thead>
+            <h2 style="margin-bottom: 0.2em; margin-top: 1em" class="text-xl font-bold"><i class="fa-solid fa-circle-question fa-fw" aria-hidden="true"></i> {{ _('Clarifications') }}</h2>
+            <table id="contest-clartifications" class="table w-full text-gray-900 table-left table-fixed text-base">
+                <thead class="text-lg uppercase text-white bg-primary">
                     <tr>
-                        <th>{{ _('When') }}</th>
-                        <th>{{ _('Problem') }}</th>
-                        <th>{{ _('Description') }}</th>
+                        <th scope="col" class="px-4 py-3 border w-48">{{ _('When') }}</th>
+                        <th scope="col" class="px-4 py-3 border w-1/5">{{ _('Problem') }}</th>
+                        <th scope="col" class="px-4 py-3 border">{{ _('Description') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                 {% for clarification in clarifications %}
-                    <tr>
+                    <tr class="border hover:bg-light-blue-pink-gradient">
                         <td style="width: 15%;">{{ clarification.date|date(_("F j, Y, G:i")) }}</td>
                         <td style="width: 20%; text-align: left; padding-left: 2em;">
                             <a href="{{ url('problem_detail', clarification.problem.code) }}"

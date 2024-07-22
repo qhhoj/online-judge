@@ -76,7 +76,7 @@ class DefaultContestFormat(BaseContestFormat):
 
         if format_data:
             return format_html(
-                '<td class="{state} border whitespace-nowrap text-center text-lg">'
+                '<td class="{state} border whitespace-nowrap text-center">'
                 '<a href="{url}">{points}<div class="solving-time">{time}</div></a></td>',
                 state=(('pretest-' if self.contest.run_pretests_only and contest_problem.is_pretested else '') +
                        ('first-solve ' if first_solves.get(str(contest_problem.id), None) == participation.id else '') +

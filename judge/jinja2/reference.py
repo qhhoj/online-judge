@@ -161,7 +161,7 @@ def link_user(user):
         display_badge_img = ''
 
     return mark_safe(f'<span class="{profile.css_class}">'
-                     f'<a class="{profile.css_class} font-bold text-xl"'
+                     f'<a class="{profile.css_class} font-bold text-base"'
                      f' href="{escape(reverse("user_page", args=[user.username]))}"'
                      f' style="display: inline-block;">'
                      f'{escape(profile.display_name)}</a>{display_badge_img}</span>')
