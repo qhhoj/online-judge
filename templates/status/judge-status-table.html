@@ -1,5 +1,5 @@
 <div class="overflow-x-auto">
-    <table class="w-full text-lg text-left text-gray-500">
+    <table class="w-full text-base text-left text-gray-500">
         <thead class="text-lg text-white uppercase bg-primary">
             <tr>
                 <th scope="col" class="px-4 py-3 border">{{ _("Judge") }}</th>
@@ -15,7 +15,7 @@
         <tbody>
             {% for judge in judges %}
                 <tr class="border hover:bg-light-blue-pink-gradient">
-                    <td class="px-4 py-2 font-extrabold text-gray-900 whitespace-nowrap border">
+                    <td class="px-4 py-2 font-semibold text-gray-900 whitespace-nowrap border">
                         {% if perms.judge.change_judge %}
                             <a href="{{ url('admin:judge_judge_change', judge.id) }}"> {{ judge.name }} </a>
                         {% else %}

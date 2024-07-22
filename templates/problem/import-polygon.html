@@ -115,7 +115,7 @@
 {%- endmacro %}
 
 {% block body %}
-    <form action="" method="post" class="form-area centered-form" enctype="multipart/form-data" style="display: flex; justify-content: center; flex-direction: column;">
+    <form action="" method="post" class="form-area centered-form flex flex-col justify-center" enctype="multipart/form-data">
         {% if form.errors %}
             <div id="form-errors">
                 {{ form.code.errors }}

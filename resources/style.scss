@@ -512,4 +512,9 @@
     .case-bad {
         text-decoration: underline;
     }
+
+    .need::after {
+      content: "*";
+      color: red;
+    }
 }

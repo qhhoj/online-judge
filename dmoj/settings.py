@@ -693,6 +693,7 @@ STATICFILES_FINDERS = (
 STATICFILES_DIRS = [
     DMOJ_RESOURCES,
     ('flowbite', os.path.join(BASE_DIR, 'node_modules', 'flowbite')),
+    ('preline', os.path.join(BASE_DIR, 'node_modules', 'preline')),
 ]
 STATIC_URL = '/static/'
 

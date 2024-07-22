@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["./templates/**/*.{html,js}", "./node_modules/flowbite/**/*.js"],
+  content: ["./templates/**/*.{html,js}", "./node_modules/flowbite/**/*.js", './node_modules/preline/dist/*.js'],
   theme: {
     extend: {
       fontFamily: {
@@ -30,7 +30,7 @@ export default {
       }
     },
   },
-  plugins: [require('@tailwindcss/typography'), require('flowbite/plugin'), require('daisyui'),],
+  plugins: [require('preline/plugin'), require('@tailwindcss/typography'), require('flowbite/plugin'), require('daisyui'),],
   daisyui: {
     themes: ["light", "dark"],
   },
