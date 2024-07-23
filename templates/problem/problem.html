@@ -31,11 +31,6 @@
             padding-left: 3em;
         }
 
-        #content-right {
-            max-width: 12.5em;
-            min-width: 12.5em;
-        }
-
         #problem-types, #allowed-langs, #available-judges {
             padding-top: 1em;
         }
@@ -123,6 +118,184 @@
 {% endblock %}
 
 {% block info_float %}
+
+<div data-accordion="open">
+    <h2 id="accordion-info-head" class="border-b">
+        <button type="button" class="bg-primary flex items-center justify-between w-full p-5 font-medium rtl:text-right text-white border border-b-0 border-gray-200 rounded-t-xl focus:ring-4 focus:ring-blue-300 hover:bg-indigo-600 gap-3" data-accordion-target="#accordion-info-body" aria-expanded="true" aria-controls="accordion-info-body">
+            <span class="flex items-center">
+                <i class="fa-solid fa-circle-info fa-fw" aria-hidden="true"></i>
+                {{ _("Information") }}
+                </span>
+            </span>
+            <svg data-accordion-icon class="w-3 h-3 rotate-180 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5 5 1 1 5"/>
+            </svg>
+        </button>
+    </h2>
+    <div id="accordion-info-body" class="hidden" aria-labelledby="accordion-info-head">
+        <div class="p-5 border border-t-0 border-gray-200">
+            <table class="w-full mb-2 text-gray-900">
+                <tbody>
+                    <tr>
+                        <td class="w-fit text-left font-medium">
+                            <i class="fa-solid fa-4 fa-fw" aria-hidden="true"></i>
+                            {{ _('Points:') }}
+                        </td>
+                        <td class="w-auto text-right">
+                            {% if contest_problem %}
+                                {{ contest_problem.points }}{% if contest_problem.partial %} {{ _('(partial)') }}{% endif %}
+                            {% else %}
+                                {{ problem.points|floatformat(0) }}{% if problem.partial %} {{ _('(partial)') }}{% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="w-fit text-left font-medium">
+                            <i class="fa-solid fa-stopwatch fa-fw" aria-hidden="true"></i>
+                            {{ _('Time limit:') }}
+                        </td>
+                        <td class="w-auto text-right">
+                            {{ problem.time_limit }}s
+                        </td>
+                    </tr>
+
+                    {% for name, limit in problem.language_time_limit %}
+                        <tr>
+                            <td class="w-fit text-left font-medium">
+                                <i class="fa-solid fa-stopwatch-20 fa-fw" aria-hidden="true"></i>
+                                {{ name }}:
+                            </td>
+                            <td class="w-auto text-right">{{ limit }}s</td>
+                        </tr>
+                    {% endfor %}
+
+                    <tr>
+                        <td class="w-fit text-left font-medium">
+                            <i class="fa-solid fa-memory fa-fw" aria-hidden="true"></i>
+                            {{ _('Memory limit:') }}
+                        </td>
+                        <td class="w-auto text-right">
+                            {{ problem.memory_limit|kbsimpleformat }}
+                        </td>
+                    </tr>
+
+                    {% for name, limit in problem.language_memory_limit %}
+                        <tr>
+                            <td class="w-fit text-left font-medium">
+                                <i class="fa-solid fa-sd-card fa-fw" aria-hidden="true"></i>
+                                {{ name }}:
+                            </td>
+                            <td class="w-auto text-right">{{ limit|kbsimpleformat }}s</td>
+                        </tr>
+                    {% endfor %}
+                <tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% if not contest_problem or not contest_problem.contest.hide_problem_tags %}
+<div data-accordion="open" class="mt-2">
+    {% with types=problem.types_list %}
+        <h2 id="accordion-types-head" class="border-b">
+            <button type="button" class="bg-primary flex items-center justify-between w-full p-5 font-medium rtl:text-right text-white border border-b-0 border-gray-200 rounded-t-xl focus:ring-4 focus:ring-blue-300 hover:bg-indigo-600 gap-3" data-accordion-target="#accordion-types-body" aria-expanded="true" aria-controls="accordion-types-body">
+                <span class="flex items-center">
+                    <i class="fa-solid fa-quote-left fa-fw" aria-hidden="true"></i>
+                    {% trans trimmed count=problem.types_list|length %}
+                    Problem type
+                    {% pluralize count %}
+                    Problem types
+                    {% endtrans %}
+                </span>
+                <svg data-accordion-icon class="w-3 h-3 rotate-180 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5 5 1 1 5"/>
+                </svg>
+            </button>
+        </h2>
+        <div id="accordion-types-body" class="hidden" aria-labelledby="accordion-types-head">
+            <div class="p-5 border border-t-0 border-gray-200">
+                <p class="mb-2 text-gray-900">{{ problem.types_list|join(", ") }}</div>
+            </div>
+        </div>
+    {% endwith %}
+</div>
+{% endif %}
+
+{% if show_languages %}
+    <div  data-accordion="open" class="mt-2">
+        {% with usable=problem.usable_common_names, langs=problem.languages_list() %}
+            <h2 id="accordion-lang-head" class="border-b">
+                <button type="button" class="bg-primary flex items-center justify-between w-full p-5 font-medium rtl:text-right text-white border border-b-0 border-gray-200 rounded-t-xl focus:ring-4 focus:ring-blue-300 hover:bg-indigo-600 gap-3" data-accordion-target="#accordion-lang-body" aria-expanded="true" aria-controls="accordion-lang-body">
+                    <span class="flex items-center">
+                        <i class="fa-solid fa-language fa-fw" aria-hidden="true"></i>
+                        {{ _('Allowed languages') }}
+                    </span>
+                    <svg data-accordion-icon class="w-3 h-3 rotate-180 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5 5 1 1 5"/>
+                    </svg>
+                </button>
+            </h2>
+            <div id="accordion-lang-body" class="hidden" aria-labelledby="accordion-lang-head">
+                <div class="p-5 border border-t-0 border-gray-200">
+                    <p class="mb-2 text-gray-900">
+                    {% for lang in langs %}
+                        {%- if lang in usable -%}
+                            {{ lang }}
+                        {%- else -%}
+                            <s>{{ lang }}</s>
+                        {%- endif -%}
+                        {% if not loop.last %}, {% endif -%}
+                    {% endfor %}
+                    </p>
+                </div>
+            </div>
+        {% endwith %}
+    </div>
+{% endif %}
+
+{% if problem.is_editable_by(request.user) %}
+    <div data-accordion="open" class="mt-2">
+        {% with usable=problem.usable_common_names, langs=problem.languages_list() %}
+            <h2 id="accordion-judge-head" class="border-b">
+                <button type="button" class="bg-primary flex items-center justify-between w-full p-5 font-medium rtl:text-right text-white border border-b-0 border-gray-200 rounded-t-xl focus:ring-4 focus:ring-blue-300 hover:bg-indigo-600 gap-3" data-accordion-target="#accordion-judge-body" aria-expanded="true" aria-controls="accordion-judge-body">
+                    <span class="flex items-center">
+                        <i class="fa fa-database fa-fw" aria-hidden="true"></i>
+                        <span class="pi-name">{% trans trimmed count=available_judges|length %}
+                            Judge
+                        {% pluralize count %}
+                            Judges
+                        {% endtrans %}
+                        </span>
+                    </span>
+                    <svg data-accordion-icon class="w-3 h-3 rotate-180 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5 5 1 1 5"/>
+                    </svg>
+                </button>
+            </h2>
+            <div id="accordion-judge-body" class="hidden" aria-labelledby="accordion-judge-head">
+                <div class="p-5 border border-t-0 border-gray-200">
+                    <p class="mb-2 text-gray-900">
+                        {% if available_judges %}
+                        {% if perms.judge.change_judge %}
+                            {% for judge in available_judges %}
+                                <a href="{{ url('admin:judge_judge_change', judge.id) }}" class="text-primary">{{ judge.name }}</a>
+                                {%- if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            {{ available_judges|join(", ") }}
+                        {% endif %}
+                    {% else %}
+                        <i>{{ _('none available') }}</i>
+                    {% endif %}
+                    </p>
+                </div>
+            </div>
+        {% endwith %}
+    </div>
+{% endif %}
+
+
+<br>
     <div class="relative border mb-4 border-black rounded-lg">
         <div class="border-b border-black font-bold text-primary" style="padding-bottom: 0.3em; padding-left: 0.5em; margin-top: 0.2em; margin-bottom: 0.2em;">
             Hello
@@ -211,60 +384,6 @@
 
     <hr style="padding-top: 0.3em">
 
-    <div class="problem-info-entry">
-        <i class="fa fa-check fa-fw"></i><span class="pi-name">{{ _('Points:') }}</span>
-        <span class="pi-value">
-            {% if contest_problem %}
-                {{ contest_problem.points }}{% if contest_problem.partial %} {{ _('(partial)') }}{% endif %}
-            {% else %}
-                {{ problem.points|floatformat(0) }}{% if problem.partial %} {{ _('(partial)') }}{% endif %}
-            {% endif %}
-        </span>
-    </div>
-    <div class="problem-info-entry">
-        <i class="fa fa-clock-o fa-fw"></i><span class="pi-name">{{ _('Time limit:') }}</span>
-        <span class="pi-value">{{ problem.time_limit }}s</span>
-    </div>
-    <div class="problem-lang-limits">
-        {% for name, limit in problem.language_time_limit %}
-            <div class="lang-limit">
-                <span class="lang-name">{{ name }}</span>
-                <span class="lang-tl">{{ limit }}s</span>
-            </div>
-        {% endfor %}
-    </div>
-    <div class="problem-info-entry">
-        <i class="fa fa-server fa-fw"></i><span class="pi-name">{{ _('Memory limit:') }}</span>
-        <span class="pi-value">{{ problem.memory_limit|kbsimpleformat }}</span>
-    </div>
-    <div class="problem-lang-limits">
-        {% for name, limit in problem.language_memory_limit %}
-            <div class="lang-limit">
-                <span class="lang-name">{{ name }}</span>
-                <span class="lang-ml">{{ limit|kbsimpleformat }}</span>
-            </div>
-        {% endfor %}
-    </div>
-    {% if problem.io_method.method == 'standard' %}
-        <div class="problem-info-entry">
-            <i class="fa fa-keyboard-o fa-fw"></i><span class="pi-name">{{ _('Input:') }}</span>
-            <span class="pi-value">stdin</span>
-        </div>
-        <div class="problem-info-entry">
-            <i class="fa fa-print fa-fw"></i><span class="pi-name">{{ _('Output:') }}</span>
-            <span class="pi-value">stdout</span>
-        </div>
-    {% elif problem.io_method.method == 'file' %}
-        <div class="problem-info-entry">
-            <i class="fa fa-keyboard-o fa-fw"></i><span class="pi-name">{{ _('Input:') }}</span>
-            <span class="pi-value"><i>{{ problem.io_method.input }}</i></span>
-        </div>
-        <div class="problem-info-entry">
-            <i class="fa fa-print fa-fw"></i><span class="pi-name">{{ _('Output:') }}</span>
-            <span class="pi-value"><i>{{ problem.io_method.output }}</i></span>
-        </div>
-    {% endif %}
-
     <hr style="padding-top: 0.7em">
 
     {% if not contest_problem or not contest_problem.contest.hide_problem_authors %}
@@ -299,65 +418,6 @@
             <div class="pi-value authors-value">{{ problem.source }}</div>
         </div>
     {% endif %}
-
-    {% if not contest_problem or not contest_problem.contest.hide_problem_tags %}
-        <div id="problem-types">
-            {% with types=problem.types_list %}
-                <div class="toggle closed unselectable">
-                    <i class="fa fa-chevron-right fa-fw"></i>{% trans trimmed count=problem.types_list|length %}
-                    Problem type
-                    {% pluralize count %}
-                    Problem types
-                {% endtrans %}
-                </div>
-                <div style="display:none" class="toggled">{{ problem.types_list|join(", ") }}</div>
-            {% endwith %}
-        </div>
-    {% endif %}
-    {% if show_languages %}
-        <div id="allowed-langs">
-            <div class="toggle open unselectable">
-                <i class="fa fa-chevron-right fa-fw"></i>{{ _('Allowed languages') }}
-            </div>
-            <div class="toggled">
-                {% with usable=problem.usable_common_names, langs=problem.languages_list() %}
-                    {% for lang in langs %}
-                        {%- if lang in usable -%}
-                            {{ lang }}
-                        {%- else -%}
-                            <s title="{{ _('No %(lang)s judge online', lang=lang) }}">{{ lang }}</s>
-                        {%- endif -%}
-                        {% if not loop.last %}, {% endif -%}
-                    {% endfor %}
-                {% endwith %}
-            </div>
-        </div>
-    {% endif %}
-    {% if problem.is_editable_by(request.user) %}
-        <div id="available-judges">
-            <i class="fa fa-database fa-fw"></i><span
-                class="pi-name">{% trans trimmed count=available_judges|length %}
-                Judge:
-                {% pluralize count %}
-                Judges:
-            {% endtrans %}
-            </span>
-            <div class="pi-value judges-value">
-                {% if available_judges %}
-                    {% if perms.judge.change_judge %}
-                        {% for judge in available_judges %}
-                            <a href="{{ url('admin:judge_judge_change', judge.id) }}">{{ judge.name }}</a>
-                            {%- if not loop.last %}, {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        {{ available_judges|join(", ") }}
-                    {% endif %}
-                {% else %}
-                    <i>{{ _('none available') }}</i>
-                {% endif %}
-            </div>
-        </div>
-    {% endif %}
 {% endblock %}
 
 {% block description %}
@@ -370,7 +430,7 @@
             {{ _('This problem cannot be accessed by normal users until it is approved by an admin or staff. Please make sure that all the data for this problem is correct.') }}
         </div>
     {% endif %}
-    <article class="prose">
+    <article class="prose prose-lg">
         {% include "problem/problem-detail.html" %}
     </article>
 {% endblock %}

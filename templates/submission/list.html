@@ -326,9 +326,12 @@
 
     <div id="common-content">
         <div id="content-right" class="submission">
-            <div class="info-float">
-                <div class="sidebox">
-                    <h3>{{ _('Filter submissions') }} <i class="fa fa-search"></i></h3>
+            <div class="info-float flex flex-row gap-x-8 mt-4">
+                <div class="w-full p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mb-4 mr-4 drop-shadow mx-auto">
+                    <h3 class="font-bold text-xl text-center m-2 capitalize mb-4">
+                        <i class="fa fa-search"></i>
+                        {{ _('Filter submissions') }} 
+                    </h3>
                     <div class="sidebox-content">
                         <form id="filter-form" name="form" action="{{ first_page_href }}" method="get">
                             <div class="filter-form-group">
@@ -350,7 +353,7 @@
                                 </select>
                             </div>
                             {% if not organization %}
-                                <div class="filter-form-group">
+                                <div class="filter-form-group mb-10">
                                     <label for="organization"><i>{{ _('Organization') }}</i></label>
                                     <select id="organization" name="organization">
                                         <option value="">{{ _('All') }}</option>
@@ -363,15 +366,20 @@
                                 </div>
                             {% endif %}
                             <div class="form-submit-group">
-                                <a id="go" onclick="form.submit()" class="button">{{ _('Go') }}</a>
+                                <a id="go" onclick="form.submit()" class="unselectable button full participate-button bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-24 font-medium mt-10">{{ _('Go') }}</a>
                             </div>
                         </form>
                     </div>
+                </div>
+                <div class="w-1/4 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mb-4 drop-shadow ml-4 mx-auto">
                     <div id="statistics-table w-full flex flex-row justify-center">
-                        <h3>{{ _('Statistics') }} <i class="fa fa-pie-chart"></i></h3>
-                        <div class="sidebox-content w-1/2">
+                        <h3 class="font-bold text-xl text-center m-2 capitalize mb-4">
+                            <i class="fa fa-pie-chart"></i>
+                            {{ _('Statistics') }}
+                        </h3>
+                        <div class="sidebox-content">
                             <div id="status-graph">
-                                <canvas width="230" height="170"></canvas>
+                                <canvas width="460" height="340"></canvas>
                             </div>
                             <div class="total">
                                 {{ _('Total:') }} <span id="total-submission-count"></span>

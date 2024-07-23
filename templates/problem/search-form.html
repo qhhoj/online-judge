@@ -1,37 +1,42 @@
 <div class="sidebox">
-    <h3>{{ _('Problem search') }} <i class="fa fa-search"></i>
-    </h3>
-    <div class="sidebox-content">
+    <div class="w-1/2 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mb-4 drop-shadow mx-auto">
+        <h3 class="font-bold text-xl text-center m-2 capitalize mb-4">
+            <i class="fa fa-search fa-fw"></i>
+            {{ _('Problem search') }}
+        </h3>
+
         <form id="filter-form" name="form" action="" method="get">
             <div>
                 <input id="search" type="text" name="search" value="{{ search_query or '' }}"
-                       placeholder="{{ _('Search problems...') }}">
+                       placeholder="{{ _('Search problems...') }}" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 w-full p-2.5 mb-4">
             </div>
-            {% if has_fts %}
-                <div>
+            <div class="mb-2">
+                {% if has_fts %}
+                <div class="flex items-center">
                     <input id="full_text" type="checkbox" name="full_text" value="1"
-                           {% if full_text %}checked{% endif %}>
+                           {% if full_text %}checked{% endif %} class="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 align-middle mr-1">
                     <label for="full_text">{{ _('Full text search') }}</label>
                 </div>
-            {% endif %}
-            {% if request.user.is_authenticated %}
-                <div>
-                    <input id="hide_solved" type="checkbox" name="hide_solved" value="1"
-                           {% if hide_solved %}checked{% endif %}>
-                    <label for="hide_solved">{{ _('Hide solved problems') }}</label>
+                {% endif %}
+                {% if request.user.is_authenticated %}
+                    <div class="flex items-center">
+                        <input id="hide_solved" type="checkbox" name="hide_solved" value="1"
+                            {% if hide_solved %}checked{% endif %} class="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 align-middle mr-1">
+                        <label for="hide_solved">{{ _('Hide solved problems') }}</label>
+                    </div>
+                {% endif %}
+                <div class="flex items-center">
+                    <input id="has_public_editorial" type="checkbox" name="has_public_editorial" value="1"
+                            {% if has_public_editorial %} checked{% endif %} class="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 align-middle mr-1">
+                    <label for="has_public_editorial">{{ _('Has editorial') }}</label>
                 </div>
-            {% endif %}
-            <div>
-                <input id="has_public_editorial" type="checkbox" name="has_public_editorial" value="1"
-                        {% if has_public_editorial %} checked{% endif %}>
-                <label for="has_public_editorial">{{ _('Has editorial') }}</label>
+                <div class="flex items-center">
+                    <input id="show_types" type="checkbox" name="show_types" value="1"
+                            {% if show_types %} checked{% endif %} class="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 align-middle mr-1">
+                    <label for="show_types">{{ _('Show problem types') }}</label>
+                </div>
             </div>
-            <div>
-                <input id="show_types" type="checkbox" name="show_types" value="1"
-                        {% if show_types %} checked{% endif %}>
-                <label for="show_types">{{ _('Show problem types') }}</label>
-            </div>
-            <div class="filter-form-group">
+            <div class="flex flex-col mb-8">
                 <label for="category"><i>{{ _('Category') }}</i></label>
                 <select id="category" name="category">
                     {% if category %}
@@ -46,7 +51,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="filter-form-group">
+            <div class="flex flex-col mb-4">
                 <label for="type"><i>{{ _('Problem types') }}</i></label>
                 <select id="types" name="type" multiple>
                     {% for type in problem_types %}
@@ -57,14 +62,22 @@
                 </select>
             </div>
             {% if point_values %}
-                <div class="form-label">{{ _('Point range') }}</div>
-                <div id="point-slider"></div>
+                <div class="form-label text-center my-4">{{ _('Point range') }}</div>
+                <div id="point-slider" class="h-2"></div>
             {% endif %}
             <input id="point-start" type="hidden" name="point_start" {% if point_start and point_start != point_values.min %}value="{{ point_start }}"{% else %}disabled{% endif %}>
             <input id="point-end" type="hidden" name="point_end" {% if point_end and point_end != point_values.max %}value="{{ point_end }}"{% else %}disabled{% endif %}>
-            <div class="form-submit-group">
-                <a id="go" class="button">{{ _('Go') }}</a>
-                <a id="random" class="button">{{ _('Random') }}</a>
+            <div class="flex flex-row w-full justify-center content-center mt-4">
+                <a id="go" class="mr-12">
+                    <button class="unselectable button full participate-button bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-24 font-medium">
+                        {{ _('Go') }}
+                    </button>
+                </a>
+                <a id="random">
+                    <button class="unselectable button full participate-button bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-24 font-medium">
+                        {{ _('Random') }}
+                    </button>
+                </a>
             </div>
         </form>
 

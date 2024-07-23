@@ -30,6 +30,13 @@ export default {
       },
       maxWidth: {
         '8xl': '100rem',
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: 'none',
+          },
+        },
       }
     },
   },

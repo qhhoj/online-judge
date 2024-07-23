@@ -103,7 +103,9 @@
         
         <table class="text-left ml-5">
             <tbody>
-                {{ render_checkbox_input(form.is_public) }}
+                {% if form.is_public %}
+                    {{ render_checkbox_input(form.is_public) }}
+                {% endif %}
                 {{ render_text_input(form.code) }}
                 {{ render_text_input(form.name) }}
                 {{ render_text_input(form.time_limit) }}

@@ -58,10 +58,10 @@
 
 {% block body %}
     <div id="common-content" class="relative">
-        <div id="content-right" class="float-right w-48 inline my-1 mr-1 -ml-42">
+        <div id="content-right" class="float-right inline my-1 mr-1 -ml-80 w-72 min-w-72 max-w-72">
             <div class="info-float">{% block info_float %}{% endblock %}</div>
         </div>
-        <div id="content-left" class="split-common-content">
+        <div id="content-left" class="split-common-content relative block my-1 ml-1 mr-80">
             <div class="content-description screen">
                 {% block description %}{% endblock %}
                 {% block description_end %}

@@ -430,66 +430,8 @@
         {% block bodyend %}{% endblock %}
     </main>
 
-    <div class="flex-grow"></div>
-
-    <div id="page-container">
-        <footer class="footer footer-center bg-primary text-primary-content p-10">
-            <aside>
-                <p class="font-bold">
-                QHHOJ - Mission Impossible
-                <br/>
-                Quốc Học Huế Online Judge
-                </p>
-                <p>Copyright © <span id="year"></span></p>
-            </aside>
-            <nav>
-                <div class="grid grid-flow-col gap-4">
-                <a href="https://www.facebook.com/qhhoj">
-                    <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    class="fill-current">
-                    <path
-                        d="M22.675 0h-21.35C.597 0 0 .598 0 1.334v21.333C0 23.402.597 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.412c0-3.1 1.896-4.788 4.668-4.788 1.325 0 2.462.099 2.794.142v3.24h-1.918c-1.5 0-1.794.713-1.794 1.76v2.31h3.587l-.467 3.622h-3.12V24h6.116c.729 0 1.325-.598 1.325-1.333V1.334C24 .598 23.402 0 22.675 0z"></path>
-                    </svg>
-                </a>
-                <a href="mailto:qhhoj@qhhoj.com">
-                    <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    class="fill-current">
-                    <path
-                        d="M12 12.713L.025 3.008C.191 2.442.628 2 1.235 2h21.529c.607 0 1.044.442 1.21 1.008L12 12.713zM.025 20.992V7.234l7.833 6.211L.025 20.992zM9.6 14.498l2.4 1.9 2.4-1.9 7.833-6.264v13.758H.025V8.234L9.6 14.498zM16.142 13.445L24 7.235v13.757L16.142 13.445z"></path>
-                    </svg>
-                </a>
-                <a href="https://github.com/qhhoj/online-judge">
-                    <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    class="fill-current">
-                    <path
-                        d="M12 .5C5.73.5.98 5.24.98 11.5c0 4.86 3.16 8.98 7.54 10.43.55.1.75-.24.75-.53v-1.87c-3.07.67-3.72-1.48-3.72-1.48-.5-1.28-1.22-1.62-1.22-1.62-.99-.68.08-.67.08-.67 1.1.08 1.68 1.13 1.68 1.13.98 1.68 2.56 1.19 3.18.91.1-.71.39-1.19.71-1.47-2.45-.28-5.02-1.22-5.02-5.44 0-1.2.42-2.18 1.1-2.95-.11-.28-.48-1.42.1-2.96 0 0 .92-.3 3.02 1.12.87-.24 1.81-.36 2.74-.36.93 0 1.87.12 2.74.36 2.1-1.42 3.02-1.12 3.02-1.12.58 1.54.21 2.68.1 2.96.69.77 1.1 1.75 1.1 2.95 0 4.23-2.58 5.16-5.04 5.43.4.35.74 1.03.74 2.07v3.07c0 .29.2.63.76.52 4.38-1.45 7.54-5.57 7.54-10.43C23.02 5.24 18.27.5 12 .5z"></path>
-                    </svg>
-                </a>
-                </div>
-            </nav>
-            <form id="set_language" action="{{ url('set_language') }}" method="post" style="display: inline">
-                {% csrf_token %}
-                <input name="next" type="hidden" value="{{ request.get_full_path() }}">
-                <input name="language" type="hidden" value="{{LANGUAGE_CODE}}">
-            </form>
-            {# DO NOT DELETE THE LINE BELOW IT'S LAMTER CODE #}
-            <div class="hidden case-WA case-AC case-TLE case-SC case-OLE case-MLE case-RTE case-IR case-_AC case-RJ case-BAD"></div>
-            <div class="hidden AC _AC WA RJ TLE MLE OLE IR RTE OTH CE IE QU G"></div>
-            {# DO NOT DELETE THE LINE ABOVE IT'S LAMTER CODE #}
-        </footer>
-    </div>
+    <div class="flex-grow mb-10"></div>
+    
 </section>
 
 {% if request.in_contest %}
@@ -514,6 +456,65 @@
         {% endif %}
     </div>
 {% endif %}
+
+<div id="page-container">
+    <footer class="footer footer-center bg-primary text-primary-content p-10">
+        <aside>
+            <p class="font-bold">
+            QHHOJ - Mission Impossible
+            <br/>
+            Quốc Học Huế Online Judge
+            </p>
+            <p>Copyright © <span id="year"></span></p>
+        </aside>
+        <nav>
+            <div class="grid grid-flow-col gap-4">
+            <a href="https://www.facebook.com/qhhoj">
+                <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                class="fill-current">
+                <path
+                    d="M22.675 0h-21.35C.597 0 0 .598 0 1.334v21.333C0 23.402.597 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.412c0-3.1 1.896-4.788 4.668-4.788 1.325 0 2.462.099 2.794.142v3.24h-1.918c-1.5 0-1.794.713-1.794 1.76v2.31h3.587l-.467 3.622h-3.12V24h6.116c.729 0 1.325-.598 1.325-1.333V1.334C24 .598 23.402 0 22.675 0z"></path>
+                </svg>
+            </a>
+            <a href="mailto:qhhoj@qhhoj.com">
+                <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                class="fill-current">
+                <path
+                    d="M12 12.713L.025 3.008C.191 2.442.628 2 1.235 2h21.529c.607 0 1.044.442 1.21 1.008L12 12.713zM.025 20.992V7.234l7.833 6.211L.025 20.992zM9.6 14.498l2.4 1.9 2.4-1.9 7.833-6.264v13.758H.025V8.234L9.6 14.498zM16.142 13.445L24 7.235v13.757L16.142 13.445z"></path>
+                </svg>
+            </a>
+            <a href="https://github.com/qhhoj/online-judge">
+                <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                class="fill-current">
+                <path
+                    d="M12 .5C5.73.5.98 5.24.98 11.5c0 4.86 3.16 8.98 7.54 10.43.55.1.75-.24.75-.53v-1.87c-3.07.67-3.72-1.48-3.72-1.48-.5-1.28-1.22-1.62-1.22-1.62-.99-.68.08-.67.08-.67 1.1.08 1.68 1.13 1.68 1.13.98 1.68 2.56 1.19 3.18.91.1-.71.39-1.19.71-1.47-2.45-.28-5.02-1.22-5.02-5.44 0-1.2.42-2.18 1.1-2.95-.11-.28-.48-1.42.1-2.96 0 0 .92-.3 3.02 1.12.87-.24 1.81-.36 2.74-.36.93 0 1.87.12 2.74.36 2.1-1.42 3.02-1.12 3.02-1.12.58 1.54.21 2.68.1 2.96.69.77 1.1 1.75 1.1 2.95 0 4.23-2.58 5.16-5.04 5.43.4.35.74 1.03.74 2.07v3.07c0 .29.2.63.76.52 4.38-1.45 7.54-5.57 7.54-10.43C23.02 5.24 18.27.5 12 .5z"></path>
+                </svg>
+            </a>
+            </div>
+        </nav>
+        <form id="set_language" action="{{ url('set_language') }}" method="post" style="display: inline">
+            {% csrf_token %}
+            <input name="next" type="hidden" value="{{ request.get_full_path() }}">
+            <input name="language" type="hidden" value="{{LANGUAGE_CODE}}">
+        </form>
+        {# DO NOT DELETE THE LINE BELOW IT'S LAMTER CODE #}
+        <div class="hidden case-WA case-AC case-TLE case-SC case-OLE case-MLE case-RTE case-IR case-_AC case-RJ case-BAD"></div>
+        <div class="hidden AC _AC WA RJ TLE MLE OLE IR RTE OTH CE IE QU G"></div>
+        {# DO NOT DELETE THE LINE ABOVE IT'S LAMTER CODE #}
+    </footer>
+</div>
 
 <script>
     document.getElementById('year').textContent = new Date().getFullYear();
