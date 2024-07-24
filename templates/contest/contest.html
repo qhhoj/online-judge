@@ -8,9 +8,9 @@
     {% if contest.is_organization_private %}
         <span class="organization-tags">
             {% for org in contest.organizations.all() %}
-                <span class="organization-tag">
-                    <a href="{{ org.get_absolute_url() }}">
-                        <i class="fa fa-lock"></i> {{ org.name }}
+                <span style="background-color: #cccccc" class="contest-tag px-2 py-1 mr-2 w-fit rounded-lg">
+                    <a href="{{ org.get_absolute_url() }}" style="color: #000000">
+                        <i class="fa fa-lock fa-fw"></i> {{ org.name }}
                     </a>
                 </span>
             {% endfor %}
@@ -186,23 +186,23 @@
 
     {% if is_in_contest or contest.ended or request.user.is_superuser or is_editor or is_tester %}
         <div class="contest-problems">
-            <p style="margin-bottom: 0.2em; margin-top: 1em; float:left;" class="text-xl font-bold"><i class="fa-solid fa-book fa-fw" aria-hidden="true"></i>{{ _('Problems') }} </p>
+            <p style="margin-bottom: 0.2em; margin-top: 1em; float:left;" class="text-2xl font-bold"><i class="fa-solid fa-book fa-fw" aria-hidden="true"></i>{{ _('Problems') }} </p>
             {% if can_edit and can_download_data %}
                 <a class="button" style="float:right" href="{{ url('contest_prepare_data', contest.key) }}">{{ _('Download data') }}</a>
             {% endif %}
             <table class="table striped w-full text-base text-left text-gray-900 table-fixed border">
                 <thead class="text-lg text-white uppercase bg-primary border">
                 <tr>
-                    <th class="px-4 py-3 text-center w-16 border">#</th>
+                    <th class="px-4 py-2 text-center w-16 border">#</th>
                     {% if request.user.is_authenticated %}
-                        <th class="px-4 py-3 text-center w-16 border"><i class="fa fa-check fa-fw"></i></th>
+                        <th class="px-4 py-2 text-center w-16 border"><i class="fa fa-check fa-fw"></i></th>
                     {% endif %}
-                    <th class="px-4 py-3 border">{{ _('Problem') }}</th>
+                    <th class="px-4 py-2 border">{{ _('Problem') }}</th>
                     {% if not is_ICPC_format %}
                         <th class="px-4 py-3 border text-center w-36">{{ _('Points') }}</th>
                     {% endif %}
                     {% if metadata.has_public_editorials %}
-                        <th class="px-4 py-3 border text-center w-24">{{ _('Editorials') }}</th>
+                        <th class="px-4 py-2 border text-center w-24">{{ _('Editorials') }}</th>
                     {% endif %}
                 </tr>
                 </thead>
@@ -264,7 +264,7 @@
             </table>
             {% if can_view_all_problems %}
             <a class="button" href="{{ url('contest_all_problems', contest.key) }}">
-                <button type='button' class="text-white text-lg font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-48">
+                <button type='button' class="text-white text-base font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-48">
                     <i class="fa-solid fa-cubes-stacked fa-fw" aria-hidden="true"></i>
                     {{ _('All problems') }}
                 </button>
@@ -273,7 +273,7 @@
         </div>
         {% if has_announcements or can_edit %}
         <div class="contest-clartifications">
-            <h2 style="margin-bottom: 0.2em; margin-top: 1em" class="text-xl font-bold"><i class="fa-solid fa-bullhorn fa-fw" aria-hidden="true"></i> {{ _('Announcements') }}</h2>
+            <h2 style="margin-bottom: 0.2em; margin-top: 1em" class="text-2xl font-bold"><i class="fa-solid fa-bullhorn fa-fw" aria-hidden="true"></i> {{ _('Announcements') }}</h2>
             <table id="contest-clartifications" class="table w-full text-gray-900 table-left table-fixed text-base">
                 <thead class="text-lg uppercase text-white bg-primary">
                     <tr>
@@ -289,7 +289,7 @@
                         <td class="whitespace-nowrap border font-bold pl-8">
                             {{ announcement.title }}
                         </td>
-                        <td class="whitespace-nowrap border pl-8 prose">
+                        <td class="text-wrap border pl-8 prose">
                             {{ announcement.description|markdown('announcement', MATH_ENGINE)|reference }}
                         </td>
                     </tr>
@@ -298,7 +298,7 @@
             </table>
             {% if can_edit %}
                 <a class="button" href="{{ url('contest_announce', contest.key) }}">
-                    <button type='button' class="text-white text-lg font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-48">
+                    <button type='button' class="text-white text-base font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-48">
                         <i class="fa-solid fa-plus fa-fw" aria-hidden="true"></i>
                         {{ _('Add an announcement') }}
                     </button>
@@ -308,7 +308,7 @@
         {% endif %}
         {% if has_clarifications or can_edit %}
         <div class="contest-clartifications">
-            <h2 style="margin-bottom: 0.2em; margin-top: 1em" class="text-xl font-bold"><i class="fa-solid fa-circle-question fa-fw" aria-hidden="true"></i> {{ _('Clarifications') }}</h2>
+            <h2 style="margin-bottom: 0.2em; margin-top: 1em" class="text-2xl font-bold"><i class="fa-solid fa-circle-question fa-fw" aria-hidden="true"></i> {{ _('Clarifications') }}</h2>
             <table id="contest-clartifications" class="table w-full text-gray-900 table-left table-fixed text-base">
                 <thead class="text-lg uppercase text-white bg-primary">
                     <tr>
