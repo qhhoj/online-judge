@@ -24,6 +24,7 @@ export default {
         'rate-grandmaster': 'red',
         'rate-international-grandmaster': 'red',
         'rate-legendary-grandmaster': 'red',
+        'code-gray': '#f8f8f8',
       },
       fontFamily: {
         consolas: ['Consolas', 'monospace'],
@@ -31,13 +32,18 @@ export default {
       maxWidth: {
         '8xl': '100rem',
       },
-      typography: {
+      typography: (theme) => ({
         DEFAULT: {
           css: {
             maxWidth: 'none',
+            'pre': {
+              backgroundColor: theme('colors.code-gray'),
+              borderWidth: '1px',
+              color: 'black',
+            }
           },
         },
-      }
+      }),
     },
   },
   plugins: [

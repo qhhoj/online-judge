@@ -91,17 +91,7 @@
             {% endif %}
         {% endif %}
         <h2 style="display: inline-block">{{ title }}</h2>
-        {% if problem.is_organization_private %}
-            <span class="organization-tags">
-                {% for org in problem.organizations.all() %}
-                    <span class="organization-tag">
-                        <a href="{{ org.get_absolute_url() }}">
-                            <i class="fa fa-lock"></i> {{ org.name }}
-                        </a>
-                    </span>
-                {% endfor %}
-            </span>
-        {% endif %}
+        <!--
         <span class="spacer"></span>
         {% if has_pdf_render %}
             <a href="{{ url('problem_pdf', problem.code) }}" class="view-pdf">
@@ -114,6 +104,7 @@
             </span>
             {{ _('View as PDF') }}
         </a>
+        -->
     </div>
 {% endblock %}
 
@@ -134,6 +125,17 @@
     </h2>
     <div id="accordion-info-body" class="hidden" aria-labelledby="accordion-info-head">
         <div class="p-5 border border-t-0 border-gray-200">
+            {% if problem.is_organization_private %}
+                <span class="organization-tags">
+                    {% for org in problem.organizations.all() %}
+                        <div class="organization-tag">
+                            <a href="{{ org.get_absolute_url() }}" class="text-gray-500">
+                                <i class="fa fa-lock fa-fw" aria-hidden="true"></i> {{ org.name }}
+                            </a>
+                        </div>
+                    {% endfor %}
+                </span>
+            {% endif %}
             <table class="w-full mb-2 text-gray-900">
                 <tbody>
                     <tr>
