@@ -156,8 +156,10 @@ def SubmissionSourceDiff(request):
     }
 
     content_title = mark_safe(escape(_('Comparing submission %(first)s with %(second)s')) % {
-        'first': format_html('<a href="{0}" class="text-primary">{1}</a>', reverse('submission_source', args=[first_id]), first_id),
-        'second': format_html('<a href="{0}" class="text-primary">{1}</a>', reverse('submission_source', args=[second_id]), second_id),
+        'first': format_html('<a href="{0}" class="text-primary">{1}</a>',
+                             reverse('submission_source', args=[first_id]), first_id),
+        'second': format_html('<a href="{0}" class="text-primary">{1}</a>',
+                              reverse('submission_source', args=[second_id]), second_id),
     })
 
     return render(request, 'submission/source-diff.html', {
