@@ -4,41 +4,6 @@
         {% include "comments/media-css.html" %}
     {% endif %}
     <style>
-        .title-state {
-            font-size: 2em;
-            float: left;
-            width: 1.1em;
-            display: block;
-            margin-top: 0.16em;
-        }
-
-        .info-float a {
-            vertical-align: middle;
-        }
-
-        .problem-clarification {
-            border-bottom: 1px solid #ccc;
-            margin-top: 1em;
-            margin-bottom: 1em;
-        }
-
-        .clarifications-area h2 {
-            margin-bottom: 20px;
-        }
-
-        .problem-clarification .body {
-            display: inline-block;
-            padding-left: 3em;
-        }
-
-        #problem-types, #allowed-langs, #available-judges {
-            padding-top: 1em;
-        }
-
-        .problem-info-entry {
-            padding-top: 0.5em;
-        }
-
         #raw_problem {
             visibility: hidden;
             width: 0;
@@ -90,7 +55,7 @@
                 </a>
             {% endif %}
         {% endif %}
-        <h2 style="display: inline-block">{{ title }}</h2>
+        <h2 style="display: inline-block" class="text-center w-full font-extrabold text-4xl">{{ title }}</h2>
         <!--
         <span class="spacer"></span>
         {% if has_pdf_render %}
@@ -106,6 +71,98 @@
         </a>
         -->
     </div>
+{% endblock %}
+
+{% block before_content %}
+<div class="container">
+<div class="flex flex-row space-x-2">
+{% if request.user.is_authenticated and request.in_contest and submission_limit %}
+    {% if submissions_left > 0 %}
+        <div>
+        <a href="{{ url('problem_submit', problem.code) }}">
+            <button type='button' class="text-white text-xs font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-fit">
+                <i class="fa-solid fa-cubes-stacked fa-fw" aria-hidden="true"></i>
+                {{ _('Submit solution') }}
+            </button>
+        </a>
+        </div>
+    {% else %}
+    <div>
+        <a class="unselectable button full disabled">
+            <button type='button' class="text-black text-xs font-medium bg-code-gray px-5 py-2.5 my-2 rounded-lg flex-col w-fit border">
+                <i class="fa-solid fa-cubes-stacked fa-fw" aria-hidden="true"></i>
+                {{ _('Submit solution') }}
+            </button>
+        </a>
+    </div>
+    {% endif %}
+{% else %}
+    <div>
+        <a href="{{ url('problem_submit', problem.code) }}">
+            <button type='button' class="text-white text-xs font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-fit">
+                <i class="fa-solid fa-cubes-stacked fa-fw" aria-hidden="true"></i>
+                {{ _('Submit solution') }}
+            </button>
+        </a>
+    </div>
+{% endif %}
+
+{% if request.in_contest and contest_problem %}
+    {% set contest = contest_problem.contest %}
+    <div><a href="{{ url('contest_user_submissions', contest.key, request.user.username, problem.code) }}">
+        <button type='button' class="text-white text-xs font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-fit">
+            <i class="fa-solid fa-cubes-stacked fa-fw" aria-hidden="true"></i>
+            {{ _('My submissions') }}
+        </button>
+    </a></div>
+    {% if contest.can_see_full_submission_list(request.user) %}
+        <div><a href="{{ url('chronological_submissions', problem.code) }}">
+            <button type='button' class="text-white text-xs font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-fit">
+                <i class="fa-solid fa-cubes-stacked fa-fw" aria-hidden="true"></i>
+                {{ _('All submissions') }}
+            </button>
+        </a></div>
+        <div><a href="{{ url('contest_ranked_submissions', contest.key, problem.code) }}">
+            <button type='button' class="text-white text-xs font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-fit">
+                <i class="fa-solid fa-cubes-stacked fa-fw" aria-hidden="true"></i>
+                {{ _('My submissions') }}
+            </button>
+        </a></div>
+    {% endif %}
+{% else %}
+    {% if request.user.is_authenticated and has_submissions %}
+        <div>
+            <a href="{{ url('user_submissions', problem.code, request.user.username) }}">    
+            <button type='button' class="text-white text-xs font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-fit">
+                <i class="fa-solid fa-cubes-stacked fa-fw" aria-hidden="true"></i>
+                {{ _('My submissions') }}
+            </button></a>
+        </div>
+    {% endif %}
+    <div><a href="{{ url('chronological_submissions', problem.code) }}">
+        <button type='button' class="text-white text-xs font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-fit">
+            <i class="fa-solid fa-cubes-stacked fa-fw" aria-hidden="true"></i>
+            {{ _('All submissions') }}
+        </button>
+    </a></div>
+    <div><a href="{{ url('ranked_submissions', problem.code) }}">
+        <button type='button' class="text-white text-xs font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-fit">
+            <i class="fa-solid fa-cubes-stacked fa-fw" aria-hidden="true"></i>
+            {{ _('Best submissions') }}
+        </button>
+    </a></div>
+{% endif %}
+
+{% if (editorial and editorial.is_accessible_by(request.user)) and not request.in_contest %}
+    <div><a href="{{ url('problem_editorial', problem.code) }}">
+        <button type='button' class="text-white text-xs font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-fit">
+            <i class="fa-solid fa-cubes-stacked fa-fw" aria-hidden="true"></i>
+            {{ _('Read editorial') }}
+        </button>
+    </a></div>
+{% endif %}
+</div>
+</div>
 {% endblock %}
 
 {% block info_float %}
@@ -136,14 +193,15 @@
                     {% endfor %}
                 </span>
             {% endif %}
+            <div>
             <table class="w-full mb-2 text-gray-900">
                 <tbody>
                     <tr>
-                        <td class="w-fit text-left font-medium">
+                        <td class="w-fit text-left font-medium whitespace-nowrap align-top">
                             <i class="fa-solid fa-4 fa-fw" aria-hidden="true"></i>
                             {{ _('Points:') }}
                         </td>
-                        <td class="w-auto text-right">
+                        <td class="w-auto text-right break-words">
                             {% if contest_problem %}
                                 {{ contest_problem.points }}{% if contest_problem.partial %} {{ _('(partial)') }}{% endif %}
                             {% else %}
@@ -153,49 +211,136 @@
                     </tr>
                     
                     <tr>
-                        <td class="w-fit text-left font-medium">
+                        <td class="w-fit text-left font-medium whitespace-nowrap align-top">
                             <i class="fa-solid fa-stopwatch fa-fw" aria-hidden="true"></i>
                             {{ _('Time limit:') }}
                         </td>
-                        <td class="w-auto text-right">
+                        <td class="w-auto text-right break-words">
                             {{ problem.time_limit }}s
                         </td>
                     </tr>
 
                     {% for name, limit in problem.language_time_limit %}
                         <tr>
-                            <td class="w-fit text-left font-medium">
+                            <td class="w-auto text-left font-medium whitespace-nowrap align-top">
                                 <i class="fa-solid fa-stopwatch-20 fa-fw" aria-hidden="true"></i>
                                 {{ name }}:
                             </td>
-                            <td class="w-auto text-right">{{ limit }}s</td>
+                            <td class="w-auto text-right break-words">{{ limit }}s</td>
                         </tr>
                     {% endfor %}
 
                     <tr>
-                        <td class="w-fit text-left font-medium">
+                        <td class="w-auto text-left font-medium whitespace-nowrap align-top">
                             <i class="fa-solid fa-memory fa-fw" aria-hidden="true"></i>
                             {{ _('Memory limit:') }}
                         </td>
-                        <td class="w-auto text-right">
+                        <td class="w-auto text-right break-words">
                             {{ problem.memory_limit|kbsimpleformat }}
                         </td>
                     </tr>
 
                     {% for name, limit in problem.language_memory_limit %}
                         <tr>
-                            <td class="w-fit text-left font-medium">
+                            <td class="w-auto text-left font-medium whitespace-nowrap align-top">
                                 <i class="fa-solid fa-sd-card fa-fw" aria-hidden="true"></i>
                                 {{ name }}:
                             </td>
-                            <td class="w-auto text-right">{{ limit|kbsimpleformat }}s</td>
+                            <td class="w-auto text-right break-words">{{ limit|kbsimpleformat }}s</td>
                         </tr>
                     {% endfor %}
+
+                    {% if problem.source %}
+                        <tr>
+                            <td class="w-auto text-left font-medium whitespace-nowrap align-top">
+                                <i class="fa-solid fa-share fa-fw" aria-hidden="true"></i>
+                                {{ _('Source') }}:
+                            </td>
+                            <td class="w-auto text-right break-words">{{ problem.source }}</td>
+                        </tr>
+                    {% endif %}
+
+                    {% if not contest_problem or not contest_problem.contest.hide_problem_authors %}
+                    {% cache 86400 'problem_authors' problem.id LANGUAGE_CODE %}
+                        {% with authors = problem.authors.all() %}
+                        {% if authors %}
+                            <tr>
+                                <td class="w-auto text-left font-medium whitespace-nowrap align-top">
+                                    <i class="fa-solid fa-pen-to-square fa-fw" aria-hidden="true"></i>
+                                    {% trans trimmed count=authors|length %}
+                                    Author:
+                                    {% pluralize count %}
+                                    Authors:
+                                    {% endtrans %}
+                                </td>
+                                <td class="w-auto text-right break-all">{{ link_users(authors) }}</td>
+                            </tr>
+                        {% endif %}
+                        {% if problem.suggester %}
+                        <tr>
+                            <td class="w-auto text-left font-medium whitespace-nowrap align-top">
+                                <i class="fa-solid fa-i-cursor fa-fw" aria-hidden="true"></i>
+                                {{ _("Suggester:") }}
+                            </td>
+                            <td class="w-fit text-right break-words">{{ link_user(problem.suggester) }}</td>
+                        </tr>
+                        {% endif %}
+                        {% endwith %}
+                    {% endcache %}
+                    {% endif %}
                 <tbody>
             </table>
         </div>
     </div>
 </div>
+
+{% if can_edit_problem or (request.user.is_authenticated and has_tickets) or problem.is_subs_manageable_by(request.user) or (perms.judge.clone_problem and can_edit_problem) %}
+<div data-accordion="open" class="mt-2">
+    {% with types=problem.types_list %}
+        <h2 id="accordion-edit-head" class="border-b">
+            <button type="button" class="bg-primary flex items-center justify-between w-full p-5 font-medium rtl:text-right text-white border border-b-0 border-gray-200 rounded-t-xl focus:ring-4 focus:ring-blue-300 hover:bg-indigo-600 gap-3" data-accordion-target="#accordion-edit-body" aria-expanded="true" aria-controls="accordion-edit-body">
+                <span class="flex items-center">
+                    <i class="fa-solid fa-wand-magic-sparkles fa-fw" aria-hidden="true"></i>
+                    {{ _("Edit")}}
+                </span>
+                <svg data-accordion-icon class="w-3 h-3 rotate-180 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5 5 1 1 5"/>
+                </svg>
+            </button>
+        </h2>
+        <div id="accordion-edit-body" class="hidden" aria-labelledby="accordion-edit-head">
+            <div class="p-5 border border-t-0 border-gray-200">
+                {% if can_edit_problem %}
+                    <div><a href="{{ url('problem_ticket_list', problem.code) }}">{{ _('Manage tickets') }}
+                        {% if num_open_tickets %}<span class="badge">{{ num_open_tickets }}</span>{% endif %}
+                    </a></div>
+                    <div><a href="{{ url('problem_edit', problem.code) }}">{{ _('Edit problem') }}</a></div>
+                    {% if not problem.is_manually_managed %}
+                        <div><a href="{{ url('problem_data', problem.code) }}">{{ _('Edit test data') }}</a></div>
+                    {% endif %}
+                {% elif request.user.is_authenticated and has_tickets %}
+                <div>
+                    <a href="{{ url('problem_ticket_list', problem.code) }}">{{ _('My tickets') }}
+                        {% if num_open_tickets %}<span class="badge">{{ num_open_tickets }}</span>{% endif %}
+                    </a>
+                </div>
+                {% endif %}
+                {% if problem.is_subs_manageable_by(request.user) %}
+                <div>
+                    <a href="{{ url('problem_manage_submissions', problem.code) }}">{{ _('Manage submissions') }}</a>
+                </div>
+                {% endif %}
+                {% if perms.judge.clone_problem and can_edit_problem %}
+                <div>
+                    <a href="{{ url('problem_clone', problem.code) }}">{{ _('Clone problem') }}</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endwith %}
+</div>
+{% endif %}
+
 {% if not contest_problem or not contest_problem.contest.hide_problem_tags %}
 <div data-accordion="open" class="mt-2">
     {% with types=problem.types_list %}
@@ -295,131 +440,6 @@
         {% endwith %}
     </div>
 {% endif %}
-
-
-<br>
-    <div class="relative border mb-4 border-black rounded-lg">
-        <div class="border-b border-black font-bold text-primary" style="padding-bottom: 0.3em; padding-left: 0.5em; margin-top: 0.2em; margin-bottom: 0.2em;">
-            Hello
-        </div>
-        <div class="">
-            <div style="margin: 1em; font-size: 0.8em;">
-                Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
-            </div>
-        </div>
-    </div>
-
-    {% if request.user.is_authenticated and request.in_contest and submission_limit %}
-        {% if submissions_left > 0 %}
-            <a href="{{ url('problem_submit', problem.code) }}" class="unselectable button full">
-                {{ _('Submit solution') }}
-            </a>
-            <div class="submissions-left">
-                {% trans trimmed counter=submissions_left %}
-                    {{ counter }} submission left
-                    {% pluralize %}
-                    {{ counter }} submissions left
-                {% endtrans %}
-            </div>
-        {% else %}
-            <a class="unselectable button full disabled">{{ _('Submit solution') }}</a>
-            <div class="no-submissions-left submissions-left">{{ _('0 submissions left') }}</div>
-        {% endif %}
-    {% else %}
-        <a href="{{ url('problem_submit', problem.code) }}" class="unselectable button full">
-            {{ _('Submit solution') }}
-        </a>
-    {% endif %}
-
-    <hr style="padding-bottom: 0.3em">
-    {% if request.in_contest and contest_problem %}
-        {% set contest = contest_problem.contest %}
-        <div><a href="{{ url('contest_user_submissions', contest.key, request.user.username, problem.code) }}">{{ _('My submissions') }}</a></div>
-        {% if contest.can_see_full_submission_list(request.user) %}
-            <div><a href="{{ url('chronological_submissions', problem.code) }}">{{ _('All submissions') }}</a></div>
-            <div><a href="{{ url('contest_ranked_submissions', contest.key, problem.code) }}">{{ _('Best submissions') }}</a></div>
-        {% endif %}
-    {% else %}
-        {% if request.user.is_authenticated and has_submissions %}
-            <div>
-                <a href="{{ url('user_submissions', problem.code, request.user.username) }}">{{ _('My submissions') }}</a>
-            </div>
-        {% endif %}
-        <div><a href="{{ url('chronological_submissions', problem.code) }}">{{ _('All submissions') }}</a></div>
-        <div><a href="{{ url('ranked_submissions', problem.code) }}">{{ _('Best submissions') }}</a></div>
-    {% endif %}
-    {% if (editorial and editorial.is_accessible_by(request.user)) and not request.in_contest %}
-        <hr>
-        <div><a href="{{ url('problem_editorial', problem.code) }}">{{ _('Read editorial') }}</a></div>
-    {% endif %}
-    {% if can_edit_problem %}
-        <hr>
-        <div>
-            <a href="{{ url('problem_ticket_list', problem.code) }}">{{ _('Manage tickets') }}
-                {% if num_open_tickets %}<span class="badge">{{ num_open_tickets }}</span>{% endif %}
-            </a>
-        </div>
-        <div><a href="{{ url('problem_edit', problem.code) }}">{{ _('Edit problem') }}</a></div>
-        {% if not problem.is_manually_managed %}
-            <div><a href="{{ url('problem_data', problem.code) }}">{{ _('Edit test data') }}</a></div>
-        {% endif %}
-    {% elif request.user.is_authenticated and has_tickets %}
-        <hr>
-        <div>
-            <a href="{{ url('problem_ticket_list', problem.code) }}">{{ _('My tickets') }}
-                {% if num_open_tickets %}<span class="badge">{{ num_open_tickets }}</span>{% endif %}
-            </a>
-        </div>
-    {% endif %}
-
-    {% if problem.is_subs_manageable_by(request.user) %}
-        <div>
-            <a href="{{ url('problem_manage_submissions', problem.code) }}">{{ _('Manage submissions') }}</a>
-        </div>
-    {% endif %}
-
-    {% if perms.judge.clone_problem and can_edit_problem %}
-        <div>
-            <a href="{{ url('problem_clone', problem.code) }}">{{ _('Clone problem') }}</a>
-        </div>
-    {% endif %}
-
-    <hr style="padding-top: 0.3em">
-
-    <hr style="padding-top: 0.7em">
-
-    {% if not contest_problem or not contest_problem.contest.hide_problem_authors %}
-        {% cache 86400 'problem_authors' problem.id LANGUAGE_CODE %}
-            {% with authors=problem.authors.all() %}
-                {% if authors %}
-                    <div class="problem-info-entry">
-                        <i class="fa fa-pencil-square-o fa-fw"></i><span
-                            class="pi-name">{% trans trimmed count=authors|length %}
-                        Author:
-                        {% pluralize count %}
-                        Authors:
-                    {% endtrans %}</span>
-                        <div class="pi-value authors-value">{{ link_users(authors) }}</div>
-                    </div>
-                {% endif %}
-                {% if problem.suggester %}
-                <div class="problem-info-entry">
-                    <i class="fa fa-pencil-square-o fa-fw"></i><span
-                        class="pi-name">{{ _("Suggester:") }}</span>
-                        <div class="pi-value authors-value">{{ link_user(problem.suggester) }}</div>
-                    </div>
-                {% endif %}
-            {% endwith %}
-        {% endcache %}
-    {% endif %}
-
-    {% if problem.source %}
-        <div class="problem-info-entry">
-            <i class="fa fa-pencil-square-o fa-fw"></i><span
-                class="pi-name">{{ _('Problem source:') }}</span>
-            <div class="pi-value authors-value">{{ problem.source }}</div>
-        </div>
-    {% endif %}
 {% endblock %}
 
 {% block description %}
@@ -437,6 +457,7 @@
     </article>
 {% endblock %}
 
+<!--
 {% block post_description_end %}
     {% if request.user.is_authenticated and not request.profile.mute %}
         <a href="{{ url('new_problem_ticket', problem.code) }}" class="button clarify">
@@ -448,7 +469,9 @@
         </a>
     {% endif %}
 {% endblock %}
+-->
 
+<!--
 {% block comments %}
     {% if comment_lock %}
         <div class="clarifications-area">
@@ -470,3 +493,4 @@
         {% include "comments/list.html" %}
     {% endif %}
 {% endblock %}
+-->

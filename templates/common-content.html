@@ -8,20 +8,8 @@
     {% compress js %}
         <script src="{{ static('libs/clipboard/clipboard.js') }}"></script>
         <script src="{{ static('libs/clipboard/tooltip.js') }}"></script>
-        <script type="text/javascript">
+        <!--script type="text/javascript">
             $(function () {
-                var info_float = $('.info-float');
-                if (info_float.length) {
-                    var container = $('#content-right');
-                    if (!featureTest('position', 'sticky')) {
-                        fix_div(info_float, 55);
-                        $(window).resize(function () {
-                            info_float.width(container.width());
-                        });
-                        info_float.width(container.width());
-                    }
-                }
-
                 window.add_code_copy_buttons = function ($container) {
                     $container.find('pre code').each(function () {
                         var copyButton;
@@ -51,7 +39,7 @@
                 };
                 window.add_code_copy_buttons($(document));
             });
-        </script>
+        </script-->
     {% endcompress %}
     {% block content_js_media %}{% endblock %}
 {% endblock %}
