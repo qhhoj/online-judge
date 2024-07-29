@@ -38,7 +38,7 @@
                     <form action="{{ url('contest_leave', contest.key) }}" method="post"
                           class="contest-join-pseudotab unselectable button">
                         {% csrf_token %}
-                        <button type="submit" class="leaving-forever bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-32 font-medium">
+                        <button type="submit" class="leaving-forever bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-36 font-medium">
                             {{ _('Leave contest') }}
                         </button>
                     </form>
@@ -47,7 +47,7 @@
                     <form action="{{ url('contest_join', contest.key) }}" method="post"
                           class="contest-join-pseudotab unselectable button">
                         {% csrf_token %}
-                        <button type="submit" class="contest-join bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-32 font-medium">
+                        <button type="submit" class="contest-join bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-36 font-medium">
                             {{ _('Virtual join') }}
                         </button>
                     </form>
@@ -58,7 +58,7 @@
                     <form action="{{ url('contest_leave', contest.key) }}" method="post"
                           class="contest-join-pseudotab unselectable button">
                         {% csrf_token %}
-                        <button type="submit" class="bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-32 font-medium">
+                        <button type="submit" class="bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-36 font-medium">
                             {%- if request.participation.spectate %}
                                 {{- _('Stop spectating') -}}
                             {% else %}
@@ -70,7 +70,7 @@
                     <form action="{{ url('contest_join', contest.key) }}" method="post"
                           class="contest-join-pseudotab unselectable button">
                         {% csrf_token %}
-                        <button type="submit" class="contest-join bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-32 font-medium">
+                        <button type="submit" class="contest-join bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-36 font-medium">
                             {{ _('Spectate contest') }}
                         </button>
                     </form>
@@ -80,7 +80,7 @@
                             class="contest-join-pseudotab unselectable button">
                             {% csrf_token %}
                             <button type="submit"
-                                class="contest-join{% if not has_joined %} first-join{% endif %} bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-32 font-medium"
+                                class="contest-join{% if not has_joined %} first-join{% endif %} bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-36 font-medium"
                             >{{ _('Join contest') }}
                             </button>
                         </form>
@@ -89,7 +89,7 @@
                             class="contest-join-pseudotab unselectable button" style="background: linear-gradient(to bottom, #87ab69 0, #4b6043 100%) repeat-x">
                             {% csrf_token %}
                             <button type="submit"
-                                class="register-warning bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-32 font-medium">
+                                class="register-warning bg-primary hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white px-3 py-2.5 rounded-lg w-36 font-medium">
                                 {{ _('Register') }}
                             </button>
                         </form>

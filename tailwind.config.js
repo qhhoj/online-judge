@@ -35,6 +35,7 @@ export default {
       typography: (theme) => ({
         DEFAULT: {
           css: {
+            color: 'black',
             maxWidth: 'none',
             'pre': {
               backgroundColor: theme('colors.code-gray'),

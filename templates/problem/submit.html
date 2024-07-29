@@ -313,15 +313,14 @@
             {% endif %}
         </div>
 
-        <hr>
-
         {% if no_judges %}
             <span style="color: red">{{ _('No judge is available for this problem.') }}</span>
         {% else %}
             <div class="submit-bar">
                 {{ form.judge }}
-                <input type="submit" value="{{ _('Submit!') }}" class="button"
-                       {% if request.in_contest and submission_limit and not submissions_left %}disabled{% endif %}>
+                <button type='submit' class="text-white text-xs font-medium bg-primary px-5 py-2.5 my-2 rounded-lg flex-col w-fit" {% if request.in_contest and submission_limit and not submissions_left %}disabled{% endif %}>
+                    {{ _('Submit') }}
+                </button>
             </div>
         {% endif %}
     </form>
