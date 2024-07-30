@@ -12,6 +12,7 @@ window.MathJax = {
         ],
         packages: {
             '[+]': ['unicode'],
+            '[+]': ['textmacros'],
         },
     },
     options: {

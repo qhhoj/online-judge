@@ -517,4 +517,35 @@
       content: "*";
       color: red;
     }
+
+    .staff a, .staff {
+      color: #ff888a !important;
+      font-weight: bold !important;
+    }
+    
+    .staff a::before {
+      content: "🔥";
+    }
+
+    .teacher a::before {
+      content: "🤖";
+    }
+
+    .daor a, .daor {
+      color: #ff0066 !important;
+      font-weight: bold !important;
+    }
+    
+    .daor a::before {
+      content: "🌸";
+    }
+
+    .admin a .admin {
+      color: black !important;
+      font-weight: bold !important;
+    }
+
+    .admin a::before {
+      content: "♨️";
+    }
 }
