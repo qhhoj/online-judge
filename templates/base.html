@@ -298,7 +298,7 @@
       <span class="sr-only">Close menu</span>
    </button>
 
-  <div class="py-4 overflow-y-auto">
+  <div class="py-4 overflow-y-auto flex flex-col">
       <ul class="space-y-2 font-medium">
         {% for node in mptt_tree(nav_bar) recursive %}
             {% if not node.hidden or request.user.is_superuser %}
@@ -331,7 +331,7 @@
         {% endfor %}
       </ul>
 
-      <ul class="space-y-2 font-medium flex-col">
+      <ul class="space-y-2 font-medium flex-col self-end">
         {% if request.user.is_authenticated %}
             <li>
                 <a href={% if request.resolver_match.view_name == "problem_detail" and problem %}
@@ -352,19 +352,20 @@
             </li>
             {% endif %}
             <li>
-                <button type="button" class="flex items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700" aria-controls="dropdown-avatar" data-collapse-toggle="dropdown-avatar">
-                    <a class="relative flex" href="{{ url('user_page') }}">
+                <button type="button" class="flex flex-row items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group" aria-controls="dropdown-avatar" data-collapse-toggle="dropdown-avatar">
+                    <a class="flex flex-row" href="{{ url('user_page') }}">
                         <div class="avatar">
-                            <div class="ring-accent ring-offset-base-100 w-8 rounded-full ring ring-offset-2">
-                            <img src="{{ gravatar(request.user) }}" />
+                            <div class="ring-accent ring-offset-base-100 w-8 h-8 rounded-full ring ring-offset-2">
+                            <img src="{{ gravatar(request.user) }}" class="rounded-full">
                         </div>
-                        <p class="text-lg ml-2 mt-1">
-                            &nbsp;{{ _('Hello,') }}&nbsp;{{  _('%(username)s.', username=bold(request.user.first_name or request.profile.display_name)) }}
-                        </p>
+                        <div class="self-center">
+                            <span class="self-center">
+                                <p class="text-base ml-2 self-center">
+                                    &nbsp;Hello,&nbsp;{{  _('%(username)s.', username=bold(request.user.first_name or request.profile.display_name)) }}
+                                </p>
+                            </span>
+                        </div>
                     </a>
-                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                       <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                    </svg>
                 </button>
                 <ul id="dropdown-avatar" class="hidden space-y-2 ml-4">
                     {% if request.user.is_staff or request.user.is_superuser %}
@@ -384,12 +385,12 @@
                 </ul>
             </li>
             <li>
-                <label class="flex justify-between p-4">
+                <label class="flex flex-row gap-x-1">
                     <a id="flag_vi" href="#" onclick="submmit_language('vi')" class="flex items-center">
-                        <img src="{{ static('icons/vi_flag.svg') }}" alt="VI" class="w-12 h-12">
+                        <img src="{{ static('icons/vi_flag.svg') }}" alt="VI" class="w-6 h-6 mx-[2px]">
                     </a>
                     <a id="flag_en" href="#" onclick="submmit_language('en')" class="flex items-center">
-                        <img src="{{ static('icons/gb_flag.svg') }}" alt="EN" class="w-12 h-12">
+                        <img src="{{ static('icons/gb_flag.svg') }}" alt="EN" class="w-6 h-6 mx-[2px]">
                     </a>                                     
                 </label>
             </li>
