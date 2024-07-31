@@ -120,11 +120,11 @@
                 {{ render_raw_input(form.submission_source_visibility_mode) }}
                 {{ render_raw_input(form.testcase_visibility_mode) }}
                 {{ render_raw_input(form.description) }}
+                {{ render_raw_input(form.testers) }}
             <tbody>
         <table>
 
         {{ lang_limit_formset.management_form }}
-        <table class="django-as-table">{{ form.as_table() }}</table>
         <hr>
 
         <center>

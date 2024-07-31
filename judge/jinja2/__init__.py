@@ -31,8 +31,8 @@ def counter(start=1):
 
 
 @registry.function
-def render_input(field, attrs):
-    form_input = field.as_widget(attrs=attrs)
+def render_input(field, attrs, render_as_widget=True):
+    form_input = (field.as_widget(attrs=attrs) if not render_as_widget else field)
 
     help_text = ''
     if field.help_text:
@@ -91,7 +91,6 @@ def render_file_input(field):
 @registry.function
 def render_raw_input(field):
     attrs = {}
-
     return render_input(field, attrs)
 
 

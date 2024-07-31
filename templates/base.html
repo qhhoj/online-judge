@@ -351,17 +351,17 @@
                 </a>
             </li>
             {% endif %}
-            <li>
+            <li class="fixed bottom-0 mb-4 pb-4">
                 <button type="button" class="flex flex-row items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group" aria-controls="dropdown-avatar" data-collapse-toggle="dropdown-avatar">
                     <a class="flex flex-row" href="{{ url('user_page') }}">
                         <div class="avatar">
                             <div class="ring-accent ring-offset-base-100 w-8 h-8 rounded-full ring ring-offset-2">
                             <img src="{{ gravatar(request.user) }}" class="rounded-full">
                         </div>
-                        <div class="self-center">
+                        <div class="self-center flex flex-col">
                             <span class="self-center">
-                                <p class="text-base ml-2 self-center">
-                                    &nbsp;Hello,&nbsp;{{  _('%(username)s.', username=bold(request.user.first_name or request.profile.display_name)) }}
+                                <p class="text-base ml-2 self-center text-wrap">
+                                    &nbsp;Hello,&nbsp;{{  _('%(username)s.', username=bold(request.user.username)) }}
                                 </p>
                             </span>
                         </div>
@@ -384,18 +384,8 @@
                     {% endif %}
                 </ul>
             </li>
-            <li>
-                <label class="flex flex-row gap-x-1">
-                    <a id="flag_vi" href="#" onclick="submmit_language('vi')" class="flex items-center">
-                        <img src="{{ static('icons/vi_flag.svg') }}" alt="VI" class="w-6 h-6 mx-[2px]">
-                    </a>
-                    <a id="flag_en" href="#" onclick="submmit_language('en')" class="flex items-center">
-                        <img src="{{ static('icons/gb_flag.svg') }}" alt="EN" class="w-6 h-6 mx-[2px]">
-                    </a>                                     
-                </label>
-            </li>
         {% else %}
-        <span class="anon place-self-center">
+        <span class="anon place-self-center fixed bottom-0">
             <a href="{{ url('auth_login') }}?next={{ LOGIN_RETURN_PATH|urlencode }}"><button class="btn btn-primary font-bold text-base">{{ _('Log in') }}</button></a>
             <a href="{{ url('registration_register') }}"><button class="btn btn-accent font-bold text-base">{{ _('Sign up') }}</button></a>                 
         </span>
