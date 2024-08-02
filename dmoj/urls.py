@@ -109,9 +109,9 @@ urlpatterns = [
     path('accounts/', include(register_patterns)),
     path('', include('social_django.urls')),
     path('about/', FlatPageViewGenerator('about.html').as_view(), name='about'),
-    path('qhhoj_summer_challenge_2024_register/',
-         FlatPageViewGenerator('qhhoj_summer_challenge_2024.html').as_view(),
-         name='QHHOJ_SUMMER''_CHALLENGE_2024'),
+    # path('qhhoj_summer_challenge_2024_register/',
+    #      FlatPageViewGenerator('qhhoj_summer_challenge_2024.html').as_view(),
+    #      name='QHHOJ_SUMMER''_CHALLENGE_2024'),
 
     path('problems', include([
         path('/', problem.ProblemList.as_view(), name='problem_list'),
