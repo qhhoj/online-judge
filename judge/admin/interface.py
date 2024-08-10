@@ -89,6 +89,10 @@ class BlogPostAdmin(VersionAdmin):
             return request.user.has_perm('judge.change_blogpost')
         return obj.is_editable_by(request.user)
 
+    @admin.display(description=_('authors'))
+    def show_authors(self, obj):
+        return ', '.join(map(str, obj.authors.all()))
+
 
 class SolutionForm(ModelForm):
     def __init__(self, *args, **kwargs):

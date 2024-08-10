@@ -76,6 +76,9 @@ class JudgeHandler(ZlibPacketHandler):
         self.judge = None
         self.judge_address = None
 
+        self._submission_cache_id = None
+        self._submission_cache = {}
+
     def on_connect(self):
         self.timeout = 15
         logger.info('Judge connected from: %s', self.client_address)

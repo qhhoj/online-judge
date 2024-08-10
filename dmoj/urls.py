@@ -20,6 +20,7 @@ from judge.views import TitledTemplateView, api, blog, comment, contests, langua
     two_factor, user, widgets
 from judge.views.URL import redirect_url, shorten_url
 from judge.views.flatpages import FlatPageViewGenerator
+from judge.views.magazine import MagazinePage
 from judge.views.problem_data import ProblemDataView, ProblemSubmissionDiff, \
     problem_data_file, problem_init_view
 from judge.views.register import ActivationView, RegistrationView
@@ -288,6 +289,7 @@ urlpatterns = [
          lambda _, pk, suffix: HttpResponsePermanentRedirect('/organization/%s' % suffix)),
     path('organization/<slug:slug>', include([
         path('', organization.OrganizationHome.as_view(), name='organization_home'),
+        path('/<int:page>', organization.OrganizationHome.as_view(), name='organization_home'),
         path('/users/', organization.OrganizationUsers.as_view(), name='organization_users'),
         path('/join', organization.JoinOrganization.as_view(), name='join_organization'),
         path('/leave', organization.LeaveOrganization.as_view(), name='leave_organization'),
@@ -429,6 +431,7 @@ urlpatterns = [
         path('', shorten_url, name='shorten_url'),
         path('<str:short_code>/', redirect_url, name='redirect_url'),
     ])),
+    path('magazine/', MagazinePage.as_view(), name='magazine'),
 ]
 
 favicon_paths = ['apple-touch-icon-180x180.png', 'apple-touch-icon-114x114.png', 'android-chrome-72x72.png',

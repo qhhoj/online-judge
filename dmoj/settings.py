@@ -100,6 +100,10 @@ VNOJ_TESTCASE_VISIBLE_LENGTH = 60
 
 VNOJ_TAG_PROBLEM_MIN_RATING = 1900  # Minimum rating to be able to tag a problem
 
+VNOJ_SHOULD_BAN_FOR_CHEATING_IN_CONTESTS = False
+VNOJ_CONTEST_CHEATING_BAN_MESSAGE = 'Banned for multiple cheating offenses during contests'
+VNOJ_MAX_DISQUALIFICATIONS_BEFORE_BANNING = 3
+
 # List of subdomain that will be ignored in organization subdomain middleware
 VNOJ_IGNORED_ORGANIZATION_SUBDOMAINS = ['oj', 'www', 'localhost']
 
@@ -702,6 +706,7 @@ AUTHENTICATION_BACKENDS = (
     'social_core.backends.facebook.FacebookOAuth2',
     'judge.social_auth.GitHubSecureEmailOAuth2',
     'django.contrib.auth.backends.ModelBackend',
+    'judge.ip_auth.IPBasedAuthBackend',
 )
 
 SOCIAL_AUTH_PIPELINE = (
@@ -712,8 +717,9 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.social_user',
     'social_core.pipeline.user.get_username',
     'social_core.pipeline.social_auth.associate_by_email',
-    'judge.social_auth.choose_username',
+    'judge.social_auth.get_username_password',
     'social_core.pipeline.user.create_user',
+    'judge.social_auth.add_password',
     'judge.social_auth.make_profile',
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
@@ -725,6 +731,8 @@ SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 SOCIAL_AUTH_SLUGIFY_USERNAMES = True
 SOCIAL_AUTH_SLUGIFY_FUNCTION = 'judge.social_auth.slugify_username'
 SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['first_name', 'last_name']
+
+IP_BASED_AUTHENTICATION_HEADER = 'REMOTE_ADDR'
 
 MOSS_API_KEY = None
 

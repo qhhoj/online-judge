@@ -6439,6 +6439,52 @@ msgstr "Liên hệ với chúng mình"
 #, python-format
 msgid "Welcome to QHHOJ - Activate Your Account"
 msgstr "Chào mừng đến với QHHOJ - Vui lòng kích hoạt tài khoản của bạn"
+#: templates/registration/activation_email.html:1
+#, python-format
+msgid "Thanks for registering on the %(site_name)s! We're glad to have you."
+msgstr "Cảm ơn bạn đã đăng ký tài khoản ở trang %(site_name)s!"
+
+#: templates/registration/activation_email.html:3
+#: templates/registration/activation_email.txt:1
+#, python-format
+msgid ""
+"Please activate your %(site_name)s account in the next %(expiration_days)d "
+"days."
+msgstr ""
+"Hãy kích hoạt tài khoản %(site_name)s của bạn trong vòng %(expiration_days)d "
+"tới"
+
+#: templates/registration/activation_email.html:5
+#: templates/registration/activation_email.txt:3
+msgid "Please click on the following link to activate your account:"
+msgstr "Hãy nhấn vào link này để kích hoạt tài khoản:"
+
+#: templates/registration/activation_email.html:10
+#: templates/registration/activation_email.txt:6
+msgid "Alternatively, you can reply to this message to activate your account."
+msgstr "Hoặc bạn có thể reply lại email này để kích hoạt."
+
+#: templates/registration/activation_email.html:11
+#: templates/registration/activation_email.txt:7
+msgid "Your reply must keep the following text intact for this to work:"
+msgstr "Email reply của bạn cần có đoạn text sau:"
+
+#: templates/registration/activation_email.html:17
+msgid "See you soon!"
+msgstr "Hẹn gặp lại!"
+
+#: templates/registration/activation_email.html:19
+msgid ""
+"If you have problems activating your account, feel free to shoot us a "
+"message at: "
+msgstr ""
+"Nếu bạn có vấn đề với việc kích hoạt tài khoản, hãy liên hệ với chúng mình "
+"qua: "
+
+#: templates/registration/activation_email_subject.txt:1
+#, python-format
+msgid "Activate your %(SITE_NAME)s account)"
+msgstr "Kích hoạt tài khoản %(SITE_NAME)s"
 
 #: templates/registration/login.html:35
 msgid "Invalid username or password."
@@ -6538,6 +6584,57 @@ msgstr "Nếu bạn còn gặp vấn đề với việc đặt lại mật khẩ
 #, python-format
 msgid "Your Account on QHHOJ - Reset Your Password"
 msgstr "Tài khoản QHHOJ - Đặt lại mật khẩu"
+#: templates/registration/password_reset_done.html:6
+#: templates/registration/password_reset_email.html:11
+msgid ""
+"See you soon! If you have problems resetting your password, feel free to "
+"shoot us a message at: "
+msgstr ""
+"Nếu bạn có vấn đề với việc đặt lại mật khẩu, hãy liên hệ với chúng mình qua: "
+
+#: templates/registration/password_reset_email.html:6
+#, python-format
+msgid "Forgot your password on the %(site_name)s? Don't worry!"
+msgstr "Bạn quên mất mật khẩu trên %(site_name)s? Đừng lo lắng!"
+
+#: templates/registration/password_reset_email.html:7
+#, python-format
+msgid ""
+"To reset the password for your account \"%(username)s\", click the button "
+"below."
+msgstr ""
+"Để đặt lại mật khẩu của tài khoản \"%(username)s\", nhấn vào link phía dưới."
+
+#: templates/registration/password_reset_email.txt:1
+#, python-format
+msgid ""
+"You're receiving this email because you requested a password reset for your "
+"user account at %(site_name)s."
+msgstr ""
+"Bạn nhận được email này bởi vì bạn đã yêu cầu đặt lại mật khẩu cho tài khoản "
+"của mình tại %(site_name)s."
+
+#: templates/registration/password_reset_email.txt:3
+msgid "Please go to the following page and choose a new password:"
+msgstr "Hãy đi đến trang sau và chọn một mật khẩu mới:"
+
+#: templates/registration/password_reset_email.txt:7
+msgid "Your username, in case you've forgotten:"
+msgstr "Tên người dùng của bạn, trong trường hợp bạn quên:"
+
+#: templates/registration/password_reset_email.txt:9
+msgid "Thanks for using our site!"
+msgstr "Cảm ơn đã sử dụng hệ thống của chúng tôi!"
+
+#: templates/registration/password_reset_email.txt:11
+#, python-format
+msgid "The %(site_name)s team"
+msgstr "Đội ngũ %(site_name)s"
+
+#: templates/registration/password_reset_subject.txt:1
+#, python-format
+msgid "Password reset on %(site_name)s"
+msgstr "Đặt lại mật khẩu tại %(site_name)s"
 
 #: templates/registration/profile_creation.html:44
 #: templates/registration/username_select.html:7
@@ -6555,6 +6652,14 @@ msgid ""
 msgstr ""
 "Cảm ơn bạn đã đăng ký. Một email đã được gửi đến cho bạn để xác nhận đăng ký "
 "của bạn."
+
+#: templates/registration/registration_complete.html:4
+msgid ""
+"See you soon! If you have problems activating your account, feel free to "
+"shoot us a message at: "
+msgstr ""
+"Nếu bạn có vấn đề với việc kích hoạt tài khoản, hãy liên hệ với chúng mình "
+"qua: "
 
 #: templates/registration/registration_form.html:143
 #: templates/registration/registration_form.html:197

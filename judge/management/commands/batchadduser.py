@@ -70,7 +70,7 @@ def add_user(username, fullname, password):
     usr.set_password(password)
     usr.save()
 
-    profile = Profile(user=usr, is_unlisted=True)
+    profile = Profile(user=usr)
     profile.language = Language.objects.get(key=settings.DEFAULT_USER_LANGUAGE)
     profile.save()
 

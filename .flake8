@@ -23,6 +23,6 @@ exclude =
     ./dmoj/local_urls.py,
     # is actually a fragment to be included by settings.py
     ./.ci.settings.py,
-    # ignore migration files
+    # ignore migrations files
     ./judge/migrations/*.py,
     fc_*

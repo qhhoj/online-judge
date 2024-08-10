@@ -2,7 +2,6 @@ from django.utils.translation import gettext as _, gettext_lazy
 
 from judge.contest_format.legacy_ioi import LegacyIOIContestFormat
 from judge.contest_format.registry import register_contest_format
-# from judge.timezone import from_database_time
 
 
 @register_contest_format('ioi16')
