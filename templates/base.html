@@ -329,9 +329,9 @@
                 <ul>
                     <li>
                         <a href="{{ url('user_page') }}">
-                            <span>
-                                <img src="{{ gravatar(request.user, 32) }}" height="24" width="24">{# -#}
-                                <span>{{ _('Hello, %(username)s.', username=bold(request.user.first_name or request.profile.display_name)) }}</span>
+                            <span style="display: flex; align-items: center; justify-content: center;">
+                                {{ boring_avatars(name=request.user.username, square=True, size=32) }}
+                                <span style="padding-left: 5px;">{{ _('Hello, %(username)s.', username=bold(request.user.first_name or request.profile.display_name)) }}</span>
                             </span>
                         </a>
                         <ul style="width: 150px">

@@ -190,7 +190,7 @@
             <section class="ticket-message new-message">
                 <div class="info">
                     <a href="{{ url('user_page', request.user.username) }}" class="user">
-                        <img src="{{ gravatar(request.user, 80) }}" class="user-gravatar">
+                        {{ boring_avatars(name=request.user.username, square=True, size=80, style="margin: 0 auto;") }}
                     </a>
                 </div>
                 <div class="detail">

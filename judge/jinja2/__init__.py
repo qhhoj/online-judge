@@ -8,8 +8,8 @@ from statici18n.templatetags.statici18n import inlinei18n
 
 from judge.highlight_code import highlight_code
 from judge.user_translations import gettext
-from . import (camo, datetime, filesize, format, gravatar, language, markdown, rating, reference, render, social,
-               spaceless, submission, timedelta)
+from . import (boring_avatars, camo, datetime, filesize, format, gravatar, language, markdown, rating, reference,
+               render, social, spaceless, submission, timedelta)
 from . import registry
 
 registry.function('str', str)

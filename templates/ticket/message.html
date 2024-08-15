@@ -1,7 +1,7 @@
 <section id="message-{{ message.id }}" class="ticket-message">
-    <div class="info">
+    <div class="info" style="padding-right: 5px;">
         <a href="{{ url('user_page', message.user.user.username) }}" class="user">
-            <img src="{{ gravatar(message.user, 80) }}" class="user-gravatar">
+            {{ boring_avatars(name=message.user.username, square=True, size=80, style='margin: 0 auto;') }}
         </a>
     </div>
     <div class="detail">
