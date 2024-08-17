@@ -418,7 +418,8 @@
         <span id="footer-content">
             <br>
             {{_('proudly powered by %(dmoj)s', dmoj=safe('<a style="color: #808080" href="https://dmoj.ca"><b>DMOJ</b></a>'))}} |
-            {{_('follow us on %(github)s', github=safe('<a style="color: #808080" href="https://github.com/qhhoj/online-judge"><b>GitHub</b></a>'))}}
+            {{_('follow us on %(github)s', github=safe('<a style="color: #808080" href="https://github.com/qhhoj/online-judge"><b>GitHub</b></a>'))}} |
+            {{_('sponsored by %(fpt)s', fpt=safe('<a style="color: #808080" href="https://www.facebook.com/fsofthue/"><b>FPT Software Hue</b></a>'))}}
             {% if misc_config.footer %}
                 {{ misc_config.footer|safe }} |
             {% endif %}
