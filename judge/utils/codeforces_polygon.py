@@ -50,7 +50,7 @@ end
 
 function Math(m)
     -- Fix math delimiters
-    local delimiter = m.mathtype == 'InlineMath' and '~' or '$$'
+    local delimiter = m.mathtype == 'InlineMath' and '$' or '$$'
     return pandoc.RawInline('html', delimiter .. m.text .. delimiter)
 end
 
