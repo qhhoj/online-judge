@@ -19,7 +19,9 @@ MathJax = {
             '[+]': [
                 'textmacros',
                 'ams',
-            ]
+                'base',
+                'unicode',
+            ],
         },
         autoload: {
             color: [],

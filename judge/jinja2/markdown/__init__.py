@@ -92,6 +92,25 @@ def end_table_class(text):
     return text.replace(r'</table>', r'</table></div>')
 
 
+def replace_latex_with_placeholder(text):
+    latex_placeholder = '<latex>{}</latex>'
+    placeholders = []
+
+    def replace_match(match):
+        placeholders.append(match.group(0))
+        return latex_placeholder.format(len(placeholders) - 1)
+
+    text = re.sub(r'(\$\$.*?\$\$|\$.*?\$|~.*?~)', replace_match, text)
+
+    return text, placeholders
+
+
+def replace_placeholder_with_latex(html, placeholders):
+    for i, latex in enumerate(placeholders):
+        html = html.replace(f'<latex>{i}</latex>', latex)
+    return html
+
+
 @registry.filter
 def markdown(text, style, math_engine=None, lazy_load=False, strip_paragraphs=False):
     styles = settings.MARKDOWN_STYLES.get(style, settings.MARKDOWN_DEFAULT_STYLE)
@@ -100,7 +119,7 @@ def markdown(text, style, math_engine=None, lazy_load=False, strip_paragraphs=Fa
     else:
         safe_mode = None
 
-    extras = ['latex', 'spoiler', 'fenced-code-blocks', 'cuddled-lists', 'tables', 'strike']
+    extras = ['spoiler', 'fenced-code-blocks', 'cuddled-lists', 'tables', 'strike', 'smarty-pants', 'wikilinks', 'target-blank']
     if styles.get('nofollow', True):
         extras.append('nofollow')
 
@@ -112,8 +131,11 @@ def markdown(text, style, math_engine=None, lazy_load=False, strip_paragraphs=Fa
     if lazy_load:
         post_processors.append(lazy_load_processor)
 
+    text, placeholders = replace_latex_with_placeholder(text)
+
     result = markdown2.markdown(text, safe_mode=safe_mode, extras=extras)
 
+    result = replace_placeholder_with_latex(result, placeholders)
     result = add_table_class(result)
     result = end_table_class(result)
     result = inc_header(result, 2)
