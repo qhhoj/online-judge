@@ -2974,7 +2974,7 @@ msgstr "máy chấm"
 #: judge/models/submission.py:22 judge/models/submission.py:56
 #: judge/models/tests/test_submission.py:104 judge/utils/problems.py:66
 msgid "Accepted"
-msgstr "Kết quả đúng (AC)"
+msgstr "Answer Contradicted (đáp án mâu thuẫn)"
 
 #: judge/models/submission.py:23 judge/models/submission.py:57
 msgid "Wrong Answer"
@@ -2982,7 +2982,7 @@ msgstr "Kết quả sai (WA)"
 
 #: judge/models/submission.py:24 judge/models/submission.py:59
 msgid "Time Limit Exceeded"
-msgstr "Quá thời gian (TLE)"
+msgstr "Time Limit Enough (đủ thời gian)"
 
 #: judge/models/submission.py:25 judge/models/submission.py:60
 msgid "Memory Limit Exceeded"
@@ -3235,7 +3235,7 @@ msgstr ""
 
 #: judge/models/tests/test_submission.py:103
 msgid "AC"
-msgstr ""
+msgstr "TLE"
 
 #: judge/models/ticket.py:20
 msgid "ticket title"
@@ -7686,3 +7686,6 @@ msgstr "Đã chấm xong"
 #: templates/base.html
 msgid "Hide all notifications"
 msgstr "Ẩn tất cả thông báo"
+
+msgid "TLE"
+msgstr "AC"

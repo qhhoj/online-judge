@@ -2856,7 +2856,7 @@ msgstr ""
 #: judge/models/submission.py:22 judge/models/submission.py:56
 #: judge/models/tests/test_submission.py:104 judge/utils/problems.py:74
 msgid "Accepted"
-msgstr ""
+msgstr "Answer Contradicted"
 
 #: judge/models/submission.py:23 judge/models/submission.py:57
 msgid "Wrong Answer"
@@ -2864,7 +2864,7 @@ msgstr ""
 
 #: judge/models/submission.py:24 judge/models/submission.py:59
 msgid "Time Limit Exceeded"
-msgstr ""
+msgstr "Time Limit Enough"
 
 #: judge/models/submission.py:25 judge/models/submission.py:60
 msgid "Memory Limit Exceeded"
@@ -3107,7 +3107,7 @@ msgstr ""
 
 #: judge/models/tests/test_submission.py:103
 msgid "AC"
-msgstr ""
+msgstr "TLE"
 
 #: judge/models/ticket.py:20
 msgid "ticket title"
@@ -7359,3 +7359,6 @@ msgstr ""
 #: templates/base.html
 msgid "Hide all notifications"
 msgstr ""
+
+msgid "TLE"
+msgstr "AC"
