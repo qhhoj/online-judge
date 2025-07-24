@@ -19,6 +19,7 @@ pytz
 django-statici18n
 pika
 ua-parser
+user-agents
 pyyaml
 jinja2
 django_jinja>=2.5.0

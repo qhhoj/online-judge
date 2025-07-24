@@ -414,25 +414,26 @@ INSTALLED_APPS += (
 )
 
 MIDDLEWARE = (
-    'judge.middleware.ShortCircuitMiddleware',
+    'judge.legacy_middleware.ShortCircuitMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
-    'judge.middleware.APIMiddleware',
+    'judge.legacy_middleware.APIMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'judge.middleware.MiscConfigMiddleware',
-    'judge.middleware.DMOJLoginMiddleware',
+    'judge.legacy_middleware.MiscConfigMiddleware',
+    'judge.legacy_middleware.DMOJLoginMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'judge.user_log.LogUserAccessMiddleware',
     'judge.timezone.TimezoneMiddleware',
     'impersonate.middleware.ImpersonateMiddleware',
-    'judge.middleware.DMOJImpersonationMiddleware',
-    'judge.middleware.ContestMiddleware',
+    'judge.legacy_middleware.DMOJImpersonationMiddleware',
+    'judge.legacy_middleware.ContestMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
     'judge.social_auth.SocialAuthExceptionMiddleware',
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
+    'judge.middlewares.user_activity_safe.UserActivityMiddleware',
 )
 
 IMPERSONATE_REQUIRE_SUPERUSER = True

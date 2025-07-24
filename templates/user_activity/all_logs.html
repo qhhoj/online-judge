@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+{% block title %}All Activity Logs{% endblock %}
+
+{% block media %}
+<style>
+    .all-logs-page {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .page-header {
+        background: linear-gradient(135deg, #c4504c 0%, #9e4a3d 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .page-header h2 {
+        margin: 0;
+        font-size: 2rem;
+    }
+    .page-header .subtitle {
+        opacity: 0.9;
+        font-size: 1.1rem;
+        margin-top: 0.5rem;
+    }
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .summary-card {
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    .summary-card:hover {
+        transform: translateY(-2px);
+    }
+    .summary-card .number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #c4504c;
+        margin-bottom: 0.5rem;
+    }
+    .summary-card .label {
+        color: #555;
+        font-size: 0.9rem;
+    }
+    .filters-section {
+        background: #f8f8f8;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .filter-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .filter-group:last-child {
+        margin-bottom: 0;
+    }
+    .filter-group strong {
+        color: #1e1e1e;
+        min-width: 100px;
+    }
+    .btn-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .logs-table-container {
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    .table-header {
+        background: linear-gradient(135deg, #f8f8f8 0%, #eee 100%);
+        border-bottom: 2px solid #ccc;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        color: #1e1e1e;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .logs-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+    .logs-table th {
+        background: #555;
+        color: white;
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        border: none;
+    }
+    .logs-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+    .logs-table tbody tr:hover {
+        background: #f8f8f8;
+    }
+    .logs-table tbody tr:nth-child(even) {
+        background: #fafafa;
+    }
+    .logs-table tbody tr:nth-child(even):hover {
+        background: #f0f0f0;
+    }
+    .method-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 3px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: white;
+    }
+    .method-get { background: #17a2b8; }
+    .method-post { background: #28a745; }
+    .method-put { background: #ffc107; color: #000; }
+    .method-delete { background: #dc3545; }
+    .method-patch { background: #6f42c1; }
+    .response-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 3px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .response-success { background: #28a745; color: white; }
+    .response-redirect { background: #17a2b8; color: white; }
+    .response-error { background: #dc3545; color: white; }
+    .response-other { background: #6c757d; color: white; }
+    .btn-qhhoj {
+        background: linear-gradient(135deg, #c4504c 0%, #9e4a3d 100%);
+        border: 1px solid #9e4a3d;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+    .btn-qhhoj:hover {
+        background: linear-gradient(135deg, #9e4a3d 0%, #c4504c 100%);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+    .btn-secondary {
+        background: #808080;
+        border: 1px solid #555;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-secondary:hover {
+        background: #555;
+        color: white;
+        text-decoration: none;
+    }
+    .btn-warning {
+        background: #faa700;
+        border: 1px solid #d58512;
+        color: #1e1e1e;
+    }
+    .btn-warning:hover {
+        background: #d58512;
+        color: white;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    .user-link {
+        color: #c4504c;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .user-link:hover {
+        color: #9e4a3d;
+        text-decoration: underline;
+    }
+    .pagination {
+        background: #f8f8f8;
+        border-top: 1px solid #ccc;
+        padding: 1rem;
+        text-align: center;
+    }
+    .pagination .btn {
+        margin: 0 0.25rem;
+    }
+    .pagination .current-page {
+        color: #555;
+        font-weight: 600;
+        margin: 0 1rem;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 4rem;
+        color: #808080;
+    }
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+    .controls-bar {
+        text-align: center;
+        margin: 2rem 0;
+    }
+    .controls-bar .btn {
+        margin: 0 0.5rem;
+    }
+    .export-section {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="all-logs-page">
+    <div class="page-header">
+        <h2><i class="fa fa-list-alt"></i> All Activity Logs</h2>
+        <div class="subtitle">Complete system activity monitoring</div>
+    </div>
+
+    <!-- SUMMARY STATISTICS -->
+    <div class="summary-cards">
+        <div class="summary-card">
+            <div class="number">{{ total_logs_count or 0 }}</div>
+            <div class="label">Total Logs</div>
+        </div>
+        <div class="summary-card">
+            <div class="number">{{ unique_users_count or 0 }}</div>
+            <div class="label">Unique Users</div>
+        </div>
+        <div class="summary-card">
+            <div class="number">{{ unique_ips_count or 0 }}</div>
+            <div class="label">Unique IPs</div>
+        </div>
+        <div class="summary-card">
+            <div class="number">{{ date_range_days or 0 }}</div>
+            <div class="label">Days Covered</div>
+        </div>
+    </div>
+
+    <!-- EXPORT SECTION -->
+    <div class="export-section">
+        <strong><i class="fa fa-download"></i> Export Data:</strong>
+        <a href="/admin/user-activity/export-logs/?format=csv&days={{ days_filter }}" class="btn btn-warning btn-sm">
+            <i class="fa fa-file-csv"></i> Export CSV
+        </a>
+        <span style="margin-left: 1rem; color: #666;">
+            Export filtered results to CSV file
+        </span>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters-section">
+        <div class="filter-group">
+            <strong><i class="fa fa-calendar"></i> Time Period:</strong>
+            <div class="btn-group">
+                <a href="?days=1" class="btn btn-sm {% if days_filter == 1 %}btn-qhhoj{% else %}btn-secondary{% endif %}">Today</a>
+                <a href="?days=7" class="btn btn-sm {% if days_filter == 7 %}btn-qhhoj{% else %}btn-secondary{% endif %}">7 days</a>
+                <a href="?days=30" class="btn btn-sm {% if days_filter == 30 %}btn-qhhoj{% else %}btn-secondary{% endif %}">30 days</a>
+                <a href="?days=90" class="btn btn-sm {% if days_filter == 90 %}btn-qhhoj{% else %}btn-secondary{% endif %}">90 days</a>
+                <a href="?days=-1" class="btn btn-sm {% if days_filter == -1 %}btn-qhhoj{% else %}btn-secondary{% endif %}">All Time</a>
+            </div>
+        </div>
+        
+        <div class="filter-group">
+            <strong><i class="fa fa-filter"></i> User Type:</strong>
+            <div class="btn-group">
+                <a href="?user_type=all&days={{ days_filter }}" class="btn btn-sm {% if user_type_filter == 'all' %}btn-qhhoj{% else %}btn-secondary{% endif %}">All</a>
+                <a href="?user_type=authenticated&days={{ days_filter }}" class="btn btn-sm {% if user_type_filter == 'authenticated' %}btn-qhhoj{% else %}btn-secondary{% endif %}">Authenticated</a>
+                <a href="?user_type=anonymous&days={{ days_filter }}" class="btn btn-sm {% if user_type_filter == 'anonymous' %}btn-qhhoj{% else %}btn-secondary{% endif %}">Anonymous</a>
+                <a href="?user_type=bots&days={{ days_filter }}" class="btn btn-sm {% if user_type_filter == 'bots' %}btn-qhhoj{% else %}btn-secondary{% endif %}">Bots</a>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <strong><i class="fa fa-sort"></i> Order By:</strong>
+            <div class="btn-group">
+                <a href="?order_by=newest&days={{ days_filter }}&user_type={{ user_type_filter }}" class="btn btn-sm {% if order_by == 'newest' %}btn-qhhoj{% else %}btn-secondary{% endif %}">Newest</a>
+                <a href="?order_by=oldest&days={{ days_filter }}&user_type={{ user_type_filter }}" class="btn btn-sm {% if order_by == 'oldest' %}btn-qhhoj{% else %}btn-secondary{% endif %}">Oldest</a>
+            </div>
+            <span style="color: #666; margin-left: 1rem;">
+                Showing: {% if days_filter == -1 %}All time{% else %}{{ days_filter }} days{% endif %} | 
+                {{ user_type_filter.title() }} users | 
+                {{ order_by.title() }} first
+            </span>
+        </div>
+    </div>
+
+    <!-- LOGS TABLE -->
+    <div class="logs-table-container">
+        <div class="table-header">
+            <span>
+                <i class="fa fa-table"></i> Activity Logs 
+                ({{ activities.paginator.count if activities else 0 }} total)
+            </span>
+            <span style="font-size: 0.9rem; opacity: 0.8;">
+                {% if activities %}
+                    Page {{ activities.number }} of {{ activities.paginator.num_pages }}
+                {% endif %}
+            </span>
+        </div>
+        
+        {% if activities %}
+        <table class="logs-table">
+            <thead>
+                <tr>
+                    <th><i class="fa fa-clock"></i> Time</th>
+                    <th><i class="fa fa-user"></i> User</th>
+                    <th><i class="fa fa-link"></i> Path</th>
+                    <th><i class="fa fa-code"></i> Method</th>
+                    <th><i class="fa fa-globe"></i> IP Address</th>
+                    <th><i class="fa fa-chart-line"></i> Response</th>
+                    <th><i class="fa fa-browser"></i> User Agent</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in activities %}
+                <tr>
+                    <td>
+                        {% if activity.timestamp %}
+                            <small>{{ activity.timestamp.strftime('%m-%d %H:%M:%S') }}</small>
+                        {% else %}
+                            <small>N/A</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if activity.user %}
+                            <a href="/admin/user-activity/user/{{ activity.user.username }}/" class="user-link">
+                                <i class="fa fa-user"></i> {{ activity.user.username }}
+                            </a>
+                        {% else %}
+                            <span style="color: #6c757d;">
+                                <i class="fa fa-user-secret"></i> Anonymous
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <code style="font-size: 0.8rem;">
+                            {% if activity.path and len(activity.path) > 40 %}
+                                {{ activity.path[:40] }}...
+                            {% else %}
+                                {{ activity.path or 'N/A' }}
+                            {% endif %}
+                        </code>
+                    </td>
+                    <td>
+                        <span class="method-badge method-{{ activity.method|lower if activity.method else 'get' }}">
+                            {{ activity.method or 'GET' }}
+                        </span>
+                    </td>
+                    <td>
+                        <code style="font-size: 0.8rem;">{{ activity.ip_address or 'N/A' }}</code>
+                    </td>
+                    <td>
+                        {% if activity.response_code %}
+                            {% if activity.response_code >= 200 and activity.response_code < 300 %}
+                                <span class="response-badge response-success">{{ activity.response_code }}</span>
+                            {% elif activity.response_code >= 300 and activity.response_code < 400 %}
+                                <span class="response-badge response-redirect">{{ activity.response_code }}</span>
+                            {% elif activity.response_code >= 400 %}
+                                <span class="response-badge response-error">{{ activity.response_code }}</span>
+                            {% else %}
+                                <span class="response-badge response-other">{{ activity.response_code }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="response-badge response-other">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <small style="color: #666; font-size: 0.7rem;">
+                            {% if activity.user_agent %}
+                                {% if activity.user_agent|length > 30 %}
+                                    {{ activity.user_agent[:30] }}...
+                                {% else %}
+                                    {{ activity.user_agent }}
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </small>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- PAGINATION -->
+        {% if activities.has_other_pages %}
+        <div class="pagination">
+            {% if activities.has_previous %}
+                <a href="?page=1&days={{ days_filter }}&user_type={{ user_type_filter }}&order_by={{ order_by }}" class="btn btn-secondary btn-sm">
+                    <i class="fa fa-angle-double-left"></i> First
+                </a>
+                <a href="?page={{ activities.previous_page_number }}&days={{ days_filter }}&user_type={{ user_type_filter }}&order_by={{ order_by }}" class="btn btn-secondary btn-sm">
+                    <i class="fa fa-chevron-left"></i> Previous
+                </a>
+            {% endif %}
+            
+            <span class="current-page">
+                Page {{ activities.number }} of {{ activities.paginator.num_pages }}
+                ({{ activities.paginator.count }} total entries)
+            </span>
+            
+            {% if activities.has_next %}
+                <a href="?page={{ activities.next_page_number }}&days={{ days_filter }}&user_type={{ user_type_filter }}&order_by={{ order_by }}" class="btn btn-secondary btn-sm">
+                    Next <i class="fa fa-chevron-right"></i>
+                </a>
+                <a href="?page={{ activities.paginator.num_pages }}&days={{ days_filter }}&user_type={{ user_type_filter }}&order_by={{ order_by }}" class="btn btn-secondary btn-sm">
+                    Last <i class="fa fa-angle-double-right"></i>
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <i class="fa fa-search"></i>
+            <h4>No activity logs found</h4>
+            <p>Try adjusting your filters or check back later</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls-bar">
+        <a href="{{ url('admin:index') }}" class="btn btn-secondary">
+            <i class="fa fa-home"></i> Back to Admin
+        </a>
+        <a href="/admin/user-activity/active-users/" class="btn-qhhoj">
+            <i class="fa fa-users"></i> Live Dashboard
+        </a>
+        <button onclick="location.reload()" class="btn btn-secondary">
+            <i class="fa fa-sync-alt"></i> Refresh
+        </button>
+        <a href="/admin/user-activity/export-logs/?format=csv&days={{ days_filter }}&user_type={{ user_type_filter }}" class="btn btn-warning">
+            <i class="fa fa-download"></i> Export CSV
+        </a>
+    </div>
+</div>
+{% endblock %} 
