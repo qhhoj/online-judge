@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Test</title>
+</head>
+<body>
+    <h1>DEBUG USER ACTIVITY</h1>
+    
+    <h2>Context Variables:</h2>
+    <ul>
+        <li><strong>total_active_users:</strong> {{ total_active_users }}</li>
+        <li><strong>total_anonymous:</strong> {{ total_anonymous }}</li>
+        <li><strong>total_sessions:</strong> {{ total_sessions }}</li>
+        <li><strong>authenticated_sessions count:</strong> {{ authenticated_sessions|length if authenticated_sessions else 'None' }}</li>
+        <li><strong>anonymous_sessions count:</strong> {{ anonymous_sessions|length if anonymous_sessions else 'None' }}</li>
+        <li><strong>bot_sessions count:</strong> {{ bot_sessions|length if bot_sessions else 'None' }}</li>
+        <li><strong>bot_stats:</strong> {{ bot_stats }}</li>
+    </ul>
+    
+    <h2>First Authenticated Session (if any):</h2>
+    {% if authenticated_sessions %}
+        {% for session in authenticated_sessions[:1] %}
+            <ul>
+                <li>User: {{ session.user.username if session.user else 'No user' }}</li>
+                <li>IP: {{ session.ip_address }}</li>
+                <li>Device: {{ session.device_type }}</li>
+                <li>Browser: {{ session.browser }}</li>
+                <li>Last Activity: {{ session.last_activity }}</li>
+            </ul>
+        {% endfor %}
+    {% else %}
+        <p>No authenticated sessions found</p>
+    {% endif %}
+    
+    <h2>First Anonymous Session (if any):</h2>
+    {% if anonymous_sessions %}
+        {% for session in anonymous_sessions[:1] %}
+            <ul>
+                <li>IP: {{ session.ip_address }}</li>
+                <li>Device: {{ session.device_type }}</li>
+                <li>Browser: {{ session.browser }}</li>
+                <li>Last Activity: {{ session.last_activity }}</li>
+            </ul>
+        {% endfor %}
+    {% else %}
+        <p>No anonymous sessions found</p>
+    {% endif %}
+    
+    <h2>First Bot Session (if any):</h2>
+    {% if bot_sessions %}
+        {% for session in bot_sessions[:1] %}
+            <ul>
+                <li>IP: {{ session.ip_address }}</li>
+                <li>User Agent: {{ session.user_agent }}</li>
+                <li>Last Activity: {{ session.last_activity }}</li>
+            </ul>
+        {% endfor %}
+    {% else %}
+        <p>No bot sessions found</p>
+    {% endif %}
+    
+    <hr>
+    <p><strong>Time:</strong> {{ request.build_absolute_uri }}</p>
+    <p><strong>User:</strong> {{ request.user.username if request.user.is_authenticated else 'Anonymous' }}</p>
+</body>
+</html> 

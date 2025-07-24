@@ -1,0 +1,807 @@
+{% extends "base.html" %}
+{% block title %}User Activity Dashboard{% endblock %}
+
+{% block media %}
+<style>
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+    
+    .dashboard-header {
+        background: linear-gradient(135deg, #c4504c 0%, #9e4a3d 100%);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 16px;
+        margin-bottom: 3rem;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(196, 80, 76, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .dashboard-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: shimmer 3s ease-in-out infinite;
+    }
+    
+    @keyframes shimmer {
+        0%, 100% { transform: translateX(-100%) translateY(-100%) rotate(0deg); }
+        50% { transform: translateX(-50%) translateY(-50%) rotate(180deg); }
+    }
+    
+    .dashboard-header h2 {
+        margin: 0;
+        font-size: 3rem;
+        font-weight: 300;
+        letter-spacing: -1px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .dashboard-header .subtitle {
+        font-size: 1.3rem;
+        opacity: 0.9;
+        margin-top: 0.5rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border: 3px solid transparent;
+        border-radius: 16px;
+        padding: 2.5rem;
+        text-align: center;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: linear-gradient(90deg, #c4504c, #faa700, #28a745, #17a2b8);
+        border-radius: 16px 16px 0 0;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-12px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        border-color: #c4504c;
+    }
+    
+    .stat-card.primary { --accent: #c4504c; }
+    .stat-card.success { --accent: #28a745; }
+    .stat-card.info { --accent: #17a2b8; }
+    .stat-card.warning { --accent: #faa700; }
+    
+    .stat-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: var(--accent, #c4504c);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover .stat-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+    
+    .stat-number {
+        font-size: 3.5rem;
+        font-weight: 700;
+        color: var(--accent, #c4504c);
+        margin-bottom: 0.5rem;
+        line-height: 1;
+    }
+    
+    .stat-label {
+        font-size: 1.2rem;
+        color: #666;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-sublabel {
+        font-size: 0.9rem;
+        color: #999;
+        opacity: 0.8;
+    }
+    
+    .tabs-container {
+        background: white;
+        border: 3px solid #f0f0f0;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .tabs-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-bottom: 3px solid #dee2e6;
+        padding: 0;
+        display: flex;
+        position: relative;
+    }
+    
+    .tab-button {
+        flex: 1;
+        padding: 1.5rem 2rem;
+        background: transparent;
+        border: none;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #666;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .tab-button:hover {
+        background: rgba(196, 80, 76, 0.1);
+        color: #c4504c;
+    }
+    
+    .tab-button.active {
+        background: #c4504c;
+        color: white;
+    }
+    
+    .tab-button.active::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: #c4504c;
+    }
+    
+    .tab-content {
+        display: none;
+        padding: 2rem;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    
+    .users-table th {
+        background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+        color: white;
+        padding: 1.25rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        border: none;
+        position: relative;
+    }
+    
+    .users-table th::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #c4504c, #faa700);
+    }
+    
+    .users-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
+        transition: all 0.2s ease;
+    }
+    
+    .users-table tbody tr {
+        transition: all 0.3s ease;
+    }
+    
+    .users-table tbody tr:hover {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        transform: scale(1.01);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .users-table tbody tr:nth-child(even) {
+        background: #fdfdfd;
+    }
+    
+    .user-link {
+        color: #c4504c;
+        text-decoration: none;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .user-link:hover {
+        color: #9e4a3d;
+        text-decoration: none;
+        transform: translateX(5px);
+    }
+    
+    .device-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #f8f9fa;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        color: #666;
+        transition: all 0.3s ease;
+    }
+    
+    .device-indicator:hover {
+        background: #e9ecef;
+        transform: scale(1.05);
+    }
+    
+    .device-icon {
+        color: #c4504c;
+        font-size: 1.1rem;
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        animation: pulse 2s infinite;
+    }
+    
+    .status-active {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+    
+    .status-time {
+        background: #f8f9fa;
+        color: #666;
+        border: 1px solid #dee2e6;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+    
+    .action-button {
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, #c4504c 0%, #9e4a3d 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 2px solid transparent;
+    }
+    
+    .action-button:hover {
+        background: linear-gradient(135deg, #9e4a3d 0%, #c4504c 100%);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(196, 80, 76, 0.3);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6c757d;
+    }
+    
+    .empty-state-icon {
+        font-size: 5rem;
+        margin-bottom: 2rem;
+        opacity: 0.3;
+        color: #c4504c;
+    }
+    
+    .empty-state h4 {
+        margin-bottom: 1rem;
+        color: #495057;
+    }
+    
+    .controls-section {
+        background: white;
+        border: 3px solid #f0f0f0;
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        margin-top: 2rem;
+    }
+    
+    .control-button {
+        margin: 0 0.75rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 2px solid transparent;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #c4504c 0%, #9e4a3d 100%);
+        color: white;
+        border-color: #c4504c;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+        border-color: #6c757d;
+    }
+    
+    .control-button:hover {
+        text-decoration: none;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #9e4a3d 0%, #c4504c 100%);
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #545b62;
+        color: white;
+    }
+    
+    .refresh-indicator {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        border: 2px solid #2196f3;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 2rem;
+        text-align: center;
+        color: #1976d2;
+        font-weight: 500;
+    }
+    
+    .refresh-indicator i {
+        animation: rotate 2s linear infinite;
+        margin-right: 0.5rem;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 768px) {
+        .dashboard-header h2 {
+            font-size: 2rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .tabs-header {
+            flex-direction: column;
+        }
+        
+        .tab-button {
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .tab-button:last-child {
+            border-bottom: none;
+        }
+        
+        .users-table {
+            font-size: 0.85rem;
+        }
+        
+        .control-button {
+            margin: 0.5rem;
+            display: block;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-container">
+    <!-- HEADER -->
+    <div class="dashboard-header">
+        <h2><i class="fa fa-chart-line"></i> Live User Activity</h2>
+        <div class="subtitle">Real-time monitoring dashboard</div>
+    </div>
+
+    <!-- STATISTICS CARDS -->
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-icon"><i class="fa fa-users"></i></div>
+            <div class="stat-number">{{ (total_active_users or 0) + (total_anonymous or 0) }}</div>
+            <div class="stat-label">Human Users</div>
+            <div class="stat-sublabel">Real people online</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-icon"><i class="fa fa-user-check"></i></div>
+            <div class="stat-number">{{ total_active_users or 0 }}</div>
+            <div class="stat-label">Authenticated</div>
+            <div class="stat-sublabel">Logged in users</div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-icon"><i class="fa fa-user-secret"></i></div>
+            <div class="stat-number">{{ total_anonymous or 0 }}</div>
+            <div class="stat-label">Anonymous</div>
+            <div class="stat-sublabel">Guest visitors</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-icon"><i class="fa fa-robot"></i></div>
+            <div class="stat-number">{{ bot_stats.total_bots if bot_stats else 0 }}</div>
+            <div class="stat-label">Bots</div>
+            <div class="stat-sublabel">Crawlers & spiders</div>
+        </div>
+    </div>
+
+    <!-- TABS SECTION -->
+    <div class="tabs-container">
+        <div class="tabs-header">
+            <button class="tab-button active" onclick="showTab('authenticated')">
+                <i class="fa fa-user-check"></i>
+                Authenticated ({{ total_active_users or 0 }})
+            </button>
+            <button class="tab-button" onclick="showTab('anonymous')">
+                <i class="fa fa-user-secret"></i>
+                Anonymous ({{ total_anonymous or 0 }})
+            </button>
+            <button class="tab-button" onclick="showTab('bots')">
+                <i class="fa fa-robot"></i>
+                Bots ({{ bot_stats.total_bots if bot_stats else 0 }})
+            </button>
+        </div>
+
+        <!-- AUTHENTICATED USERS TAB -->
+        <div id="authenticated" class="tab-content active">
+            {% if authenticated_sessions %}
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th><i class="fa fa-user"></i> User</th>
+                        <th><i class="fa fa-globe"></i> IP Address</th>
+                        <th><i class="fa fa-mobile-alt"></i> Device</th>
+                        <th><i class="fa fa-browser"></i> Browser</th>
+                        <th><i class="fa fa-clock"></i> Last Activity</th>
+                        <th><i class="fa fa-cog"></i> Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in authenticated_sessions %}
+                    <tr>
+                        <td>
+                            <div class="user-link">
+                                <i class="fa fa-user-circle"></i>
+                                {{ session.user.username if session.user else 'Unknown' }}
+                            </div>
+                        </td>
+                        <td>
+                            <code style="background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                                {{ session.ip_address or 'N/A' }}
+                            </code>
+                        </td>
+                        <td>
+                            <div class="device-indicator">
+                                {% if session.device_type == 'mobile' %}
+                                    <i class="fa fa-mobile-alt device-icon"></i> Mobile
+                                {% elif session.device_type == 'tablet' %}
+                                    <i class="fa fa-tablet-alt device-icon"></i> Tablet
+                                {% elif session.device_type == 'desktop' %}
+                                    <i class="fa fa-desktop device-icon"></i> Desktop
+                                {% else %}
+                                    <i class="fa fa-question device-icon"></i> {{ session.device_type or 'Unknown' }}
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>{{ session.browser or 'Unknown' }}</td>
+                        <td>
+                            {% if session.last_activity %}
+                                <div class="status-badge status-active">
+                                    <i class="fa fa-circle"></i>
+                                    {{ session.last_activity.strftime('%H:%M:%S') }}
+                                </div>
+                                <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
+                                    {{ session.last_activity.strftime('%Y-%m-%d') }}
+                                </div>
+                            {% else %}
+                                <div class="status-badge status-time">N/A</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if session.user %}
+                            <a href="/admin/user-activity/user/{{ session.user.username }}/" class="action-button">
+                                <i class="fa fa-eye"></i> Details
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fa fa-user-slash"></i>
+                </div>
+                <h4>No Authenticated Users Online</h4>
+                <p>All current visitors are browsing anonymously</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ANONYMOUS USERS TAB -->
+        <div id="anonymous" class="tab-content">
+            {% if anonymous_sessions %}
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th><i class="fa fa-globe"></i> IP Address</th>
+                        <th><i class="fa fa-mobile-alt"></i> Device</th>
+                        <th><i class="fa fa-browser"></i> Browser</th>
+                        <th><i class="fa fa-clock"></i> Last Activity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in anonymous_sessions %}
+                    <tr>
+                        <td>
+                            <code style="background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                                {{ session.ip_address or 'N/A' }}
+                            </code>
+                        </td>
+                        <td>
+                            <div class="device-indicator">
+                                {% if session.device_type == 'mobile' %}
+                                    <i class="fa fa-mobile-alt device-icon"></i> Mobile
+                                {% elif session.device_type == 'tablet' %}
+                                    <i class="fa fa-tablet-alt device-icon"></i> Tablet
+                                {% elif session.device_type == 'desktop' %}
+                                    <i class="fa fa-desktop device-icon"></i> Desktop
+                                {% else %}
+                                    <i class="fa fa-question device-icon"></i> {{ session.device_type or 'Unknown' }}
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>{{ session.browser or 'Unknown' }}</td>
+                        <td>
+                            {% if session.last_activity %}
+                                <div class="status-badge status-active">
+                                    <i class="fa fa-circle"></i>
+                                    {{ session.last_activity.strftime('%H:%M:%S') }}
+                                </div>
+                                <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
+                                    {{ session.last_activity.strftime('%Y-%m-%d') }}
+                                </div>
+                            {% else %}
+                                <div class="status-badge status-time">N/A</div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fa fa-user-secret"></i>
+                </div>
+                <h4>No Anonymous Users</h4>
+                <p>All current visitors are authenticated</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- BOTS TAB -->
+        <div id="bots" class="tab-content">
+            {% if bot_sessions %}
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th><i class="fa fa-globe"></i> IP Address</th>
+                        <th><i class="fa fa-robot"></i> User Agent</th>
+                        <th><i class="fa fa-clock"></i> Last Activity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in bot_sessions %}
+                    <tr>
+                        <td>
+                            <code style="background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                                {{ session.ip_address or 'N/A' }}
+                            </code>
+                        </td>
+                        <td>
+                            <div style="font-family: monospace; font-size: 0.8rem; color: #666; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">
+                                {% if session.user_agent %}
+                                    {% if session.user_agent|length > 80 %}
+                                        {{ session.user_agent[:80] }}...
+                                    {% else %}
+                                        {{ session.user_agent }}
+                                    {% endif %}
+                                {% else %}
+                                    Unknown Bot
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if session.last_activity %}
+                                <div class="status-badge status-active">
+                                    <i class="fa fa-circle"></i>
+                                    {{ session.last_activity.strftime('%H:%M:%S') }}
+                                </div>
+                                <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
+                                    {{ session.last_activity.strftime('%Y-%m-%d') }}
+                                </div>
+                            {% else %}
+                                <div class="status-badge status-time">N/A</div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fa fa-robot"></i>
+                </div>
+                <h4>No Bot Activity</h4>
+                <p>Your site is currently bot-free!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls-section">
+        <a href="{{ url('admin:index') }}" class="control-button btn-secondary">
+            <i class="fa fa-home"></i> Admin Panel
+        </a>
+        <a href="/admin/user-activity/all-logs/" class="control-button btn-primary">
+            <i class="fa fa-list"></i> All Logs
+        </a>
+        <button onclick="location.reload()" class="control-button btn-secondary">
+            <i class="fa fa-sync-alt"></i> Refresh Now
+        </button>
+        <button onclick="toggleAutoRefresh()" class="control-button btn-secondary" id="autoRefreshBtn">
+            <i class="fa fa-pause"></i> Stop Auto-Refresh
+        </button>
+    </div>
+
+    <!-- AUTO REFRESH INDICATOR -->
+    <div class="refresh-indicator">
+        <i class="fa fa-sync-alt"></i>
+        <strong>Auto-Refresh Active:</strong> Page updates every 30 seconds |
+        <strong>Last Updated:</strong> <span id="lastUpdate"></span> |
+        <strong>Total Sessions:</strong> {{ total_sessions or 0 }}
+    </div>
+</div>
+
+<script>
+// Tab functionality
+function showTab(tabName) {
+    // Hide all tab contents
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Remove active class from all buttons
+    const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(tabName).classList.add('active');
+    
+    // Add active class to clicked button
+    event.target.classList.add('active');
+}
+
+// Auto refresh functionality
+let autoRefreshInterval;
+let isAutoRefreshOn = true;
+
+function updateLastUpdate() {
+    const now = new Date();
+    document.getElementById('lastUpdate').textContent = now.toLocaleTimeString();
+}
+
+function toggleAutoRefresh() {
+    const btn = document.getElementById('autoRefreshBtn');
+    if (isAutoRefreshOn) {
+        clearInterval(autoRefreshInterval);
+        btn.innerHTML = '<i class="fa fa-play"></i> Start Auto-Refresh';
+        isAutoRefreshOn = false;
+    } else {
+        startAutoRefresh();
+        btn.innerHTML = '<i class="fa fa-pause"></i> Stop Auto-Refresh';
+        isAutoRefreshOn = true;
+    }
+}
+
+function startAutoRefresh() {
+    autoRefreshInterval = setInterval(function() {
+        location.reload();
+    }, 30000);
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateLastUpdate();
+    startAutoRefresh();
+    
+    // Add click handlers to tab buttons
+    const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach((button, index) => {
+        button.addEventListener('click', function() {
+            const tabNames = ['authenticated', 'anonymous', 'bots'];
+            showTab(tabNames[index]);
+        });
+    });
+});
+</script>
+{% endblock %} 

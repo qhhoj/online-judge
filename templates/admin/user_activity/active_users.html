@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+{% block title %}User Activity Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h1>🔥 User Activity Dashboard - LIVE</h1>
+    
+    <!-- SUMMARY CARDS -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <h5 class="card-title">👥 Total Human</h5>
+                    <h2 id="total-human">{{ total_active_users|add:total_anonymous }}</h2>
+                    <small>Real Users</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h5 class="card-title">🔐 Authenticated</h5>
+                    <h2 id="authenticated-count">{{ total_active_users }}</h2>
+                    <small>Logged In</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <h5 class="card-title">👤 Anonymous</h5>
+                    <h2 id="anonymous-count">{{ total_anonymous }}</h2>
+                    <small>Guests</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <h5 class="card-title">🤖 Total Bots</h5>
+                    <h2 id="bot-count">{{ bot_stats.total_bots }}</h2>
+                    <small>Crawlers/Bots</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-secondary">
+                <div class="card-body text-center">
+                    <h5 class="card-title">📱 Multi-session</h5>
+                    <h2>{{ multi_session_users|length }}</h2>
+                    <small>Users</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-dark">
+                <div class="card-body text-center">
+                    <h5 class="card-title">🌐 Total Sessions</h5>
+                    <h2 id="total-sessions">{{ total_sessions }}</h2>
+                    <small>All Connections</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVIGATION TABS -->
+    <ul class="nav nav-tabs" id="activityTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="humans-tab" data-bs-toggle="tab" data-bs-target="#humans" type="button" role="tab">
+                👥 Human Users ({{ total_active_users|add:total_anonymous }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="bots-tab" data-bs-toggle="tab" data-bs-target="#bots" type="button" role="tab">
+                🤖 Bot Activity ({{ bot_stats.total_bots }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats" type="button" role="tab">
+                📊 Statistics
+            </button>
+        </li>
+    </ul>
+
+    <!-- TAB CONTENT -->
+    <div class="tab-content mt-3" id="activityTabContent">
+        <!-- HUMAN USERS TAB -->
+        <div class="tab-pane fade show active" id="humans" role="tabpanel">
+            <!-- Authenticated Users -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3>🔐 Authenticated Users ({{ total_active_users }})</h3>
+                    <span class="badge bg-success">Human Only</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>👤 User</th>
+                                    <th>🌐 IP Address</th>
+                                    <th>📱 Device</th>
+                                    <th>🖥️ Browser</th>
+                                    <th>🕒 Last Activity</th>
+                                    <th>🔗 Sessions</th>
+                                    <th>⚡ Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in authenticated_sessions %}
+                                <tr>
+                                    <td>
+                                        <a href="/admin/user-activity/user/{{ session.user.username }}/" class="text-decoration-none">
+                                            <strong>{{ session.user.username }}</strong>
+                                        </a>
+                                    </td>
+                                    <td><code>{{ session.ip_address }}</code></td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ session.device_type|title }}</span>
+                                    </td>
+                                    <td>{{ session.browser }}</td>
+                                    <td>{{ session.last_activity|timesince }} ago</td>
+                                    <td>
+                                        {% if session.user.username in users_with_sessions %}
+                                            <span class="badge bg-warning">{{ users_with_sessions|get_item:session.user.username.sessions|length }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">1</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="/admin/user-activity/user/{{ session.user.username }}/" class="btn btn-sm btn-info">📋 Details</a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="7" class="text-center text-muted">No authenticated users online</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Anonymous Users -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3>👤 Anonymous Users ({{ total_anonymous }})</h3>
+                    <span class="badge bg-info">Human Only</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>🌐 IP Address</th>
+                                    <th>📱 Device</th>
+                                    <th>🖥️ Browser</th>
+                                    <th>💻 OS</th>
+                                    <th>🕒 Last Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in anonymous_sessions %}
+                                <tr>
+                                    <td><code>{{ session.ip_address }}</code></td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ session.device_type|title }}</span>
+                                    </td>
+                                    <td>{{ session.browser }}</td>
+                                    <td>{{ session.os }}</td>
+                                    <td>{{ session.last_activity|timesince }} ago</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-center text-muted">No anonymous users online</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTS TAB -->
+        <div class="tab-pane fade" id="bots" role="tabpanel">
+            <!-- Bot Summary -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body text-center">
+                            <h5>🤖 Total Bots</h5>
+                            <h3>{{ bot_stats.total_bots }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body text-center">
+                            <h5>🔐 Bot Auth</h5>
+                            <h3>{{ bot_stats.bot_authenticated }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-dark text-white">
+                        <div class="card-body text-center">
+                            <h5>👤 Bot Anonymous</h5>
+                            <h3>{{ bot_stats.bot_anonymous }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body text-center">
+                            <h5>📡 Bot IPs</h5>
+                            <h3>{{ bot_ip_stats|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bot Authenticated -->
+            {% if bot_authenticated_sessions %}
+            <div class="card mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h3>🤖🔐 Authenticated Bots ({{ bot_stats.bot_authenticated }})</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>👤 User</th>
+                                    <th>🌐 IP</th>
+                                    <th>🖥️ Browser</th>
+                                    <th>🔧 User Agent</th>
+                                    <th>🕒 Last Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in bot_authenticated_sessions %}
+                                <tr>
+                                    <td>
+                                        <a href="/admin/user-activity/user/{{ session.user.username }}/">
+                                            <strong>{{ session.user.username }}</strong>
+                                        </a>
+                                    </td>
+                                    <td><code>{{ session.ip_address }}</code></td>
+                                    <td>{{ session.browser }}</td>
+                                    <td><small>{{ session.user_agent|truncatechars:80 }}</small></td>
+                                    <td>{{ session.last_activity|timesince }} ago</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Bot Anonymous -->
+            <div class="card mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h3>🤖👤 Anonymous Bots ({{ bot_stats.bot_anonymous }})</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>🌐 IP Address</th>
+                                    <th>🖥️ Browser</th>
+                                    <th>💻 OS</th>
+                                    <th>🔧 User Agent</th>
+                                    <th>🕒 Last Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in bot_anonymous_sessions %}
+                                <tr>
+                                    <td><code>{{ session.ip_address }}</code></td>
+                                    <td>{{ session.browser }}</td>
+                                    <td>{{ session.os }}</td>
+                                    <td><small>{{ session.user_agent|truncatechars:60 }}</small></td>
+                                    <td>{{ session.last_activity|timesince }} ago</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-center text-muted">No anonymous bots detected</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bot IP Statistics -->
+            {% if bot_ip_stats %}
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h3>📊 Bot Activity by IP</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>🌐 IP Address</th>
+                                    <th>📊 Sessions</th>
+                                    <th>👥 Users</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in bot_ip_stats %}
+                                <tr>
+                                    <td><code>{{ stat.ip_address }}</code></td>
+                                    <td><span class="badge bg-warning">{{ stat.count }}</span></td>
+                                    <td><span class="badge bg-info">{{ stat.users }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- STATISTICS TAB -->
+        <div class="tab-pane fade" id="stats" role="tabpanel">
+            <div class="row">
+                <!-- Device Stats -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>📱 Device Statistics (Human)</h3>
+                        </div>
+                        <div class="card-body">
+                            {% for stat in device_stats %}
+                            <div class="d-flex justify-content-between">
+                                <span>{{ stat.device_type|title }}</span>
+                                <span class="badge bg-primary">{{ stat.count }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Browser Stats -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🖥️ Browser Statistics (Human)</h3>
+                        </div>
+                        <div class="card-body">
+                            {% for stat in browser_stats %}
+                            <div class="d-flex justify-content-between">
+                                <span>{{ stat.browser }}</span>
+                                <span class="badge bg-success">{{ stat.count }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Multi-session Users -->
+            {% if multi_session_users %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3>📱 Multi-session Users</h3>
+                </div>
+                <div class="card-body">
+                    {% for username, data in multi_session_users %}
+                    <div class="mb-2">
+                        <strong>{{ username }}</strong>
+                        <span class="badge bg-warning">{{ data.sessions|length }} sessions</span>
+                        <a href="/admin/user-activity/user/{{ username }}/" class="btn btn-sm btn-info ms-2">View</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="mt-4">
+        <a href="/admin/user-activity/all-logs/" class="btn btn-primary">📋 View All Logs</a>
+        <a href="/admin/" class="btn btn-secondary">⬅️ Back to Admin</a>
+    </div>
+</div>
+
+<script>
+// Auto refresh every 30 seconds
+setInterval(function() {
+    fetch('/admin/user-activity/api/active-users/')
+        .then(response => response.json())
+        .then(data => {
+            // Update human counts
+            document.getElementById('total-human').textContent = data.total_human_unique;
+            document.getElementById('authenticated-count').textContent = data.authenticated_users;
+            document.getElementById('anonymous-count').textContent = data.anonymous_users;
+            
+            // Update bot counts
+            document.getElementById('bot-count').textContent = data.total_bot_sessions;
+            document.getElementById('total-sessions').textContent = data.total_sessions;
+            
+            console.log('📊 Activity data updated:', data);
+        })
+        .catch(error => console.error('❌ Error updating activity data:', error));
+}, 30000);
+
+// Bootstrap tabs initialization
+document.addEventListener('DOMContentLoaded', function() {
+    var triggerTabList = [].slice.call(document.querySelectorAll('#activityTabs button'))
+    triggerTabList.forEach(function (triggerEl) {
+        var tabTrigger = new bootstrap.Tab(triggerEl)
+        
+        triggerEl.addEventListener('click', function (event) {
+            event.preventDefault()
+            tabTrigger.show()
+        })
+    })
+});
+</script>
+{% endblock %} 

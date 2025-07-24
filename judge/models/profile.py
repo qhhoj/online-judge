@@ -412,6 +412,7 @@ class Profile(models.Model):
             ('long_contest_duration', _('Can set long contest duration')),
             ('create_mass_testcases', _('Can create unlimitted number of testcases for a problem')),
             ('ban_user', _('Ban users')),
+            ('can_see_user_activity', _('Can see user activity tracking')),
         )
         verbose_name = _('user profile')
         verbose_name_plural = _('user profiles')

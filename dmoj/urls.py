@@ -17,7 +17,7 @@ from judge.feed import AtomBlogFeed, AtomCommentFeed, AtomProblemFeed, BlogFeed,
 from judge.sitemap import sitemaps
 from judge.views import TitledTemplateView, api, blog, comment, contests, language, license, mailgun, organization, \
     preview, problem, problem_manage, ranked_submission, register, stats, status, submission, tag, tasks, ticket, \
-    two_factor, user, widgets
+    two_factor, user, widgets, user_activity
 from judge.views.URL import redirect_url, shorten_url
 from judge.views.flatpages import FlatPageViewGenerator
 from judge.views.magazine import MagazinePage
@@ -105,6 +105,18 @@ def paged_list_view(view, name):
 urlpatterns = [
     path('', blog.PostList.as_view(template_name='home.html', title=_('Home')), kwargs={'page': 1}, name='home'),
     path('500/', exception),
+    
+    # User activity tracking for admins - MUST BE BEFORE admin/
+    path('admin/user-activity/', include([
+        path('active-users/', user_activity.active_users_view, name='active_users'),
+        path('user/<str:username>/', user_activity.user_activity_detail, name='user_activity_detail'),
+        path('all-logs/', user_activity.all_logs_view, name='all_logs'),
+        path('export-logs/', user_activity.export_logs, name='export_logs'),
+        path('delete-user-logs/<str:username>/', user_activity.delete_user_logs, name='delete_user_logs'),
+        path('delete-anonymous-logs/', user_activity.delete_anonymous_logs, name='delete_anonymous_logs'),
+        path('api/active-users/', user_activity.active_users_api, name='active_users_api'),
+    ])),
+    
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
     path('accounts/', include(register_patterns)),

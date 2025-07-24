@@ -1,0 +1,612 @@
+{% extends "base.html" %}
+{% block title %}{{ target_user.username }} - User Activity{% endblock %}
+
+{% block media %}
+<style>
+    .user-detail-page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+    
+    .user-hero {
+        background: linear-gradient(135deg, #c4504c 0%, #9e4a3d 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        text-align: center;
+        box-shadow: 0 6px 20px rgba(196, 80, 76, 0.3);
+    }
+    
+    .user-hero h2 {
+        margin: 0;
+        font-size: 2.5rem;
+        font-weight: 300;
+    }
+    
+    .user-hero .subtitle {
+        opacity: 0.9;
+        font-size: 1.2rem;
+        margin-top: 0.5rem;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-box {
+        background: white;
+        border: 2px solid #f0f0f0;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #c4504c, #faa700);
+    }
+    
+    .stat-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        border-color: #c4504c;
+    }
+    
+    .stat-number {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #c4504c;
+        margin-bottom: 0.5rem;
+        line-height: 1;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+    
+    .filter-section {
+        background: white;
+        border: 2px solid #f0f0f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .filter-label {
+        font-weight: 600;
+        color: #333;
+        min-width: 120px;
+    }
+    
+    .filter-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .section-card {
+        background: white;
+        border: 2px solid #f0f0f0;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    
+    .section-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem;
+        border-bottom: 2px solid #dee2e6;
+        position: relative;
+    }
+    
+    .section-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #c4504c, #faa700);
+    }
+    
+    .section-title {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .section-content {
+        padding: 1.5rem;
+    }
+    
+    .session-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+    
+    .session-card {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .session-card.active {
+        background: linear-gradient(135deg, #d4edda, #c3e6cb);
+        border-color: #28a745;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+    }
+    
+    .session-card.active::before {
+        content: '● LIVE';
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        color: #28a745;
+        font-weight: bold;
+        font-size: 0.8rem;
+    }
+    
+    .session-detail {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .device-icon {
+        color: #c4504c;
+        width: 16px;
+    }
+    
+    .activity-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    
+    .activity-table th {
+        background: #495057;
+        color: white;
+        padding: 1rem 0.75rem;
+        text-align: left;
+        font-weight: 600;
+    }
+    
+    .activity-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #dee2e6;
+        vertical-align: middle;
+    }
+    
+    .activity-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+    
+    .activity-table tbody tr:nth-child(even) {
+        background: #fdfdfd;
+    }
+    
+    .method-tag {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: white;
+        display: inline-block;
+        min-width: 50px;
+        text-align: center;
+    }
+    
+    .method-get { background: #17a2b8; }
+    .method-post { background: #28a745; }
+    .method-put { background: #ffc107; color: #000; }
+    .method-delete { background: #dc3545; }
+    .method-patch { background: #6f42c1; }
+    
+    .response-tag {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+        min-width: 40px;
+        text-align: center;
+    }
+    
+    .response-success { background: #28a745; color: white; }
+    .response-redirect { background: #17a2b8; color: white; }
+    .response-error { background: #dc3545; color: white; }
+    .response-other { background: #6c757d; color: white; }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-block;
+        border: 2px solid transparent;
+        cursor: pointer;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #c4504c 0%, #9e4a3d 100%);
+        color: white;
+        border-color: #9e4a3d;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #9e4a3d 0%, #c4504c 100%);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(196, 80, 76, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+        border-color: #6c757d;
+    }
+    
+    .btn-secondary:hover {
+        background: #545b62;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+    }
+    
+    .btn-active {
+        background: linear-gradient(135deg, #c4504c 0%, #9e4a3d 100%);
+        color: white;
+        border-color: #9e4a3d;
+    }
+    
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+        border-color: #dc3545;
+    }
+    
+    .btn-danger:hover {
+        background: #c82333;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .pagination-wrapper {
+        text-align: center;
+        margin-top: 2rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .pagination-info {
+        color: #666;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+    
+    .navigation-bar {
+        background: white;
+        border: 2px solid #f0f0f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        text-align: center;
+    }
+    
+    .navigation-bar .btn {
+        margin: 0 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .user-hero h2 {
+            font-size: 2rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+        
+        .filter-section {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .session-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="user-detail-page">
+    <!-- USER HERO -->
+    <div class="user-hero">
+        <h2><i class="fa fa-user-circle"></i> {{ target_user.username }}</h2>
+        <div class="subtitle">Activity Analysis Dashboard</div>
+    </div>
+
+    <!-- STATISTICS -->
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div class="stat-number">{{ active_session_count or 0 }}</div>
+            <div class="stat-label">Active Sessions</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">{{ total_session_count or 0 }}</div>
+            <div class="stat-label">Total Sessions</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">{{ total_activities or 0 }}</div>
+            <div class="stat-label">Total Activities</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">{{ ip_stats|length if ip_stats else 0 }}</div>
+            <div class="stat-label">Unique IPs</div>
+        </div>
+    </div>
+
+    <!-- TIME FILTER -->
+    <div class="filter-section">
+        <div class="filter-label">
+            <i class="fa fa-calendar-alt"></i> Time Period:
+        </div>
+        <div class="filter-buttons">
+            <a href="?days=7" class="btn btn-sm {% if days_filter == 7 %}btn-active{% else %}btn-secondary{% endif %}">
+                7 days
+            </a>
+            <a href="?days=30" class="btn btn-sm {% if days_filter == 30 %}btn-active{% else %}btn-secondary{% endif %}">
+                30 days
+            </a>
+            <a href="?days=90" class="btn btn-sm {% if days_filter == 90 %}btn-active{% else %}btn-secondary{% endif %}">
+                90 days
+            </a>
+            <a href="?days=-1" class="btn btn-sm {% if days_filter == -1 %}btn-active{% else %}btn-secondary{% endif %}">
+                All Time
+            </a>
+        </div>
+        <div style="color: #666; margin-left: auto;">
+            Currently showing: {% if days_filter == -1 %}All time{% else %}{{ days_filter }} days{% endif %}
+        </div>
+    </div>
+
+    <!-- SESSIONS -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fa fa-laptop"></i> User Sessions 
+                {% if all_sessions %}
+                    ({{ all_sessions|length }})
+                {% else %}
+                    (0)
+                {% endif %}
+            </h3>
+        </div>
+        <div class="section-content">
+            {% if all_sessions %}
+                <div class="session-grid">
+                    {% for session in all_sessions %}
+                    <div class="session-card {% if session.is_active %}active{% endif %}">
+                        <div style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">
+                            {% if session.device_type == 'mobile' %}
+                                <i class="fa fa-mobile-alt device-icon"></i> Mobile Device
+                            {% elif session.device_type == 'tablet' %}
+                                <i class="fa fa-tablet-alt device-icon"></i> Tablet Device
+                            {% elif session.device_type == 'desktop' %}
+                                <i class="fa fa-desktop device-icon"></i> Desktop Device
+                            {% else %}
+                                <i class="fa fa-question device-icon"></i> Unknown Device
+                            {% endif %}
+                        </div>
+                        
+                        <div class="session-detail">
+                            <i class="fa fa-globe device-icon"></i>
+                            <code>{{ session.ip_address or 'N/A' }}</code>
+                        </div>
+                        
+                        <div class="session-detail">
+                            <i class="fa fa-browser device-icon"></i>
+                            {{ session.browser or 'Unknown Browser' }}
+                        </div>
+                        
+                        <div class="session-detail">
+                            <i class="fa fa-cogs device-icon"></i>
+                            {{ session.os or 'Unknown OS' }}
+                        </div>
+                        
+                        {% if session.last_activity %}
+                        <div class="session-detail">
+                            <i class="fa fa-clock device-icon"></i>
+                            {{ session.last_activity.strftime('%Y-%m-%d %H:%M:%S') }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fa fa-laptop"></i>
+                    <h4>No Sessions Found</h4>
+                    <p>No session data available for this time period</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ACTIVITIES -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fa fa-history"></i> Recent Activities
+                {% if activities %}
+                    {% if activities.paginator %}
+                        ({{ activities.paginator.count }})
+                    {% else %}
+                        ({{ activities|length }})
+                    {% endif %}
+                {% else %}
+                    (0)
+                {% endif %}
+            </h3>
+        </div>
+        <div class="section-content">
+            {% if activities %}
+                <div style="overflow-x: auto;">
+                    <table class="activity-table">
+                        <thead>
+                            <tr>
+                                <th><i class="fa fa-clock"></i> Time</th>
+                                <th><i class="fa fa-link"></i> Path</th>
+                                <th><i class="fa fa-code"></i> Method</th>
+                                <th><i class="fa fa-globe"></i> IP</th>
+                                <th><i class="fa fa-chart-line"></i> Response</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in activities %}
+                            <tr>
+                                <td>
+                                    {% if activity.timestamp %}
+                                        <div style="font-size: 0.85rem;">
+                                            {{ activity.timestamp.strftime('%m-%d %H:%M:%S') }}
+                                        </div>
+                                    {% else %}
+                                        <span style="color: #999;">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <code style="font-size: 0.8rem; background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                                        {% if activity.path and activity.path|length > 40 %}
+                                            {{ activity.path[:40] }}...
+                                        {% else %}
+                                            {{ activity.path or 'N/A' }}
+                                        {% endif %}
+                                    </code>
+                                </td>
+                                <td>
+                                    <span class="method-tag method-{{ activity.method|lower if activity.method else 'get' }}">
+                                        {{ activity.method or 'GET' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <code style="font-size: 0.8rem;">{{ activity.ip_address or 'N/A' }}</code>
+                                </td>
+                                <td>
+                                    {% if activity.response_code %}
+                                        {% if activity.response_code >= 200 and activity.response_code < 300 %}
+                                            <span class="response-tag response-success">{{ activity.response_code }}</span>
+                                        {% elif activity.response_code >= 300 and activity.response_code < 400 %}
+                                            <span class="response-tag response-redirect">{{ activity.response_code }}</span>
+                                        {% elif activity.response_code >= 400 %}
+                                            <span class="response-tag response-error">{{ activity.response_code }}</span>
+                                        {% else %}
+                                            <span class="response-tag response-other">{{ activity.response_code }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="response-tag response-other">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAGINATION -->
+                {% if activities.has_other_pages %}
+                <div class="pagination-wrapper">
+                    <div class="pagination-info">
+                        {% if activities.paginator %}
+                            Page {{ activities.number }} of {{ activities.paginator.num_pages }} 
+                            ({{ activities.paginator.count }} total entries)
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if activities.has_previous %}
+                            <a href="?page={{ activities.previous_page_number }}&days={{ days_filter }}" class="btn btn-secondary btn-sm">
+                                <i class="fa fa-chevron-left"></i> Previous
+                            </a>
+                        {% endif %}
+                        {% if activities.has_next %}
+                            <a href="?page={{ activities.next_page_number }}&days={{ days_filter }}" class="btn btn-secondary btn-sm">
+                                Next <i class="fa fa-chevron-right"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fa fa-history"></i>
+                    <h4>No Activities Found</h4>
+                    <p>No activity data available for this time period</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <div class="navigation-bar">
+        <a href="/admin/user-activity/active-users/" class="btn btn-primary">
+            <i class="fa fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <a href="/admin/user-activity/all-logs/" class="btn btn-secondary">
+            <i class="fa fa-list"></i> All Logs
+        </a>
+        {% if total_activities and total_activities > 0 %}
+        <a href="/admin/user-activity/delete-user-logs/{{ target_user.username }}/" 
+           class="btn btn-danger" 
+           onclick="return confirm('Are you sure you want to delete all logs for {{ target_user.username }}? This action cannot be undone.')">
+            <i class="fa fa-trash"></i> Delete Logs
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

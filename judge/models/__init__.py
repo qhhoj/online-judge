@@ -15,6 +15,7 @@ from judge.models.submission import SUBMISSION_RESULT, Submission, SubmissionSou
 from judge.models.tag import Tag, TagData, TagGroup, TagProblem
 from judge.models.ticket import GeneralIssue, Ticket, TicketMessage
 from judge.models.urlshortener import URL
+from judge.models.user_activity import UserActivity, UserSession
 
 revisions.register(Profile, exclude=['points', 'last_access', 'ip', 'rating'])
 revisions.register(Problem, follow=['language_limits'])
