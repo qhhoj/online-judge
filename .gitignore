@@ -42,3 +42,5 @@ fc_*
 local_urls.py
 <desired bridge log path>
 __pycache__
+.DS_Store
+
