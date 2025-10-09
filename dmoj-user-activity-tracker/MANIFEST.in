@@ -1,0 +1,10 @@
+include README.md
+include LICENSE
+include requirements.txt
+include setup.py
+recursive-include user_activity *.py
+recursive-include templates *.html
+recursive-include installation *.py
+recursive-include static *
+exclude *.pyc
+exclude */__pycache__/* 

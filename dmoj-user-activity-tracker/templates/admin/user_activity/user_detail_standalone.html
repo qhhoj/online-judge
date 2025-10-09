@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 User Activity: {{ target_user.username }}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body { 
+            background-color: #f8f9fa; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-brand { font-weight: bold; }
+        .card { 
+            border: none; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+            margin-bottom: 1rem;
+        }
+        .badge { font-size: 0.8em; }
+        .table th { 
+            background-color: #343a40; 
+            color: white; 
+            border: none;
+        }
+        .activity-table tbody tr:hover { background-color: #f8f9fa; }
+        .method-get { background-color: #28a745; }
+        .method-post { background-color: #007bff; }
+        .method-put { background-color: #ffc107; color: #000; }
+        .method-delete { background-color: #dc3545; }
+        .pagination-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .footer {
+            padding: 20px 0;
+            text-align: center;
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 30px;
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line"></i> QHHOJ Admin
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/admin/user-activity/active-users/">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>📊 User Activity: <strong>{{ target_user.username }}</strong></h1>
+            
+            <!-- Filter Controls -->
+            <div class="btn-toolbar" role="toolbar">
+                <div class="btn-group me-2" role="group">
+                    <a href="?days=7" class="btn btn-outline-primary {% if days_filter == 7 %}active{% endif %}">7 days</a>
+                    <a href="?days=30" class="btn btn-outline-primary {% if days_filter == 30 %}active{% endif %}">30 days</a>
+                    <a href="?days=90" class="btn btn-outline-primary {% if days_filter == 90 %}active{% endif %}">90 days</a>
+                    <a href="?days=365" class="btn btn-outline-primary {% if days_filter == 365 %}active{% endif %}">1 year</a>
+                    <a href="?days=-1" class="btn btn-outline-danger {% if days_filter == -1 %}active{% endif %}">All Time</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SUMMARY CARDS -->
+        <div class="row mb-4">
+            <div class="col-md-2">
+                <div class="card text-white bg-primary">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">📊 Total Activities</h5>
+                        <h2>{{ total_activities }}</h2>
+                        <small>{% if days_filter == -1 %}All Time{% else %}Last {{ days_filter }} days{% endif %}</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-white bg-success">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">🔄 Active Sessions</h5>
+                        <h2>{{ active_session_count }}</h2>
+                        <small>Live Now</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-white bg-info">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">📱 Recent Sessions</h5>
+                        <h2>{{ recent_session_count }}</h2>
+                        <small>Last 7 days</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-white bg-warning">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">🕘 Total Sessions</h5>
+                        <h2>{{ total_session_count }}</h2>
+                        <small>All Sessions</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-white bg-secondary">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">🌐 Unique IPs</h5>
+                        <h2>{{ ip_stats|length }}</h2>
+                        <small>Different IPs</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-white bg-dark">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">📄 Pages Visited</h5>
+                        <h2>{{ path_stats|length }}</h2>
+                        <small>Different Pages</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- USER STATUS -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="alert {% if active_session_count > 0 %}alert-success{% else %}alert-secondary{% endif %}" role="alert">
+                    <h4 class="alert-heading">
+                        {% if active_session_count > 0 %}
+                            🟢 User is Currently ONLINE
+                        {% else %}
+                            ⚫ User is Currently OFFLINE
+                        {% endif %}
+                    </h4>
+                    <p class="mb-0">
+                        {% if active_sessions %}
+                            Last activity: {{ active_sessions.0.last_activity|timesince }} ago from {{ active_sessions.0.ip_address }}
+                        {% elif all_sessions %}
+                            Last seen: {{ all_sessions.0.last_activity|timesince }} ago from {{ all_sessions.0.ip_address }}
+                        {% else %}
+                            No activity recorded
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NAVIGATION TABS -->
+        <ul class="nav nav-tabs" id="userTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="activities-tab" data-bs-toggle="tab" data-bs-target="#activities" type="button" role="tab">
+                    📋 Activities ({{ total_activities }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sessions-tab" data-bs-toggle="tab" data-bs-target="#sessions" type="button" role="tab">
+                    📱 Sessions ({{ total_session_count }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats" type="button" role="tab">
+                    📊 Statistics
+                </button>
+            </li>
+        </ul>
+
+        <!-- TAB CONTENT -->
+        <div class="tab-content mt-3" id="userTabContent">
+            <!-- ACTIVITIES TAB -->
+            <div class="tab-pane fade show active" id="activities" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3>📋 Activity History ({{ total_activities }} total)</h3>
+                        <span class="badge bg-info">{% if has_complete_history %}Complete History{% else %}Filtered History{% endif %}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover activity-table">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>🕒 Timestamp</th>
+                                        <th>📄 Path</th>
+                                        <th>🔧 Method</th>
+                                        <th>🌐 IP Address</th>
+                                        <th>📊 Response</th>
+                                        <th>🖥️ Browser</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in activities %}
+                                    <tr>
+                                        <td>
+                                            <small>{{ activity.timestamp|date:"m-d H:i:s" }}</small>
+                                        </td>
+                                        <td>
+                                            <code style="font-size: 0.8em;">
+                                                {% if activity.path|length > 40 %}
+                                                    {{ activity.path|truncatechars:40 }}
+                                                {% else %}
+                                                    {{ activity.path }}
+                                                {% endif %}
+                                            </code>
+                                        </td>
+                                        <td>
+                                            <span class="badge method-{{ activity.method|lower }}">
+                                                {{ activity.method }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <code style="font-size: 0.8em;">{{ activity.ip_address }}</code>
+                                        </td>
+                                        <td>
+                                            {% if activity.response_code %}
+                                                <span class="badge {% if activity.response_code < 300 %}bg-success{% elif activity.response_code < 400 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                    {{ activity.response_code }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if activity.session %}
+                                                <small>{{ activity.session.browser|truncatechars:20 }}</small>
+                                            {% else %}
+                                                <small class="text-muted">N/A</small>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="6" class="text-center text-muted">No activities found for this period</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if activities.has_other_pages %}
+                        <div class="pagination-wrapper">
+                            <div class="pagination-info">
+                                Page {{ activities.number }} of {{ activities.paginator.num_pages }} 
+                                ({{ activities.paginator.count }} total entries)
+                            </div>
+                            <nav>
+                                <ul class="pagination">
+                                    {% if activities.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ activities.previous_page_number }}&days={{ days_filter }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for num in activities.paginator.page_range %}
+                                        {% if num == activities.number %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > activities.number|add:'-3' and num < activities.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}&days={{ days_filter }}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if activities.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ activities.next_page_number }}&days={{ days_filter }}">Next</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- SESSIONS TAB -->
+            <div class="tab-pane fade" id="sessions" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📱 User Sessions</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>🌐 IP Address</th>
+                                        <th>📱 Device</th>
+                                        <th>🖥️ Browser</th>
+                                        <th>💻 OS</th>
+                                        <th>🕒 Last Activity</th>
+                                        <th>🔄 Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for session in all_sessions %}
+                                    <tr class="{% if session.is_active and session in active_sessions %}table-success{% endif %}">
+                                        <td><code>{{ session.ip_address }}</code></td>
+                                        <td>{{ session.device_type|title }}</td>
+                                        <td>{{ session.browser|truncatechars:30 }}</td>
+                                        <td>{{ session.os|truncatechars:20 }}</td>
+                                        <td>{{ session.last_activity|timesince }} ago</td>
+                                        <td>
+                                            {% if session.is_active and session in active_sessions %}
+                                                <span class="badge bg-success">🟢 Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">⚫ Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="6" class="text-center text-muted">No sessions found</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATISTICS TAB -->
+            <div class="tab-pane fade" id="stats" role="tabpanel">
+                <div class="row">
+                    <!-- IP Statistics -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>🌐 Top IP Addresses</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>IP Address</th>
+                                                <th>Requests</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for stat in ip_stats %}
+                                            <tr>
+                                                <td><code>{{ stat.ip_address }}</code></td>
+                                                <td><span class="badge bg-primary">{{ stat.count }}</span></td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Path Statistics -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>📄 Most Visited Pages</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Path</th>
+                                                <th>Visits</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for stat in path_stats %}
+                                            <tr>
+                                                <td>
+                                                    <code style="font-size: 0.8em;">
+                                                        {% if stat.path|length > 30 %}
+                                                            {{ stat.path|truncatechars:30 }}
+                                                        {% else %}
+                                                            {{ stat.path }}
+                                                        {% endif %}
+                                                    </code>
+                                                </td>
+                                                <td><span class="badge bg-info">{{ stat.count }}</span></td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="mt-4 text-center">
+            <a href="/admin/user-activity/active-users/" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <a href="/admin/user-activity/all-logs/" class="btn btn-secondary">
+                <i class="fas fa-list"></i> All Logs
+            </a>
+            {% if total_activities and total_activities > 0 %}
+            <a href="/admin/user-activity/delete-user-logs/{{ target_user.username }}/" 
+               class="btn btn-danger" 
+               onclick="return confirm('Are you sure you want to delete all logs for {{ target_user.username }}? This action cannot be undone.')">
+                <i class="fas fa-trash"></i> Delete Logs
+            </a>
+            {% endif %}
+        </div>
+        
+        <!-- Footer with credit -->
+        <footer class="footer">
+            <div class="container">
+                <p>
+                    DMOJ User Activity Tracker v1.0.0 | Developed by 
+                    <a href="https://github.com/phancddev" target="_blank">Phan Cong Dung (@phancddev)</a>
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

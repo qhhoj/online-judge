@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}User Not Found{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="display-1 text-muted">404</h1>
+                    <h2 class="mb-3">User Not Found</h2>
+                    <p class="lead">The user you're looking for doesn't exist or you don't have permission to view their activity.</p>
+                    
+                    <div class="mt-4">
+                        <a href="/admin/user-activity/active-users/" class="btn btn-primary">Back to Dashboard</a>
+                        <a href="/admin/user-activity/all-logs/" class="btn btn-secondary">View All Logs</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
