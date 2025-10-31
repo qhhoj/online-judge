@@ -9,6 +9,7 @@ from django.db.models import Count, Q
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.core.cache import cache
 
 from judge.models import UserActivity, UserSession, Profile
 
@@ -17,6 +18,14 @@ from judge.models import UserActivity, UserSession, Profile
 @permission_required('judge.can_see_user_activity', raise_exception=True)
 def active_users_view(request):
     """View để xem người dùng đang hoạt động - Cải thiện tách bot và human users"""
+
+    # Try cache first (cache 10 giây)
+    cache_key = 'active_users_view_data'
+    cached_data = cache.get(cache_key)
+
+    if cached_data:
+        return render(request, 'user_activity/active_users.html', cached_data)
+
     # Lấy người dùng hoạt động trong 30 phút qua
     cutoff_time = timezone.now() - timedelta(minutes=30)
     
@@ -105,19 +114,22 @@ def active_users_view(request):
         'browser_stats': browser_stats,
         'os_stats': os_stats,
         'ip_stats': ip_stats,
-        
+
         # BOT STATISTICS - TÁCH RIÊNG
         'bot_sessions': bot_sessions,
         'bot_authenticated_sessions': bot_authenticated_sessions,
         'bot_anonymous_sessions': bot_anonymous_sessions,
         'bot_stats': bot_stats,
         'bot_ip_stats': bot_ip_stats,
-        
+
         # TỔNG QUAN
         'total_sessions': all_active_sessions.count(),
         'show_bots_separate': True,  # Flag để template biết hiển thị bot riêng
     }
-    
+
+    # Cache 10 giây
+    cache.set(cache_key, context, 10)
+
     return render(request, 'user_activity/active_users.html', context)
 
 
