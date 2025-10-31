@@ -392,6 +392,11 @@ urlpatterns = [
         ])),
     ])),
 
+    # Martor core URLs - required for markdown editor functionality (martor_markdownfy, etc.)
+    path('martor/', include([
+        path('', include('martor.urls')),
+    ])),
+
     path('feed/', include([
         path('problems/rss/', ProblemFeed(), name='problem_rss'),
         path('problems/atom/', AtomProblemFeed(), name='problem_atom'),
