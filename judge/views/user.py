@@ -1,7 +1,7 @@
 import itertools
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone as dt_timezone
 from datetime import timedelta
 from operator import attrgetter, itemgetter
 
@@ -183,7 +183,7 @@ class CustomPasswordChangeView(PasswordChangeView):
         return super().form_valid(form)
 
 
-EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
+EPOCH = datetime(1970, 1, 1, tzinfo=dt_timezone.utc)
 
 
 class UserAboutPage(UserPage):
