@@ -13,7 +13,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist, PermissionDenied
 from django.db import IntegrityError
-from django.db.models import BooleanField, Case, Count, F, FloatField, IntegerField, Max, Min, Q, Sum, Value, When
+from django.db.models import BooleanField, Case, Count, ExpressionWrapper, F, FloatField, IntegerField, Max, Min, Q, Sum, Value, When
 from django.db.models.expressions import CombinedExpression
 from django.db.models.query import Prefetch
 from django.http import Http404, HttpResponse, HttpResponseForbidden, HttpResponseRedirect
@@ -314,8 +314,14 @@ class ContestDetail(ContestMixin, TitleMixin, CommentedDetailView):
         context['metadata'].update(
             **self.object.contest_problems
             .annotate(
-                partials_enabled=F('partial').bitand(F('problem__partial')),
-                pretests_enabled=F('is_pretested').bitand(F('contest__run_pretests_only')),
+                partials_enabled=ExpressionWrapper(
+                    F('partial').bitand(F('problem__partial')),
+                    output_field=BooleanField()
+                ),
+                pretests_enabled=ExpressionWrapper(
+                    F('is_pretested').bitand(F('contest__run_pretests_only')),
+                    output_field=BooleanField()
+                ),
             )
             .aggregate(
                 has_partials=Sum('partials_enabled'),
