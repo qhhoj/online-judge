@@ -1,47 +1,63 @@
+# Django 5.2 compatible packages
 Django>=5.2,<5.3
-django-cleanup
-django_compressor>=4.0
-django-mptt>=0.18.0
+
+# Django extensions - all compatible with Django 5.2
+django-cleanup>=8.1.0
+django_compressor>=4.5.1
+django-mptt>=0.18.0  # Supports Django 5.2
 django-registration-redux>=2.13
-django-reversion>=6.0.0
-django-social-share
-django-sortedm2m>=3.1.0
-django-impersonate
-django-redis
-mysqlclient
-dmoj-wpadmin @ git+https://github.com/DMOJ/dmoj-wpadmin.git
-lxml[html_clean]
-Pygments<2.12
-mistune<2
-social-auth-core>=4.4.0
-social-auth-app-django>=5.4.0
-pytz
-django-statici18n
-pika
-ua-parser
-user-agents
-pyyaml
-jinja2
+django-reversion>=6.0.0  # Latest version with Django 5.x support
+django-social-share>=2.3.0
+django-sortedm2m>=3.2.0
+django-impersonate>=1.9.4
+django-redis>=5.4.0
+django-statici18n>=2.5.0
 django_jinja>=2.11.0
-llist
-requests
+django-admin-sortable2>=2.2.3
+
+# Database
+mysqlclient>=2.2.6
+
+# Custom DMOJ packages
+dmoj-wpadmin @ git+https://github.com/DMOJ/dmoj-wpadmin.git
 django-fernet-fields @ git+https://github.com/DMOJ/django-fernet-fields.git
-pyotp
-qrcode[pil]
 jsonfield @ git+https://github.com/DMOJ/jsonfield.git
-pymoss
-packaging<22
-celery
 ansi2html @ git+https://github.com/DMOJ/ansi2html.git
-sqlparse
-lupa
 martor @ git+https://github.com/VNOI-Admin/martor.git
-netaddr
-webauthn<1
-bleach[css]
 markdown2 @ git+https://github.com/qhhoj/python-markdown2.git
-discord-webhook
-django-admin-sortable2<2
-icalendar
-# This is a celery dependency whose latest major version is breaking everything.
-importlib-metadata<5
+
+# Syntax highlighting and text processing
+Pygments>=2.19.0  # Updated from <2.12 to latest version
+mistune>=3.0.2  # Updated from <2 to latest version
+lxml[html_clean]>=5.3.0
+bleach[css]>=6.2.0
+
+# Authentication and security
+social-auth-core>=4.5.4
+social-auth-app-django>=5.4.2
+pyotp>=2.9.0
+qrcode[pil]>=8.0
+webauthn>=2.3.0  # Updated from <1 to latest version
+pyyaml>=6.0.2
+
+# Task queue
+celery>=5.4.0
+pika>=1.3.2
+
+# Utilities
+requests>=2.32.3
+sqlparse>=0.5.3
+lupa>=2.2
+netaddr>=1.3.0
+discord-webhook>=1.3.1
+icalendar>=6.1.0
+pymoss>=1.0.1
+llist>=0.8
+ua-parser>=1.0.39
+user-agents>=2.2.0
+jinja2>=3.1.5
+packaging>=24.2  # Updated from <22 to latest version
+
+# Compatibility packages
+pytz>=2025.1
+importlib-metadata>=8.5.0  # Updated from <5 to latest version
