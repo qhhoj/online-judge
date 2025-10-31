@@ -19,11 +19,8 @@ class UserSessionAdmin(admin.ModelAdmin):
         return False
         
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        # Tự động đánh dấu session không hoạt động nếu quá 30 phút
-        cutoff_time = timezone.now() - timedelta(minutes=30)
-        qs.filter(is_active=True, last_activity__lt=cutoff_time).update(is_active=False)
-        return qs
+        # Không update ở đây nữa - để cron job xử lý
+        return super().get_queryset(request)
 
 
 class UserActivityAdmin(admin.ModelAdmin):
