@@ -25,7 +25,12 @@ class FakeJoinField:
     def get_joining_columns(self):
         return self.joining_columns
 
-    def get_extra_restriction(self, where_class, alias, related_alias, remote_alias=None):
+    def get_extra_restriction(self, *args, **kwargs):
+        """
+        Compatible with both Django < 5.0 and Django >= 5.0
+        Django < 5.0: get_extra_restriction(self, where_class, alias, related_alias)
+        Django >= 5.0: get_extra_restriction(self, alias, related_alias)
+        """
         pass
 
 
