@@ -11,7 +11,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import SuccessURLAllowedHostsMixin
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect, JsonResponse
 from django.urls import reverse
-from django.utils.http import is_safe_url
+from django.utils.http import url_has_allowed_host_and_scheme as is_safe_url
 from django.utils.translation import gettext as _, gettext_lazy
 from django.views.generic import FormView, View
 from django.views.generic.base import ContextMixin
