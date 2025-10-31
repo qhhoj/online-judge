@@ -29,13 +29,13 @@ from judge.utils.ranker import ranker
 from judge.utils.views import DiggPaginatorMixin, QueryStringSortMixin, TitleMixin, generic_message
 from judge.views.blog import BlogPostCreate, PostListBase
 from judge.views.contests import ContestList, CreateContest
-from judge.views.problem import ProblemCreate, ProblemList
+from judge.views.problem import ProblemCreate, ProblemImportPolygon, ProblemList
 from judge.views.submission import SubmissionsListBase
 
 __all__ = ['OrganizationList', 'OrganizationHome', 'OrganizationUsers', 'OrganizationMembershipChange',
            'JoinOrganization', 'LeaveOrganization', 'EditOrganization', 'RequestJoinOrganization',
            'OrganizationRequestDetail', 'OrganizationRequestView', 'OrganizationRequestLog',
-           'KickUserWidgetView']
+           'KickUserWidgetView', 'ProblemImportPolygonOrganization']
 
 
 class OrganizationMixin(object):
@@ -675,3 +675,63 @@ class ContestCreateOrganization(AdminOrganizationMixin, CreateContest):
         self.object.is_organization_private = True
         self.object.organizations.add(self.organization)
         self.object.save()
+
+
+class ProblemImportPolygonOrganization(AdminOrganizationMixin, ProblemImportPolygon):
+    """
+    Import problem from Codeforces Polygon package for Organization.
+    Problem will be created as private for the organization.
+    """
+    permission_required = 'judge.import_polygon_package'
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        formset = self.get_formset()
+        if form.is_valid() and formset.is_valid():
+            package = form.cleaned_data['package'].file
+            code = form.cleaned_data['code']
+            do_update = form.cleaned_data['do_update']
+            config = {
+                'ignore_zero_point_batches': form.cleaned_data['ignore_zero_point_batches'],
+                'ignore_zero_point_cases': form.cleaned_data['ignore_zero_point_cases'],
+                'append_main_solution_to_tutorial': form.cleaned_data['append_main_solution_to_tutorial'],
+                'main_tutorial_language': form.cleaned_data.get('main_tutorial_language', None),
+                'main_statement_language': None,
+                'polygon_to_site_language_map': {},
+            }
+            if len(formset) > 1:
+                for statement in formset:
+                    polygon_language = statement.cleaned_data['polygon_language']
+                    site_language = statement.cleaned_data['site_language']
+
+                    if site_language == settings.LANGUAGE_CODE:
+                        config['main_statement_language'] = polygon_language
+                    else:
+                        config['polygon_to_site_language_map'][polygon_language] = site_language
+
+            try:
+                from judge.utils.codeforces_polygon import PolygonImporter, ImportPolygonError
+
+                importer = PolygonImporter(
+                    package=package,
+                    code=code,
+                    authors=[self.request.profile],
+                    curators=[],
+                    do_update=do_update,
+                    interactive=False,
+                    config=config,
+                )
+                importer.run()
+
+                # Set problem as organization private
+                problem = Problem.objects.get(code=code)
+                problem.is_organization_private = True
+                problem.organizations.add(self.organization)
+                problem.save()
+
+            except ImportPolygonError as e:
+                return generic_message(request, _('Failed to import problem'), str(e), status=400)
+
+            return HttpResponseRedirect(reverse('problem_detail', args=[code]))
+
+        return self.render_to_response(self.get_context_data())

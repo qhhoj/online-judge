@@ -312,6 +312,8 @@ urlpatterns = [
         path('/submissions/',
              paged_list_view(organization.SubmissionListOrganization, 'submission_list_organization')),
         path('/problem-create', organization.ProblemCreateOrganization.as_view(), name='problem_create_organization'),
+        path('/import-polygon', organization.ProblemImportPolygonOrganization.as_view(),
+             name='problem_import_polygon_organization'),
         path('/contest-create', organization.ContestCreateOrganization.as_view(), name='contest_create_organization'),
 
         path('/request', organization.RequestJoinOrganization.as_view(), name='request_organization'),
