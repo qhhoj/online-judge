@@ -2974,15 +2974,15 @@ msgstr "máy chấm"
 #: judge/models/submission.py:22 judge/models/submission.py:56
 #: judge/models/tests/test_submission.py:104 judge/utils/problems.py:66
 msgid "Accepted"
-msgstr "Answer Contradicted (đáp án mâu thuẫn)"
+msgstr "Cannot be wrong (Không thể sai)"
 
 #: judge/models/submission.py:23 judge/models/submission.py:57
 msgid "Wrong Answer"
-msgstr "Kết quả sai (WA)"
+msgstr "Cannot be right (Không thể đúng)"
 
 #: judge/models/submission.py:24 judge/models/submission.py:59
 msgid "Time Limit Exceeded"
-msgstr "Time Limit Enough (đủ thời gian)"
+msgstr "Not enough time to heal (Không đủ thời gian để cứu)"
 
 #: judge/models/submission.py:25 judge/models/submission.py:60
 msgid "Memory Limit Exceeded"
@@ -4080,7 +4080,6 @@ msgstr "Tính lại điểm cho %s..."
 msgid "Successfully scheduled %d submission for rejudging."
 msgid_plural "Successfully scheduled %d submissions for rejudging."
 msgstr[0] "Đã lên lịch chấm lại %d bài giải"
-msgstr[1] "Đã lên lịch chấm lại %d bài giải"
 
 #: judge/views/ranked_submission.py:68 judge/views/ranked_submission.py:71
 #, python-format
@@ -5967,7 +5966,6 @@ msgstr ""
 msgid "Author:"
 msgid_plural "Authors:"
 msgstr[0] "Tác giả:"
-msgstr[1] "Các tác giả:"
 
 #: templates/problem/list.html:59
 msgid "Filter by type..."
@@ -6122,7 +6120,6 @@ msgstr "Gửi bài giải"
 msgid "%(counter)s submission left"
 msgid_plural "%(counter)s submissions left"
 msgstr[0] "Còn %(counter)s lần nộp"
-msgstr[1] "Còn %(counter)s lần nộp"
 
 #: templates/problem/problem.html:140
 msgid "0 submissions left"
@@ -6197,7 +6194,6 @@ msgstr "Nguồn bài:"
 msgid "Problem type"
 msgid_plural "Problem types"
 msgstr[0] "Dạng bài"
-msgstr[1] "Dạng bài"
 
 #: templates/problem/problem.html:309
 msgid "Allowed languages"
@@ -6212,7 +6208,6 @@ msgstr "Không có máy chấm %(lang)s đang online"
 msgid "Judge:"
 msgid_plural "Judges:"
 msgstr[0] "Máy chấm"
-msgstr[1] "Các máy chấm"
 
 #: templates/problem/problem.html:345
 msgid "none available"
