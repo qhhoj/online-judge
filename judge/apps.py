@@ -8,6 +8,15 @@ class JudgeAppConfig(AppConfig):
     verbose_name = gettext_lazy('Online Judge')
 
     def ready(self):
+        # Django 5 compatibility: Add force_text alias for packages that still use it
+        # force_text was removed in Django 4.0 and replaced with force_str
+        try:
+            from django.utils.encoding import force_text  # noqa: F401
+        except ImportError:
+            # If force_text doesn't exist (Django 4.0+), create an alias
+            from django.utils import encoding
+            encoding.force_text = encoding.force_str
+
         # WARNING: AS THIS IS NOT A FUNCTIONAL PROGRAMMING LANGUAGE,
         #          OPERATIONS MAY HAVE SIDE EFFECTS.
         #          DO NOT REMOVE THINKING THE IMPORT IS UNUSED.
