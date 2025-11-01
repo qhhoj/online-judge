@@ -22,12 +22,22 @@ class UserSession(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('created at'))
     last_activity = models.DateTimeField(default=timezone.now, verbose_name=_('last activity'))
     is_active = models.BooleanField(default=True, verbose_name=_('is active'))
-    
+
     class Meta:
         verbose_name = _('user session')
         verbose_name_plural = _('user sessions')
         ordering = ['-last_activity']
-        
+        indexes = [
+            # Index cho query active sessions (most common query)
+            models.Index(fields=['last_activity', 'is_active']),
+            # Index cho query sessions by user
+            models.Index(fields=['user', '-last_activity']),
+            # Index cho filter by device_type
+            models.Index(fields=['device_type', '-last_activity']),
+            # Index cho query active sessions by device type
+            models.Index(fields=['is_active', 'device_type', '-last_activity']),
+        ]
+
     def __str__(self):
         username = self.user.username if self.user else 'Anonymous'
         return f"{username} - {self.ip_address} - {self.device_type}"
