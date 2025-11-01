@@ -19,7 +19,7 @@ from judge.models import UserActivity, UserSession, Profile
 def active_users_view(request):
     """View để xem người dùng đang hoạt động - Cải thiện tách bot và human users"""
 
-    # Try cache first (cache 10 giây)
+    # Try cache first (cache 60 giây - tăng từ 10s để giảm load)
     cache_key = 'active_users_view_data'
     cached_data = cache.get(cache_key)
 
@@ -127,8 +127,8 @@ def active_users_view(request):
         'show_bots_separate': True,  # Flag để template biết hiển thị bot riêng
     }
 
-    # Cache 10 giây
-    cache.set(cache_key, context, 10)
+    # Cache 60 giây (tăng từ 10s để giảm load)
+    cache.set(cache_key, context, 60)
 
     return render(request, 'user_activity/active_users.html', context)
 
@@ -167,20 +167,27 @@ def user_activity_detail(request, username):
     paginator = Paginator(activities, 100)  # 100 per page
     page = request.GET.get('page', 1)
     activities_page = paginator.get_page(page)
-    
-    # Lấy TẤT CẢ các phiên truy cập (KHÔNG chỉ active) - LỊCH SỬ ĐẦY ĐỦ
-    all_sessions = UserSession.objects.filter(user=user).order_by('-last_activity')
-    
+
+    # Tối ưu: Chỉ lấy sessions trong khoảng thời gian cần thiết thay vì TẤT CẢ
+    # Giới hạn 30 ngày gần nhất để tránh query quá lớn
+    session_cutoff = timezone.now() - timedelta(days=30)
+    all_sessions = UserSession.objects.filter(
+        user=user,
+        last_activity__gte=session_cutoff
+    ).order_by('-last_activity')[:500]  # Giới hạn 500 sessions gần nhất
+
     # Sessions hiện tại đang hoạt động
-    active_sessions = all_sessions.filter(
+    active_sessions = UserSession.objects.filter(
+        user=user,
         last_activity__gte=timezone.now() - timedelta(minutes=30),
         is_active=True
-    )
-    
+    ).order_by('-last_activity')
+
     # Sessions gần đây (7 ngày qua)
-    recent_sessions = all_sessions.filter(
+    recent_sessions = UserSession.objects.filter(
+        user=user,
         last_activity__gte=timezone.now() - timedelta(days=7)
-    )
+    ).order_by('-last_activity')[:100]  # Giới hạn 100 sessions
     
     # Thống kê hoạt động theo ngày - FIXED JSON serialization
     daily_stats = []
@@ -212,21 +219,30 @@ def user_activity_detail(request, username):
     except (TypeError, ValueError):
         daily_stats_json = '[]'
     
-    # Thống kê theo IP - Lịch sử đầy đủ
+    # Thống kê theo IP - Giới hạn để tránh scan toàn bộ bảng
     filter_condition = {'user': user}
     if time_ago:
         filter_condition['timestamp__gte'] = time_ago
-        
+    else:
+        # Nếu không có time_ago, giới hạn 90 ngày để tránh query quá lớn
+        filter_condition['timestamp__gte'] = timezone.now() - timedelta(days=90)
+
     ip_stats = UserActivity.objects.filter(**filter_condition).values('ip_address').annotate(count=Count('id')).order_by('-count')[:20]
-    
-    # Thống kê theo path được truy cập nhiều nhất - Lịch sử đầy đủ  
+
+    # Thống kê theo path được truy cập nhiều nhất - Giới hạn
     path_stats = UserActivity.objects.filter(**filter_condition).values('path').annotate(count=Count('id')).order_by('-count')[:30]
-    
-    # Thống kê theo device type từ sessions
-    device_stats = all_sessions.values('device_type').annotate(count=Count('id')).order_by('-count')
-    
-    # Thống kê theo browser từ sessions
-    browser_stats = all_sessions.values('browser').annotate(count=Count('id')).order_by('-count')
+
+    # Thống kê theo device type từ sessions (đã giới hạn ở trên)
+    device_stats = list(UserSession.objects.filter(
+        user=user,
+        last_activity__gte=session_cutoff
+    ).values('device_type').annotate(count=Count('id')).order_by('-count'))
+
+    # Thống kê theo browser từ sessions (đã giới hạn ở trên)
+    browser_stats = list(UserSession.objects.filter(
+        user=user,
+        last_activity__gte=session_cutoff
+    ).values('browser').annotate(count=Count('id')).order_by('-count'))
     
     # Thống kê theo thời gian truy cập (theo giờ trong ngày)
     try:
@@ -307,11 +323,15 @@ def all_logs_view(request):
     page = request.GET.get('page', 1)
     activities_page = paginator.get_page(page)
     
-    # Thống kê
-    total_activities = activities.count()
-    unique_users = activities.exclude(user__isnull=True).values('user').distinct().count()
-    unique_anonymous = activities.filter(user__isnull=True).values('session').distinct().count()
-    unique_ips = activities.values('ip_address').distinct().count()
+    # Thống kê - Tối ưu: Chỉ count trên queryset đã filter, không query lại
+    # Sử dụng paginator.count thay vì activities.count() để tránh query 2 lần
+    total_activities = paginator.count
+
+    # Giới hạn distinct count để tránh scan toàn bộ bảng
+    # Chỉ count trên page hiện tại hoặc giới hạn số lượng
+    unique_users = activities[:1000].exclude(user__isnull=True).values('user').distinct().count()
+    unique_anonymous = activities[:1000].filter(user__isnull=True).values('session').distinct().count()
+    unique_ips = activities[:1000].values('ip_address').distinct().count()
     
     context = {
         'activities': activities_page,
