@@ -12,6 +12,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import datetime
 import os
 
+# Apply django-compressor compatibility patch for Django 5.1+
+# This must be imported before any django-compressor imports
+try:
+    import dmoj.compressor_patch  # noqa: F401
+except ImportError:
+    pass
+
 from django.utils.translation import gettext_lazy as _
 from django_jinja.builtins import DEFAULT_EXTENSIONS
 from jinja2 import select_autoescape
