@@ -1,0 +1,7 @@
+This commit ensures only the correct migration file exists.
+
+The file 0214_add_usersession_indexes.py should be removed from the upstream repository.
+Only 0214_create_user_activity_models.py should remain.
+
+When this PR is merged, it will replace the old migration file with the new one.
+
