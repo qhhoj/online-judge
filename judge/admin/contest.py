@@ -121,7 +121,11 @@ class ContestForm(ModelForm):
 
     def clean(self):
         cleaned_data = super(ContestForm, self).clean()
-        cleaned_data['banned_users'].filter(current_contest__contest=self.instance).update(current_contest=None)
+        # Only update current_contest if the instance has been saved (has an id)
+        # When creating a new contest, self.instance.id is None, so we skip this
+        if self.instance and self.instance.id:
+            cleaned_data['banned_users'].filter(current_contest__contest=self.instance).update(current_contest=None)
+        return cleaned_data
 
     class Meta:
         widgets = {
