@@ -1,4 +1,4 @@
-# Django 5.1 compatible packages
+# Django 5.1 compatible packages (with compressor patch)
 Django>=5.1,<5.2
 
 # Django extensions - all compatible with Django 5.1
