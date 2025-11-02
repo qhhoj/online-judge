@@ -1,580 +1,934 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 User Activity: {{ target_user.username }}</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --qhhoj-primary: #2c3e50;
-            --qhhoj-secondary: #34495e;
-            --qhhoj-accent: #3498db;
-            --qhhoj-success: #27ae60;
-            --qhhoj-warning: #f39c12;
-            --qhhoj-danger: #e74c3c;
-            --qhhoj-bg: #ecf0f1;
-            --qhhoj-card-bg: #ffffff;
+{% extends "base.html" %}
+{% block title %}{{ target_user.username }} - User Activity{% endblock %}
+
+{% block media %}
+<style>
+    /* Main container */
+    .user-detail-page {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    /* Hero section with user info */
+    .user-hero {
+        background: linear-gradient(135deg, #c4504c 0%, #9e4a3d 100%);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(196, 80, 76, 0.25);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .user-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    .user-hero h2 {
+        margin: 0;
+        font-size: 2.8rem;
+        font-weight: 600;
+        position: relative;
+        z-index: 1;
+    }
+
+    .user-hero .subtitle {
+        opacity: 0.95;
+        font-size: 1.1rem;
+        margin-top: 0.75rem;
+        font-weight: 300;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Statistics grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-box {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #c4504c, #faa700);
+    }
+
+    .stat-box:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(196, 80, 76, 0.15);
+        border-color: #c4504c;
+    }
+
+    .stat-number {
+        font-size: 3.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #c4504c, #faa700);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: #555;
+        font-size: 1rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Tab navigation */
+    .tab-navigation {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 0.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .tab-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        background: transparent;
+        color: #666;
+        font-weight: 500;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .tab-btn:hover {
+        background: #f5f5f5;
+        color: #333;
+    }
+
+    .tab-btn.active {
+        background: linear-gradient(135deg, #c4504c, #9e4a3d);
+        color: white;
+        box-shadow: 0 2px 8px rgba(196, 80, 76, 0.3);
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    /* Filter section */
+    .filter-section {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .filter-label {
+        font-weight: 600;
+        color: #333;
+        min-width: 120px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filter-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    /* Section cards */
+    .section-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, #f8f8f8 0%, #f0f0f0 100%);
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #e0e0e0;
+        position: relative;
+    }
+
+    .section-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #c4504c, #faa700);
+    }
+
+    .section-title {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-content {
+        padding: 1.5rem;
+    }
+
+    /* Session cards */
+    .session-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .session-card {
+        background: #fafafa;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1.25rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .session-card:hover {
+        border-color: #c4504c;
+        box-shadow: 0 4px 12px rgba(196, 80, 76, 0.1);
+    }
+
+    .session-card.active {
+        background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+        border-color: #4caf50;
+        box-shadow: 0 4px 16px rgba(76, 175, 80, 0.2);
+    }
+
+    .session-card.active::before {
+        content: '● LIVE';
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        color: #2e7d32;
+        font-weight: 700;
+        font-size: 0.75rem;
+        background: #fff;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .session-detail {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+        color: #555;
+    }
+
+    .session-detail:last-child {
+        margin-bottom: 0;
+    }
+
+    .device-icon {
+        color: #c4504c;
+        width: 18px;
+        text-align: center;
+    }
+
+    /* Activity table */
+    .activity-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    .activity-table th {
+        background: linear-gradient(135deg, #c4504c, #9e4a3d);
+        color: white;
+        padding: 1rem 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .activity-table td {
+        padding: 0.875rem 0.75rem;
+        border-bottom: 1px solid #e0e0e0;
+        vertical-align: middle;
+    }
+
+    .activity-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .activity-table tbody tr:hover {
+        background: #fff8f7;
+    }
+
+    .activity-table tbody tr:nth-child(even) {
+        background: #fafafa;
+    }
+
+    .activity-table tbody tr:nth-child(even):hover {
+        background: #fff8f7;
+    }
+
+    /* Method tags */
+    .method-tag {
+        padding: 0.3rem 0.6rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: white;
+        display: inline-block;
+        min-width: 55px;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    .method-get { background: #17a2b8; }
+    .method-post { background: #28a745; }
+    .method-put { background: #ffc107; color: #000; }
+    .method-delete { background: #dc3545; }
+    .method-patch { background: #6f42c1; }
+
+    /* Response tags */
+    .response-tag {
+        padding: 0.3rem 0.6rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: inline-block;
+        min-width: 45px;
+        text-align: center;
+    }
+
+    .response-success { background: #28a745; color: white; }
+    .response-redirect { background: #17a2b8; color: white; }
+    .response-error { background: #dc3545; color: white; }
+    .response-other { background: #6c757d; color: white; }
+
+    /* Buttons */
+    .btn {
+        padding: 0.625rem 1.25rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: none;
+        cursor: pointer;
+        font-size: 0.95rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #c4504c 0%, #9e4a3d 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(196, 80, 76, 0.2);
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #9e4a3d 0%, #c4504c 100%);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(196, 80, 76, 0.35);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    }
+
+    .btn-active {
+        background: linear-gradient(135deg, #c4504c 0%, #9e4a3d 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(196, 80, 76, 0.3);
+    }
+
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #c82333;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    /* Pagination */
+    .pagination-wrapper {
+        text-align: center;
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: #fafafa;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+    }
+
+    .pagination-info {
+        color: #666;
+        margin-bottom: 1rem;
+        font-weight: 500;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: #999;
+    }
+
+    .empty-state i {
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.2;
+        color: #c4504c;
+    }
+
+    .empty-state h4 {
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: #999;
+    }
+
+    /* Navigation bar */
+    .navigation-bar {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .navigation-bar .btn {
+        margin: 0.5rem;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .user-detail-page {
+            padding: 1rem 0.5rem;
         }
 
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            background-attachment: fixed;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
+        .user-hero {
+            padding: 2rem 1.5rem;
         }
 
-        .navbar {
-            background: linear-gradient(135deg, var(--qhhoj-primary) 0%, var(--qhhoj-secondary) 100%) !important;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        .user-hero h2 {
+            font-size: 2rem;
         }
 
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.3rem;
+        .user-hero .subtitle {
+            font-size: 1rem;
         }
 
-        .container-fluid {
-            background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
         }
 
-        .card {
-            border: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 1.5rem;
-            border-radius: 10px;
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        .stat-box {
+            padding: 1.5rem 1rem;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        .stat-number {
+            font-size: 2.5rem;
         }
 
-        .card-header {
-            background: linear-gradient(135deg, var(--qhhoj-primary) 0%, var(--qhhoj-secondary) 100%);
-            color: white;
-            font-weight: 600;
-            padding: 1rem 1.5rem;
+        .stat-label {
+            font-size: 0.85rem;
         }
 
-        .badge {
-            font-size: 0.85em;
-            padding: 0.4em 0.8em;
-            border-radius: 5px;
+        .filter-section {
+            flex-direction: column;
+            align-items: flex-start;
         }
 
-        .table th {
-            background: linear-gradient(135deg, var(--qhhoj-primary) 0%, var(--qhhoj-secondary) 100%);
-            color: white;
-            border: none;
-            font-weight: 600;
+        .session-grid {
+            grid-template-columns: 1fr;
         }
 
-        .activity-table tbody tr:hover {
-            background-color: #f8f9fa;
-            transform: scale(1.01);
-            transition: all 0.2s ease;
+        .activity-table {
+            font-size: 0.8rem;
         }
 
-        .method-get { background-color: var(--qhhoj-success); }
-        .method-post { background-color: var(--qhhoj-accent); }
-        .method-put { background-color: var(--qhhoj-warning); color: #000; }
-        .method-delete { background-color: var(--qhhoj-danger); }
-
-        .pagination-wrapper {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 1rem;
+        .activity-table th,
+        .activity-table td {
+            padding: 0.5rem 0.4rem;
         }
 
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            text-align: center;
-            transition: transform 0.3s ease;
+        .navigation-bar .btn {
+            display: block;
+            width: 100%;
+            margin: 0.5rem 0;
         }
+    }
+</style>
+{% endblock %}
 
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
+{% block body %}
+<div class="user-detail-page">
+    <!-- USER HERO -->
+    <div class="user-hero">
+        <h2><i class="fa fa-user-circle"></i> {{ target_user.username }}</h2>
+        <div class="subtitle">Activity Analysis Dashboard</div>
+    </div>
 
-        .error-404-section {
-            background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);
-            border-radius: 10px;
-            padding: 1rem;
-            margin-top: 1rem;
-        }
-
-        .error-404-section h5 {
-            color: white;
-            font-weight: 600;
-        }
-
-        .nav-tabs .nav-link {
-            color: var(--qhhoj-primary);
-            font-weight: 600;
-            border: none;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .nav-tabs .nav-link:hover {
-            border-bottom-color: var(--qhhoj-accent);
-        }
-
-        .nav-tabs .nav-link.active {
-            background: linear-gradient(135deg, var(--qhhoj-primary) 0%, var(--qhhoj-secondary) 100%);
-            color: white;
-            border-radius: 5px 5px 0 0;
-        }
-
-        .alert {
-            border-radius: 10px;
-            border: none;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-    </style>
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-chart-line"></i> QHHOJ Admin
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="/admin/user-activity/active-users/">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
-                </a>
-            </div>
+    <!-- STATISTICS -->
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div class="stat-number">{{ active_session_count or 0 }}</div>
+            <div class="stat-label">Active Sessions</div>
         </div>
-    </nav>
-
-    <div class="container-fluid mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>📊 User Activity: <strong>{{ target_user.username }}</strong></h1>
-            
-            <!-- Filter Controls -->
-            <div class="btn-toolbar" role="toolbar">
-                <div class="btn-group me-2" role="group">
-                    <a href="?days=7" class="btn btn-outline-primary {% if days_filter == 7 %}active{% endif %}">7 days</a>
-                    <a href="?days=30" class="btn btn-outline-primary {% if days_filter == 30 %}active{% endif %}">30 days</a>
-                    <a href="?days=90" class="btn btn-outline-primary {% if days_filter == 90 %}active{% endif %}">90 days</a>
-                    <a href="?days=365" class="btn btn-outline-primary {% if days_filter == 365 %}active{% endif %}">1 year</a>
-                    <a href="?days=-1" class="btn btn-outline-danger {% if days_filter == -1 %}active{% endif %}">All Time</a>
-                </div>
-            </div>
+        <div class="stat-box">
+            <div class="stat-number">{{ total_session_count or 0 }}</div>
+            <div class="stat-label">Total Sessions</div>
         </div>
-        
-        <!-- SUMMARY CARDS -->
-        <div class="row mb-4">
-            <div class="col-md-2">
-                <div class="card text-white bg-primary">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">📊 Total Activities</h5>
-                        <h2>{{ total_activities }}</h2>
-                        <small>{% if days_filter == -1 %}All Time{% else %}Last {{ days_filter }} days{% endif %}</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="card text-white bg-success">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">🔄 Active Sessions</h5>
-                        <h2>{{ active_session_count }}</h2>
-                        <small>Live Now</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="card text-white bg-info">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">📱 Recent Sessions</h5>
-                        <h2>{{ recent_session_count }}</h2>
-                        <small>Last 7 days</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="card text-white bg-warning">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">🕘 Total Sessions</h5>
-                        <h2>{{ total_session_count }}</h2>
-                        <small>All Sessions</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="card text-white bg-secondary">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">🌐 Unique IPs</h5>
-                        <h2>{{ ip_stats|length }}</h2>
-                        <small>Different IPs</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="card text-white bg-dark">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">📄 Pages Visited</h5>
-                        <h2>{{ path_stats|length }}</h2>
-                        <small>Different Pages</small>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-box">
+            <div class="stat-number">{{ total_activities or 0 }}</div>
+            <div class="stat-label">Total Activities</div>
         </div>
-
-        <!-- USER STATUS -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="alert {% if active_session_count > 0 %}alert-success{% else %}alert-secondary{% endif %}" role="alert">
-                    <h4 class="alert-heading">
-                        {% if active_session_count > 0 %}
-                            🟢 User is Currently ONLINE
-                        {% else %}
-                            ⚫ User is Currently OFFLINE
-                        {% endif %}
-                    </h4>
-                    <p class="mb-0">
-                        {% if active_sessions %}
-                            Last activity: {{ active_sessions.0.last_activity|timesince }} ago from {{ active_sessions.0.ip_address }}
-                        {% elif all_sessions %}
-                            Last seen: {{ all_sessions.0.last_activity|timesince }} ago from {{ all_sessions.0.ip_address }}
-                        {% else %}
-                            No activity recorded
-                        {% endif %}
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- NAVIGATION TABS -->
-        <ul class="nav nav-tabs" id="userTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="activities-tab" data-bs-toggle="tab" data-bs-target="#activities" type="button" role="tab">
-                    📋 Activities ({{ total_activities }})
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="sessions-tab" data-bs-toggle="tab" data-bs-target="#sessions" type="button" role="tab">
-                    📱 Sessions ({{ total_session_count }})
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats" type="button" role="tab">
-                    📊 Statistics
-                </button>
-            </li>
-        </ul>
-
-        <!-- TAB CONTENT -->
-        <div class="tab-content mt-3" id="userTabContent">
-            <!-- ACTIVITIES TAB -->
-            <div class="tab-pane fade show active" id="activities" role="tabpanel">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h3>📋 Activity History ({{ total_activities }} total)</h3>
-                        <span class="badge bg-info">{% if has_complete_history %}Complete History{% else %}Filtered History{% endif %}</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover activity-table">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>🕒 Timestamp</th>
-                                        <th>📄 Path</th>
-                                        <th>🔧 Method</th>
-                                        <th>🌐 IP Address</th>
-                                        <th>📊 Response</th>
-                                        <th>🖥️ Browser</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for activity in activities %}
-                                    <tr>
-                                        <td>
-                                            <small>{{ activity.timestamp|date:"m-d H:i:s" }}</small>
-                                        </td>
-                                        <td>
-                                            <code style="font-size: 0.8em;">
-                                                {% if activity.path|length > 40 %}
-                                                    {{ activity.path|truncatechars:40 }}
-                                                {% else %}
-                                                    {{ activity.path }}
-                                                {% endif %}
-                                            </code>
-                                        </td>
-                                        <td>
-                                            <span class="badge method-{{ activity.method|lower }}">
-                                                {{ activity.method }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <code style="font-size: 0.8em;">{{ activity.ip_address }}</code>
-                                        </td>
-                                        <td>
-                                            {% if activity.response_code %}
-                                                <span class="badge {% if activity.response_code < 300 %}bg-success{% elif activity.response_code < 400 %}bg-warning{% else %}bg-danger{% endif %}">
-                                                    {{ activity.response_code }}
-                                                </span>
-                                            {% else %}
-                                                <span class="text-muted">-</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if activity.session %}
-                                                <small>{{ activity.session.browser|truncatechars:20 }}</small>
-                                            {% else %}
-                                                <small class="text-muted">N/A</small>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr><td colspan="6" class="text-center text-muted">No activities found for this period</td></tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Pagination -->
-                        {% if activities.has_other_pages %}
-                        <div class="pagination-wrapper">
-                            <div class="pagination-info">
-                                Page {{ activities.number }} of {{ activities.paginator.num_pages }} 
-                                ({{ activities.paginator.count }} total entries)
-                            </div>
-                            <nav>
-                                <ul class="pagination">
-                                    {% if activities.has_previous %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ activities.previous_page_number }}&days={{ days_filter }}">Previous</a>
-                                        </li>
-                                    {% endif %}
-                                    
-                                    {% for num in activities.paginator.page_range %}
-                                        {% if num == activities.number %}
-                                            <li class="page-item active">
-                                                <span class="page-link">{{ num }}</span>
-                                            </li>
-                                        {% elif num > activities.number|add:'-3' and num < activities.number|add:'3' %}
-                                            <li class="page-item">
-                                                <a class="page-link" href="?page={{ num }}&days={{ days_filter }}">{{ num }}</a>
-                                            </li>
-                                        {% endif %}
-                                    {% endfor %}
-                                    
-                                    {% if activities.has_next %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ activities.next_page_number }}&days={{ days_filter }}">Next</a>
-                                        </li>
-                                    {% endif %}
-                                </ul>
-                            </nav>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- SESSIONS TAB -->
-            <div class="tab-pane fade" id="sessions" role="tabpanel">
-                <div class="card">
-                    <div class="card-header">
-                        <h3>📱 User Sessions</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>🌐 IP Address</th>
-                                        <th>📱 Device</th>
-                                        <th>🖥️ Browser</th>
-                                        <th>💻 OS</th>
-                                        <th>🕒 Last Activity</th>
-                                        <th>🔄 Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for session in all_sessions %}
-                                    <tr class="{% if session.is_active and session in active_sessions %}table-success{% endif %}">
-                                        <td><code>{{ session.ip_address }}</code></td>
-                                        <td>{{ session.device_type|title }}</td>
-                                        <td>{{ session.browser|truncatechars:30 }}</td>
-                                        <td>{{ session.os|truncatechars:20 }}</td>
-                                        <td>
-                                            <script>
-                                                document.write(new Date('{{ session.last_activity|date:"c" }}').toLocaleString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'}));
-                                            </script>
-                                        </td>
-                                        <td>
-                                            {% if session.is_active and session in active_sessions %}
-                                                <span class="badge bg-success">🟢 Active</span>
-                                            {% else %}
-                                                <span class="badge bg-secondary">⚫ Inactive</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr><td colspan="6" class="text-center text-muted">No sessions found</td></tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- STATISTICS TAB -->
-            <div class="tab-pane fade" id="stats" role="tabpanel">
-                <div class="row">
-                    <!-- IP Statistics -->
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3>🌐 Top IP Addresses</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-sm">
-                                        <thead>
-                                            <tr>
-                                                <th>IP Address</th>
-                                                <th>Requests</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for stat in ip_stats %}
-                                            <tr>
-                                                <td><code>{{ stat.ip_address }}</code></td>
-                                                <td><span class="badge bg-primary">{{ stat.count }}</span></td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Path Statistics -->
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3>📄 Most Visited Pages</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-sm">
-                                        <thead>
-                                            <tr>
-                                                <th>Path</th>
-                                                <th>Visits</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for stat in path_stats %}
-                                            <tr>
-                                                <td>
-                                                    <code style="font-size: 0.8em;">
-                                                        {% if stat.path|length > 30 %}
-                                                            {{ stat.path|truncatechars:30 }}
-                                                        {% else %}
-                                                            {{ stat.path }}
-                                                        {% endif %}
-                                                    </code>
-                                                </td>
-                                                <td><span class="badge bg-info">{{ stat.count }}</span></td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 404 Error Statistics Section -->
-                {% if error_404_stats %}
-                <div class="row mt-4">
-                    <div class="col-md-12">
-                        <div class="card error-404-section">
-                            <div class="card-header" style="background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);">
-                                <h3 style="color: white; margin: 0;">
-                                    <i class="fas fa-exclamation-triangle"></i> 404 Not Found Errors
-                                </h3>
-                            </div>
-                            <div class="card-body" style="background-color: rgba(255, 255, 255, 0.95);">
-                                <div class="table-responsive">
-                                    <table class="table table-sm">
-                                        <thead>
-                                            <tr>
-                                                <th style="background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);">Path</th>
-                                                <th style="background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);">Error Count</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for stat in error_404_stats %}
-                                            <tr>
-                                                <td>
-                                                    <code style="font-size: 0.8em; color: #e74c3c;">
-                                                        {% if stat.path|length > 50 %}
-                                                            {{ stat.path|truncatechars:50 }}
-                                                        {% else %}
-                                                            {{ stat.path }}
-                                                        {% endif %}
-                                                    </code>
-                                                </td>
-                                                <td>
-                                                    <span class="badge" style="background-color: #e74c3c;">
-                                                        {{ stat.count }} errors
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Navigation -->
-        <div class="mt-4 text-center">
-            <a href="/admin/user-activity/active-users/" class="btn btn-primary">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
-            <a href="/admin/user-activity/all-logs/" class="btn btn-secondary">
-                <i class="fas fa-list"></i> All Logs
-            </a>
-            {% if total_activities and total_activities > 0 %}
-            <a href="/admin/user-activity/delete-user-logs/{{ target_user.username }}/" 
-               class="btn btn-danger" 
-               onclick="return confirm('Are you sure you want to delete all logs for {{ target_user.username }}? This action cannot be undone.')">
-                <i class="fas fa-trash"></i> Delete Logs
-            </a>
-            {% endif %}
+        <div class="stat-box">
+            <div class="stat-number">{{ ip_stats|length if ip_stats else 0 }}</div>
+            <div class="stat-label">Unique IPs</div>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html> 
+    <!-- TIME FILTER -->
+    <div class="filter-section">
+        <div class="filter-label">
+            <i class="fa fa-calendar-alt"></i> Time Period:
+        </div>
+        <div class="filter-buttons">
+            <a href="?days=7" class="btn btn-sm {% if days_filter == 7 %}btn-active{% else %}btn-secondary{% endif %}">
+                7 days
+            </a>
+            <a href="?days=30" class="btn btn-sm {% if days_filter == 30 %}btn-active{% else %}btn-secondary{% endif %}">
+                30 days
+            </a>
+            <a href="?days=90" class="btn btn-sm {% if days_filter == 90 %}btn-active{% else %}btn-secondary{% endif %}">
+                90 days
+            </a>
+            <a href="?days=-1" class="btn btn-sm {% if days_filter == -1 %}btn-active{% else %}btn-secondary{% endif %}">
+                All Time
+            </a>
+        </div>
+        <div style="color: #666; margin-left: auto;">
+            Currently showing: {% if days_filter == -1 %}All time{% else %}{{ days_filter }} days{% endif %}
+        </div>
+    </div>
+
+    <!-- TAB NAVIGATION -->
+    <div class="tab-navigation">
+        <button class="tab-btn active" onclick="switchTab('activities')">
+            <i class="fa fa-history"></i>
+            <span>All Activities</span>
+            <span style="background: rgba(255,255,255,0.3); padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.85rem;">
+                {% if activities %}
+                    {% if activities.paginator %}
+                        {{ activities.paginator.count }}
+                    {% else %}
+                        {{ activities|length }}
+                    {% endif %}
+                {% else %}
+                    0
+                {% endif %}
+            </span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('errors-404')">
+            <i class="fa fa-exclamation-triangle"></i>
+            <span>404 Errors</span>
+            <span style="background: rgba(220, 53, 69, 0.15); color: #dc3545; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+                {% if activities %}
+                    {{ activities|selectattr('response_code', 'equalto', 404)|list|length }}
+                {% else %}
+                    0
+                {% endif %}
+            </span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('sessions')">
+            <i class="fa fa-laptop"></i>
+            <span>Sessions</span>
+            <span style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.85rem;">
+                {{ all_sessions|length if all_sessions else 0 }}
+            </span>
+        </button>
+    </div>
+
+    <!-- TAB CONTENT: SESSIONS -->
+    <div id="tab-sessions" class="tab-content">
+        <div class="section-card">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fa fa-laptop"></i> User Sessions
+                    {% if all_sessions %}
+                        ({{ all_sessions|length }})
+                    {% else %}
+                        (0)
+                    {% endif %}
+                </h3>
+            </div>
+            <div class="section-content">
+                {% if all_sessions %}
+                    <div class="session-grid">
+                        {% for session in all_sessions %}
+                        <div class="session-card {% if session.is_active %}active{% endif %}">
+                            <div style="font-weight: 600; color: #333; margin-bottom: 0.75rem;">
+                                {% if session.device_type == 'mobile' %}
+                                    <i class="fa fa-mobile-alt device-icon"></i> Mobile Device
+                                {% elif session.device_type == 'tablet' %}
+                                    <i class="fa fa-tablet-alt device-icon"></i> Tablet Device
+                                {% elif session.device_type == 'desktop' %}
+                                    <i class="fa fa-desktop device-icon"></i> Desktop Device
+                                {% else %}
+                                    <i class="fa fa-question device-icon"></i> Unknown Device
+                                {% endif %}
+                            </div>
+
+                            <div class="session-detail">
+                                <i class="fa fa-globe device-icon"></i>
+                                <code style="background: #fff; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.85rem;">{{ session.ip_address or 'N/A' }}</code>
+                            </div>
+
+                            <div class="session-detail">
+                                <i class="fa fa-browser device-icon"></i>
+                                <span>{{ session.browser or 'Unknown Browser' }}</span>
+                            </div>
+
+                            <div class="session-detail">
+                                <i class="fa fa-cogs device-icon"></i>
+                                <span>{{ session.os or 'Unknown OS' }}</span>
+                            </div>
+
+                            {% if session.last_activity %}
+                            <div class="session-detail">
+                                <i class="fa fa-clock device-icon"></i>
+                                <span>{{ session.last_activity.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fa fa-laptop"></i>
+                        <h4>No Sessions Found</h4>
+                        <p>No session data available for this time period</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB CONTENT: ALL ACTIVITIES -->
+    <div id="tab-activities" class="tab-content active">
+        <div class="section-card">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fa fa-history"></i> All Activities
+                    {% if activities %}
+                        {% if activities.paginator %}
+                            ({{ activities.paginator.count }})
+                        {% else %}
+                            ({{ activities|length }})
+                        {% endif %}
+                    {% else %}
+                        (0)
+                    {% endif %}
+                </h3>
+            </div>
+            <div class="section-content">
+                {% if activities %}
+                    <div style="overflow-x: auto;">
+                        <table class="activity-table">
+                            <thead>
+                                <tr>
+                                    <th><i class="fa fa-clock"></i> Time</th>
+                                    <th><i class="fa fa-link"></i> Path</th>
+                                    <th><i class="fa fa-code"></i> Method</th>
+                                    <th><i class="fa fa-globe"></i> IP</th>
+                                    <th><i class="fa fa-chart-line"></i> Response</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in activities %}
+                                <tr>
+                                    <td>
+                                        {% if activity.timestamp %}
+                                            <div style="font-size: 0.85rem; white-space: nowrap;">
+                                                {{ activity.timestamp.strftime('%m-%d %H:%M:%S') }}
+                                            </div>
+                                        {% else %}
+                                            <span style="color: #999;">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <code style="font-size: 0.8rem; background: #f5f5f5; padding: 0.3rem 0.5rem; border-radius: 4px;">
+                                            {% if activity.path and activity.path|length > 50 %}
+                                                {{ activity.path[:50] }}...
+                                            {% else %}
+                                                {{ activity.path or 'N/A' }}
+                                            {% endif %}
+                                        </code>
+                                    </td>
+                                    <td>
+                                        <span class="method-tag method-{{ activity.method|lower if activity.method else 'get' }}">
+                                            {{ activity.method or 'GET' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <code style="font-size: 0.8rem; background: #f5f5f5; padding: 0.2rem 0.4rem; border-radius: 4px;">{{ activity.ip_address or 'N/A' }}</code>
+                                    </td>
+                                    <td>
+                                        {% if activity.response_code %}
+                                            {% if activity.response_code >= 200 and activity.response_code < 300 %}
+                                                <span class="response-tag response-success">{{ activity.response_code }}</span>
+                                            {% elif activity.response_code >= 300 and activity.response_code < 400 %}
+                                                <span class="response-tag response-redirect">{{ activity.response_code }}</span>
+                                            {% elif activity.response_code >= 400 %}
+                                                <span class="response-tag response-error">{{ activity.response_code }}</span>
+                                            {% else %}
+                                                <span class="response-tag response-other">{{ activity.response_code }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="response-tag response-other">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- PAGINATION -->
+                    {% if activities.has_other_pages %}
+                    <div class="pagination-wrapper">
+                        <div class="pagination-info">
+                            {% if activities.paginator %}
+                                Page {{ activities.number }} of {{ activities.paginator.num_pages }}
+                                ({{ activities.paginator.count }} total entries)
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if activities.has_previous %}
+                                <a href="?page={{ activities.previous_page_number }}&days={{ days_filter }}" class="btn btn-secondary btn-sm">
+                                    <i class="fa fa-chevron-left"></i> Previous
+                                </a>
+                            {% endif %}
+                            {% if activities.has_next %}
+                                <a href="?page={{ activities.next_page_number }}&days={{ days_filter }}" class="btn btn-secondary btn-sm">
+                                    Next <i class="fa fa-chevron-right"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fa fa-history"></i>
+                        <h4>No Activities Found</h4>
+                        <p>No activity data available for this time period</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB CONTENT: 404 ERRORS -->
+    <div id="tab-errors-404" class="tab-content">
+        <div class="section-card">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fa fa-exclamation-triangle"></i> 404 Not Found Errors
+                    {% if activities %}
+                        ({{ activities|selectattr('response_code', 'equalto', 404)|list|length }})
+                    {% else %}
+                        (0)
+                    {% endif %}
+                </h3>
+            </div>
+            <div class="section-content">
+                {% set error_404_list = activities|selectattr('response_code', 'equalto', 404)|list if activities else [] %}
+                {% if error_404_list %}
+                    <div style="overflow-x: auto;">
+                        <table class="activity-table">
+                            <thead>
+                                <tr>
+                                    <th><i class="fa fa-clock"></i> Time</th>
+                                    <th><i class="fa fa-link"></i> Path</th>
+                                    <th><i class="fa fa-code"></i> Method</th>
+                                    <th><i class="fa fa-globe"></i> IP</th>
+                                    <th><i class="fa fa-chart-line"></i> Response</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in error_404_list %}
+                                <tr>
+                                    <td>
+                                        {% if activity.timestamp %}
+                                            <div style="font-size: 0.85rem; white-space: nowrap;">
+                                                {{ activity.timestamp.strftime('%m-%d %H:%M:%S') }}
+                                            </div>
+                                        {% else %}
+                                            <span style="color: #999;">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <code style="font-size: 0.8rem; background: #fff5f5; padding: 0.3rem 0.5rem; border-radius: 4px; color: #dc3545;">
+                                            {% if activity.path and activity.path|length > 50 %}
+                                                {{ activity.path[:50] }}...
+                                            {% else %}
+                                                {{ activity.path or 'N/A' }}
+                                            {% endif %}
+                                        </code>
+                                    </td>
+                                    <td>
+                                        <span class="method-tag method-{{ activity.method|lower if activity.method else 'get' }}">
+                                            {{ activity.method or 'GET' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <code style="font-size: 0.8rem; background: #f5f5f5; padding: 0.2rem 0.4rem; border-radius: 4px;">{{ activity.ip_address or 'N/A' }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="response-tag response-error">404</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fa fa-check-circle"></i>
+                        <h4>No 404 Errors Found</h4>
+                        <p>Great! No 404 errors in this time period</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <div class="navigation-bar">
+        <a href="/admin/user-activity/active-users/" class="btn btn-primary">
+            <i class="fa fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <a href="/admin/user-activity/all-logs/" class="btn btn-secondary">
+            <i class="fa fa-list"></i> All Logs
+        </a>
+        {% if total_activities and total_activities > 0 %}
+        <a href="/admin/user-activity/delete-user-logs/{{ target_user.username }}/"
+           class="btn btn-danger"
+           onclick="return confirm('Are you sure you want to delete all logs for {{ target_user.username }}? This action cannot be undone.')">
+            <i class="fa fa-trash"></i> Delete Logs
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Tab switching functionality
+function switchTab(tabName) {
+    // Hide all tab contents
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(content => {
+        content.classList.remove('active');
+    });
+
+    // Remove active class from all tab buttons
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(button => {
+        button.classList.remove('active');
+    });
+
+    // Show selected tab content
+    const selectedTab = document.getElementById('tab-' + tabName);
+    if (selectedTab) {
+        selectedTab.classList.add('active');
+    }
+
+    // Add active class to clicked button
+    event.target.closest('.tab-btn').classList.add('active');
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default active tab
+    const defaultTab = document.getElementById('tab-activities');
+    if (defaultTab) {
+        defaultTab.classList.add('active');
+    }
+});
+</script>
+{% endblock %}
