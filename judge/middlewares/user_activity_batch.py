@@ -69,17 +69,21 @@ class BatchUserActivityMiddleware:
 
     def _collect_activity(self, request, response):
         """Thu thập activity vào buffer"""
+        # Validate response (theo logic gốc commit 5b0d18a)
+        if not response or not hasattr(response, 'status_code'):
+            return
+
         # Tạo session nếu chưa có (quan trọng cho anonymous users)
         if not hasattr(request, 'session'):
             return
 
+        # Tạo session cho anonymous users (theo logic gốc)
+        if not request.session.session_key:
+            request.session.create()
+
         session_key = request.session.session_key
         if not session_key:
-            # Tạo session cho anonymous users
-            request.session.create()
-            session_key = request.session.session_key
-            if not session_key:
-                return
+            return
 
         user_agent_string = request.META.get('HTTP_USER_AGENT', '')
         user_agent = parse(user_agent_string)
