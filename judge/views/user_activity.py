@@ -31,14 +31,6 @@ from judge.models import (
 @permission_required('judge.can_see_user_activity', raise_exception=True)
 def active_users_view(request):
     """View để xem người dùng đang hoạt động - Cải thiện tách bot và human users"""
-
-    # Try cache first (cache 60 giây - tăng từ 10s để giảm load)
-    cache_key = 'active_users_view_data'
-    cached_data = cache.get(cache_key)
-
-    if cached_data:
-        return render(request, 'user_activity/active_users.html', cached_data)
-
     # Lấy người dùng hoạt động trong 30 phút qua
     cutoff_time = timezone.now() - timedelta(minutes=30)
 
@@ -181,26 +173,19 @@ def user_activity_detail(request, username):
     page = request.GET.get('page', 1)
     activities_page = paginator.get_page(page)
 
-    # Tối ưu: Chỉ lấy sessions trong khoảng thời gian cần thiết thay vì TẤT CẢ
-    # Giới hạn 30 ngày gần nhất để tránh query quá lớn
-    session_cutoff = timezone.now() - timedelta(days=30)
-    all_sessions = UserSession.objects.filter(
-        user=user,
-        last_activity__gte=session_cutoff,
-    ).order_by('-last_activity')[:500]  # Giới hạn 500 sessions gần nhất
+    # Lấy TẤT CẢ các phiên truy cập (KHÔNG chỉ active) - LỊCH SỬ ĐẦY ĐỦ
+    all_sessions = UserSession.objects.filter(user=user).order_by('-last_activity')
 
     # Sessions hiện tại đang hoạt động
-    active_sessions = UserSession.objects.filter(
-        user=user,
+    active_sessions = all_sessions.filter(
         last_activity__gte=timezone.now() - timedelta(minutes=30),
         is_active=True,
-    ).order_by('-last_activity')
+    )
 
     # Sessions gần đây (7 ngày qua)
-    recent_sessions = UserSession.objects.filter(
-        user=user,
+    recent_sessions = all_sessions.filter(
         last_activity__gte=timezone.now() - timedelta(days=7),
-    ).order_by('-last_activity')[:100]  # Giới hạn 100 sessions
+    )
 
     # Thống kê hoạt động theo ngày - FIXED JSON serialization
     daily_stats = []
@@ -234,43 +219,36 @@ def user_activity_detail(request, username):
     except (TypeError, ValueError):
         daily_stats_json = '[]'
 
-    # Thống kê theo IP - Giới hạn để tránh scan toàn bộ bảng
-    filter_condition = {'user': user}
+    # Thống kê theo IP
     if time_ago:
-        filter_condition['timestamp__gte'] = time_ago
-    else:
-        # Nếu không có time_ago, giới hạn 90 ngày để tránh query quá lớn
-        filter_condition['timestamp__gte'] = timezone.now() - timedelta(days=90)
-
-    ip_stats = UserActivity.objects.filter(
-        **filter_condition,
-    ).values('ip_address').annotate(count=Count('id')).order_by('-count')[:20]
-
-    # Thống kê theo path được truy cập nhiều nhất - Giới hạn
-    path_stats = UserActivity.objects.filter(
-        **filter_condition,
-    ).values('path').annotate(count=Count('id')).order_by('-count')[:30]
-
-    # Tách riêng các request 404
-    error_404_stats = UserActivity.objects.filter(
-        **filter_condition,
-        response_code=404,
-    ).values('path').annotate(count=Count('id')).order_by('-count')[:20]
-
-    # Thống kê theo device type từ sessions (đã giới hạn ở trên)
-    device_stats = list(
-        UserSession.objects.filter(
+        ip_stats = UserActivity.objects.filter(
             user=user,
-            last_activity__gte=session_cutoff,
-        ).values('device_type').annotate(count=Count('id')).order_by('-count'),
+            timestamp__gte=time_ago,
+        ).values('ip_address').annotate(count=Count('id')).order_by('-count')[:20]
+    else:
+        ip_stats = UserActivity.objects.filter(
+            user=user,
+        ).values('ip_address').annotate(count=Count('id')).order_by('-count')[:20]
+
+    # Thống kê theo path được truy cập nhiều nhất
+    if time_ago:
+        path_stats = UserActivity.objects.filter(
+            user=user,
+            timestamp__gte=time_ago,
+        ).values('path').annotate(count=Count('id')).order_by('-count')[:20]
+    else:
+        path_stats = UserActivity.objects.filter(
+            user=user,
+        ).values('path').annotate(count=Count('id')).order_by('-count')[:20]
+
+    # Thống kê theo device type từ sessions
+    device_stats = list(
+        all_sessions.values('device_type').annotate(count=Count('id')).order_by('-count'),
     )
 
-    # Thống kê theo browser từ sessions (đã giới hạn ở trên)
+    # Thống kê theo browser từ sessions
     browser_stats = list(
-        UserSession.objects.filter(
-            user=user,
-            last_activity__gte=session_cutoff,
-        ).values('browser').annotate(count=Count('id')).order_by('-count'),
+        all_sessions.values('browser').annotate(count=Count('id')).order_by('-count'),
     )
 
     # Thống kê theo thời gian truy cập (theo giờ trong ngày)
@@ -305,7 +283,6 @@ def user_activity_detail(request, username):
         'daily_stats': daily_stats_json,
         'ip_stats': ip_stats,
         'path_stats': path_stats,
-        'error_404_stats': error_404_stats,
         'device_stats': device_stats,
         'browser_stats': browser_stats,
         'hour_stats': hour_stats,
