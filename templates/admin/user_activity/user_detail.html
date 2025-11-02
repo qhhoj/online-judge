@@ -150,7 +150,7 @@
                                 {% for activity in activities %}
                                 <tr>
                                     <td>
-                                        <small>{{ date(activity.timestamp, "Y-m-d H:i:s") }}</small>
+                                        <small>{{ activity.timestamp|date("Y-m-d H:i:s") }}</small>
                                     </td>
                                     <td>
                                         <code>{{ activity.path|truncatechars:50 }}</code>
@@ -247,7 +247,7 @@
                                     <td>{{ session.browser }}</td>
                                     <td>{{ session.os }}</td>
                                     <td>{{ session.last_activity|timesince }} ago</td>
-                                    <td>{{ date(session.created_at, "Y-m-d H:i") }}</td>
+                                    <td>{{ session.created_at|date("Y-m-d H:i") }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -290,7 +290,7 @@
                                     <td>{{ session.browser }}</td>
                                     <td>{{ session.os }}</td>
                                     <td>{{ session.last_activity|timesince }} ago</td>
-                                    <td>{{ date(session.created_at, "Y-m-d H:i") }}</td>
+                                    <td>{{ session.created_at|date("Y-m-d H:i") }}</td>
                                     <td>
                                         {% if session.is_active %}
                                             <span class="badge bg-success">Active</span>
@@ -337,7 +337,7 @@
                                         </span>
                                     </td>
                                     <td>{{ session.last_activity|timesince }} ago</td>
-                                    <td>{{ date(session.created_at, "m-d H:i") }}</td>
+                                    <td>{{ session.created_at|date("m-d H:i") }}</td>
                                     <td>
                                         {% if session.is_active %}
                                             <span class="badge bg-success">Active</span>
