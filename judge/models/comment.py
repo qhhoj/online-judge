@@ -14,10 +14,14 @@ from mptt.models import MPTTModel
 
 from judge.models.contest import Contest
 from judge.models.interface import BlogPost
-from judge.models.problem import Problem, Solution
+from judge.models.problem import (
+    Problem,
+    Solution
+)
 from judge.models.profile import Profile
 from judge.models.tag import TagProblem
 from judge.utils.cachedict import CacheDict
+
 
 __all__ = ['Comment', 'CommentLock', 'CommentVote']
 

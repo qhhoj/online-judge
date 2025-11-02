@@ -2,7 +2,11 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from moss import *
 
-from judge.models import Contest, ContestParticipation, Submission
+from judge.models import (
+    Contest,
+    ContestParticipation,
+    Submission
+)
 
 
 class Command(BaseCommand):

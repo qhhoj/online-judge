@@ -1,7 +1,10 @@
 import json
 import os
 import zipfile
-from operator import attrgetter, itemgetter
+from operator import (
+    attrgetter,
+    itemgetter
+)
 
 import pyotp
 import webauthn
@@ -10,22 +13,58 @@ from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator, RegexValidator
+from django.core.validators import (
+    FileExtensionValidator,
+    RegexValidator
+)
 from django.db.models import Q
-from django.forms import BooleanField, CharField, ChoiceField, DateInput, Form, ModelForm, MultipleChoiceField, \
-    formset_factory, inlineformset_factory
+from django.forms import (
+    BooleanField,
+    CharField,
+    ChoiceField,
+    DateInput,
+    Form,
+    ModelForm,
+    MultipleChoiceField,
+    formset_factory,
+    inlineformset_factory
+)
 from django.forms.widgets import DateTimeInput
 from django.template.defaultfilters import filesizeformat
-from django.urls import reverse, reverse_lazy
+from django.urls import (
+    reverse,
+    reverse_lazy
+)
 from django.utils.text import format_lazy
-from django.utils.translation import gettext_lazy as _, ngettext_lazy
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext_lazy
 
 from django_ace import AceWidget
-from judge.models import BlogPost, Contest, ContestAnnouncement, ContestProblem, Language, LanguageLimit, \
-    Organization, Problem, Profile, Solution, Submission, Tag, URL, WebAuthnCredential
+from judge.models import (
+    URL,
+    BlogPost,
+    Contest,
+    ContestAnnouncement,
+    ContestProblem,
+    Language,
+    LanguageLimit,
+    Organization,
+    Problem,
+    Profile,
+    Solution,
+    Submission,
+    Tag,
+    WebAuthnCredential
+)
 from judge.utils.subscription import newsletter_id
-from judge.widgets import HeavySelect2MultipleWidget, HeavySelect2Widget, MartorWidget, \
-    Select2MultipleWidget, Select2Widget
+from judge.widgets import (
+    HeavySelect2MultipleWidget,
+    HeavySelect2Widget,
+    MartorWidget,
+    Select2MultipleWidget,
+    Select2Widget
+)
+
 
 TOTP_CODE_LENGTH = 6
 

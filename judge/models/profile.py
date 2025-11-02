@@ -10,7 +10,11 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models import F, Max, Sum
+from django.db.models import (
+    F,
+    Max,
+    Sum
+)
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes
@@ -21,11 +25,17 @@ from fernet_fields import EncryptedCharField
 from pyotp.utils import strings_equal
 from sortedm2m.fields import SortedManyToManyField
 
-from judge.models.choices import ACE_THEMES, MATH_ENGINES_CHOICES, SITE_THEMES, TIMEZONE
+from judge.models.choices import (
+    ACE_THEMES,
+    MATH_ENGINES_CHOICES,
+    SITE_THEMES,
+    TIMEZONE
+)
 from judge.models.runtime import Language
 from judge.ratings import rating_class
 from judge.utils.float_compare import float_compare_equal
 from judge.utils.two_factor import webauthn_decode
+
 
 __all__ = ['Organization', 'Profile', 'OrganizationRequest', 'WebAuthnCredential']
 
@@ -285,7 +295,11 @@ class Profile(models.Model):
     calculate_points.alters_data = True
 
     def calculate_contribution_points(self):
-        from judge.models import BlogPost, Comment, Ticket
+        from judge.models import (
+            BlogPost,
+            Comment,
+            Ticket
+        )
         old_pp = self.contribution_points
         # Because the aggregate function can return None
         # So we use `X or 0` to get 0 if X is None

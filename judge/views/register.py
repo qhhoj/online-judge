@@ -4,21 +4,45 @@ import re
 from django import forms
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.auth.password_validation import get_default_password_validators
+from django.contrib.auth.password_validation import (
+    get_default_password_validators
+)
 from django.db import transaction
-from django.forms import ChoiceField, ModelChoiceField
+from django.forms import (
+    ChoiceField,
+    ModelChoiceField
+)
 from django.shortcuts import render
-from django.utils.translation import gettext, gettext_lazy as _, ngettext
-from registration.backends.default.views import (ActivationView as OldActivationView,
-                                                 RegistrationView as OldRegistrationView)
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
+from registration.backends.default.views import \
+    ActivationView as OldActivationView
+from registration.backends.default.views import \
+    RegistrationView as OldRegistrationView
 from registration.forms import RegistrationForm
 from sortedm2m.forms import SortedMultipleChoiceField
 
 from judge.forms import SocialAuthMixin
-from judge.models import Language, Organization, Profile, TIMEZONE
-from judge.utils.recaptcha import ReCaptchaField, ReCaptchaWidget
-from judge.utils.subscription import Subscription, newsletter_id
-from judge.widgets import Select2MultipleWidget, Select2Widget
+from judge.models import (
+    TIMEZONE,
+    Language,
+    Organization,
+    Profile
+)
+from judge.utils.recaptcha import (
+    ReCaptchaField,
+    ReCaptchaWidget
+)
+from judge.utils.subscription import (
+    Subscription,
+    newsletter_id
+)
+from judge.widgets import (
+    Select2MultipleWidget,
+    Select2Widget
+)
+
 
 bad_mail_regex = list(map(re.compile, settings.BAD_MAIL_PROVIDER_REGEX))
 

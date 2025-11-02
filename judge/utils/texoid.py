@@ -10,6 +10,7 @@ from django.core.cache import caches
 from judge.utils.file_cache import HashFileCache
 from judge.utils.unicode import utf8bytes
 
+
 logger = logging.getLogger('judge.texoid')
 
 TEXOID_ENABLED = hasattr(settings, 'TEXOID_URL')

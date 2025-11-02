@@ -1,6 +1,9 @@
 from itertools import chain
 
-from django.db import connection, transaction
+from django.db import (
+    connection,
+    transaction
+)
 
 
 class LockModel(object):

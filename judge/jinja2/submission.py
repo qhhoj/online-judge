@@ -1,6 +1,7 @@
 from operator import attrgetter
 
 from judge.models import SubmissionSourceAccess
+
 from . import registry
 
 

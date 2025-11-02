@@ -5,8 +5,13 @@ from django.core.cache import cache
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from judge.models import Problem, Profile, Submission
+from judge.models import (
+    Problem,
+    Profile,
+    Submission
+)
 from judge.utils.celery import Progress
+
 
 __all__ = ('apply_submission_filter', 'rejudge_problem_filter', 'rescore_problem')
 

@@ -2,7 +2,10 @@ import collections.abc
 import inspect
 from math import ceil
 
-from django.core.paginator import EmptyPage, InvalidPage
+from django.core.paginator import (
+    EmptyPage,
+    InvalidPage
+)
 from django.http import Http404
 from django.utils.functional import cached_property
 from django.utils.inspect import method_has_no_args

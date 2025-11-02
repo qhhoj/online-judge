@@ -6,6 +6,7 @@ import pika
 from django.conf import settings
 from pika.exceptions import AMQPError
 
+
 __all__ = ['EventPoster', 'post', 'last']
 
 

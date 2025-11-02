@@ -3,7 +3,12 @@ import socket
 import threading
 
 from django.conf import settings
-from websocket import WebSocketException, create_connection
+
+from websocket import (
+    WebSocketException,
+    create_connection
+)
+
 
 __all__ = ['EventPostingError', 'EventPoster', 'post', 'last']
 _local = threading.local()

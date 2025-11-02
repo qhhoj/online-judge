@@ -1,10 +1,13 @@
 # Generated manually - Create UserSession and UserActivity models
 # These models are used for tracking user activity and sessions
 
-from django.conf import settings
-from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
+from django.conf import settings
+from django.db import (
+    migrations,
+    models
+)
 
 
 class Migration(migrations.Migration):
@@ -64,7 +67,7 @@ class Migration(migrations.Migration):
                 ],
             },
         ),
-        
+
         # Create UserActivity model
         migrations.CreateModel(
             name='UserActivity',
@@ -103,4 +106,3 @@ class Migration(migrations.Migration):
             },
         ),
     ]
-

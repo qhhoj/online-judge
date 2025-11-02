@@ -1,5 +1,6 @@
-import smtplib
-from django.core.mail.backends.smtp import EmailBackend as DjangoSMTPEmailBackend
+from django.core.mail.backends.smtp import \
+    EmailBackend as DjangoSMTPEmailBackend
+
 
 class EmailBackend(DjangoSMTPEmailBackend):
     """
@@ -39,4 +40,3 @@ class EmailBackend(DjangoSMTPEmailBackend):
             if connection:
                 connection.close()
             raise
-

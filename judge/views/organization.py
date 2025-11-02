@@ -3,34 +3,94 @@ from functools import cached_property
 from django import forms
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+    PermissionRequiredMixin
+)
 from django.contrib.auth.models import Group
-from django.core.exceptions import ImproperlyConfigured, PermissionDenied
-from django.db.models import Count, FilteredRelation, Q
-from django.db.models.expressions import F, Value
+from django.core.exceptions import (
+    ImproperlyConfigured,
+    PermissionDenied
+)
+from django.db.models import (
+    Count,
+    FilteredRelation,
+    Q
+)
+from django.db.models.expressions import (
+    F,
+    Value
+)
 from django.db.models.functions import Coalesce
-from django.forms import Form, modelformset_factory
-from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.forms import (
+    Form,
+    modelformset_factory
+)
+from django.http import (
+    Http404,
+    HttpResponseRedirect
+)
+from django.shortcuts import (
+    get_object_or_404,
+    render
+)
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
-from django.utils.translation import gettext as _, gettext_lazy, ngettext
-from django.views.generic import CreateView, DetailView, FormView, ListView, UpdateView, View
-from django.views.generic.detail import SingleObjectMixin, SingleObjectTemplateResponseMixin
+from django.utils.translation import gettext as _
+from django.utils.translation import (
+    gettext_lazy,
+    ngettext
+)
+from django.views.generic import (
+    CreateView,
+    DetailView,
+    FormView,
+    ListView,
+    UpdateView,
+    View
+)
+from django.views.generic.detail import (
+    SingleObjectMixin,
+    SingleObjectTemplateResponseMixin
+)
 from reversion import revisions
 
 from judge.forms import OrganizationForm
-from judge.models import BlogPost, Comment, Contest, Language, Organization, OrganizationRequest, \
-    Problem, Profile
+from judge.models import (
+    BlogPost,
+    Comment,
+    Contest,
+    Language,
+    Organization,
+    OrganizationRequest,
+    Problem,
+    Profile
+)
 from judge.tasks import on_new_problem
 from judge.utils.infinite_paginator import InfinitePaginationMixin
 from judge.utils.ranker import ranker
-from judge.utils.views import DiggPaginatorMixin, QueryStringSortMixin, TitleMixin, generic_message
-from judge.views.blog import BlogPostCreate, PostListBase
-from judge.views.contests import ContestList, CreateContest
-from judge.views.problem import ProblemCreate, ProblemImportPolygon, ProblemList
+from judge.utils.views import (
+    DiggPaginatorMixin,
+    QueryStringSortMixin,
+    TitleMixin,
+    generic_message
+)
+from judge.views.blog import (
+    BlogPostCreate,
+    PostListBase
+)
+from judge.views.contests import (
+    ContestList,
+    CreateContest
+)
+from judge.views.problem import (
+    ProblemCreate,
+    ProblemImportPolygon,
+    ProblemList
+)
 from judge.views.submission import SubmissionsListBase
+
 
 __all__ = ['OrganizationList', 'OrganizationHome', 'OrganizationUsers', 'OrganizationMembershipChange',
            'JoinOrganization', 'LeaveOrganization', 'EditOrganization', 'RequestJoinOrganization',
@@ -710,7 +770,10 @@ class ProblemImportPolygonOrganization(AdminOrganizationMixin, ProblemImportPoly
                         config['polygon_to_site_language_map'][polygon_language] = site_language
 
             try:
-                from judge.utils.codeforces_polygon import PolygonImporter, ImportPolygonError
+                from judge.utils.codeforces_polygon import (
+                    ImportPolygonError,
+                    PolygonImporter
+                )
 
                 importer = PolygonImporter(
                     package=package,

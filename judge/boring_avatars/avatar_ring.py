@@ -1,6 +1,10 @@
 import random
 
-from judge.boring_avatars.utilities import getRandomColor, hashCode
+from judge.boring_avatars.utilities import (
+    getRandomColor,
+    hashCode
+)
+
 
 SIZE = 90
 COLORS = 5

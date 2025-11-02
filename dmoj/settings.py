@@ -16,6 +16,7 @@ from django.utils.translation import gettext_lazy as _
 from django_jinja.builtins import DEFAULT_EXTENSIONS
 from jinja2 import select_autoescape
 
+
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # Quick-start development settings - unsuitable for production
@@ -48,7 +49,8 @@ DMOJ_SSL = 1
 # Refer to dmoj.ca/post/103-point-system-rework
 DMOJ_PP_STEP = 0.98514
 DMOJ_PP_ENTRIES = 300
-DMOJ_PP_BONUS_FUNCTION = lambda n: 0.05 * n  # 15 * (1 - 0.997 ** n)  # noqa: E731; 100 bai nua diem: 0.9930924
+def DMOJ_PP_BONUS_FUNCTION(n): return 0.05 * n  # 15 * (1 - 0.997 ** n)  # noqa: E731,E704; 100 bai nua diem: 0.9930924
+
 
 VNOJ_ORG_PP_STEP = 0.95
 VNOJ_ORG_PP_ENTRIES = 100
@@ -704,9 +706,9 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'user-activity-cache',
         'OPTIONS': {
-            'MAX_ENTRIES': 1000
-        }
-    }
+            'MAX_ENTRIES': 1000,
+        },
+    },
 }
 
 # Authentication

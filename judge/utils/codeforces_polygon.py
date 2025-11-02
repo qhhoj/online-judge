@@ -8,7 +8,11 @@ import subprocess
 import tempfile
 import zipfile
 from operator import itemgetter
-from typing import BinaryIO, List, Union
+from typing import (
+    BinaryIO,
+    List,
+    Union
+)
 
 from django.conf import settings
 from django.core.files import File
@@ -17,10 +21,20 @@ from django.db import transaction
 from django.utils import timezone
 from lxml import etree as ET
 
-from judge.models import Language, Problem, ProblemData, ProblemGroup, ProblemTestCase, ProblemTranslation, \
-    ProblemType, Profile, Solution
+from judge.models import (
+    Language,
+    Problem,
+    ProblemData,
+    ProblemGroup,
+    ProblemTestCase,
+    ProblemTranslation,
+    ProblemType,
+    Profile,
+    Solution
+)
 from judge.utils.problem_data import ProblemDataCompiler
 from judge.views.widgets import django_uploader
+
 
 __all__ = ['ImportPolygonError', 'PolygonImporter']
 

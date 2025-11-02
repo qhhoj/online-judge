@@ -1,6 +1,7 @@
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
+
 __all__ = ['highlight_code']
 
 
@@ -10,8 +11,8 @@ def _make_pre_code(code):
 
 try:
     import pygments
-    import pygments.lexers
     import pygments.formatters
+    import pygments.lexers
     import pygments.util
 except ImportError:
     def highlight_code(code, language, cssclass=None):

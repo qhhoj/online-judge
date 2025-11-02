@@ -3,6 +3,7 @@ from django.utils.html import escape
 
 def _init():
     from functools import wraps
+
     from django.utils import translation
 
     def wrap(function):

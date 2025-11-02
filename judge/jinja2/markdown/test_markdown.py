@@ -1,7 +1,13 @@
 from django.test import SimpleTestCase
 from lxml import html
 
-from . import fragment_tree_to_str, fragments_to_tree, get_cleaner, markdown
+from . import (
+    fragment_tree_to_str,
+    fragments_to_tree,
+    get_cleaner,
+    markdown
+)
+
 
 MATHML_N = """\
 <math xmlns="http://www.w3.org/1998/Math/MathML">

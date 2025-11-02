@@ -1,10 +1,22 @@
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase, TestCase
+from django.test import (
+    SimpleTestCase,
+    TestCase
+)
 from django.utils import timezone
 
-from judge.models import Contest, ContestParticipation, ContestTag
+from judge.models import (
+    Contest,
+    ContestParticipation,
+    ContestTag
+)
 from judge.models.contest import MinValueOrNoneValidator
-from judge.models.tests.util import CommonDataMixin, create_contest, create_contest_participation, create_user
+from judge.models.tests.util import (
+    CommonDataMixin,
+    create_contest,
+    create_contest_participation,
+    create_user
+)
 
 
 class ContestTestCase(CommonDataMixin, TestCase):

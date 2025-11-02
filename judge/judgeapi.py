@@ -8,7 +8,13 @@ from django.conf import settings
 from django.utils import timezone
 
 from judge import event_poster as event
-from judge.judge_priority import BATCH_REJUDGE_PRIORITY, CONTEST_SUBMISSION_PRIORITY, DEFAULT_PRIORITY, REJUDGE_PRIORITY
+from judge.judge_priority import (
+    BATCH_REJUDGE_PRIORITY,
+    CONTEST_SUBMISSION_PRIORITY,
+    DEFAULT_PRIORITY,
+    REJUDGE_PRIORITY
+)
+
 
 logger = logging.getLogger('judge.judgeapi')
 size_pack = struct.Struct('!I')
@@ -69,7 +75,11 @@ def judge_request(packet, reply=True):
 
 
 def judge_submission(submission, rejudge=False, batch_rejudge=False, judge_id=None):
-    from .models import ContestSubmission, Submission, SubmissionTestCase
+    from .models import (
+        ContestSubmission,
+        Submission,
+        SubmissionTestCase
+    )
 
     updates = {'time': None, 'memory': None, 'points': None, 'result': None, 'case_points': 0, 'case_total': 0,
                'error': None, 'rejudged_date': timezone.now() if rejudge or batch_rejudge else None, 'status': 'QU'}
@@ -138,6 +148,7 @@ def update_disable_judge(judge):
 
 def abort_submission(submission):
     from .models import Submission
+
     # We only want to try to abort a submission if it's still grading, otherwise this can lead to fully graded
     # submissions marked as aborted.
     if submission.status == 'D':

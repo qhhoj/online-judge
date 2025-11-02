@@ -6,9 +6,24 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
-from django.db import models, transaction
-from django.db.models import CASCADE, Exists, F, FilteredRelation, OuterRef, Q, SET_NULL
+from django.core.validators import (
+    MaxValueValidator,
+    MinValueValidator,
+    RegexValidator
+)
+from django.db import (
+    models,
+    transaction
+)
+from django.db.models import (
+    CASCADE,
+    SET_NULL,
+    Exists,
+    F,
+    FilteredRelation,
+    OuterRef,
+    Q
+)
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils import timezone
@@ -17,10 +32,17 @@ from django.utils.translation import gettext_lazy as _
 
 from judge.fulltext import SearchQuerySet
 from judge.models.problem_data import problem_data_storage
-from judge.models.profile import Organization, Profile
+from judge.models.profile import (
+    Organization,
+    Profile
+)
 from judge.models.runtime import Language
 from judge.user_translations import gettext as user_gettext
-from judge.utils.url import get_absolute_material_url, get_absolute_pdf_url
+from judge.utils.url import (
+    get_absolute_material_url,
+    get_absolute_pdf_url
+)
+
 
 __all__ = ['ProblemGroup', 'ProblemType', 'Problem', 'ProblemTranslation', 'ProblemClarification', 'License',
            'Solution', 'SubmissionSourceAccess', 'TranslatedProblemQuerySet']

@@ -1,11 +1,12 @@
 from django.contrib import admin
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django.urls import reverse
-from django.utils import timezone
-from datetime import timedelta
 
-from judge.models import UserActivity, UserSession
+from judge.models import (
+    UserActivity,
+    UserSession,
+)
 
 
 class UserSessionAdmin(admin.ModelAdmin):
@@ -14,10 +15,10 @@ class UserSessionAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'ip_address', 'user_agent')
     readonly_fields = ('session_key', 'user', 'ip_address', 'user_agent', 'device_type', 'browser', 'os', 'created_at')
     ordering = ('-last_activity',)
-    
+
     def has_add_permission(self, request):
         return False
-        
+
     def get_queryset(self, request):
         # Không update ở đây nữa - để cron job xử lý
         return super().get_queryset(request)
@@ -27,22 +28,32 @@ class UserActivityAdmin(admin.ModelAdmin):
     list_display = ('user_link', 'path', 'method', 'ip_address', 'timestamp', 'response_code')
     list_filter = ('method', 'response_code', 'timestamp')
     search_fields = ('user__username', 'path', 'ip_address')
-    readonly_fields = ('user', 'session', 'timestamp', 'path', 'method', 'ip_address', 'user_agent', 'referer', 'response_code')
+    readonly_fields = (
+        'user',
+        'session',
+        'timestamp',
+        'path',
+        'method',
+        'ip_address',
+        'user_agent',
+        'referer',
+        'response_code',
+    )
     ordering = ('-timestamp',)
     date_hierarchy = 'timestamp'
-    
+
     def user_link(self, obj):
         url = reverse('admin:auth_user_change', args=[obj.user.pk])
         return format_html('<a href="{}">{}</a>', url, obj.user.username)
     user_link.short_description = _('User')
     user_link.admin_order_field = 'user__username'
-    
+
     def has_add_permission(self, request):
         return False
-        
+
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user')
 
 
 admin.site.register(UserSession, UserSessionAdmin)
-admin.site.register(UserActivity, UserActivityAdmin) 
+admin.site.register(UserActivity, UserActivityAdmin)

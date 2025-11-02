@@ -20,6 +20,7 @@ class EchoPacketHandler(ZlibPacketHandler):
 
 def main():
     import argparse
+
     from judge.bridge.server import Server
 
     parser = argparse.ArgumentParser()

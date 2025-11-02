@@ -9,14 +9,25 @@ from django.contrib import auth
 from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import (
+    HttpResponse,
+    HttpResponseRedirect
+)
 from django.shortcuts import get_object_or_404
-from django.urls import Resolver404, resolve, reverse
+from django.urls import (
+    Resolver404,
+    resolve,
+    reverse
+)
 from django.utils.encoding import force_bytes
 from requests.exceptions import HTTPError
 
 from judge.ip_auth import IPBasedAuthBackend
-from judge.models import MiscConfig, Organization
+from judge.models import (
+    MiscConfig,
+    Organization
+)
+
 
 try:
     import uwsgi

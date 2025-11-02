@@ -5,6 +5,7 @@ import requests
 from django.conf import settings
 from django.utils.translation import gettext
 
+
 logger = logging.getLogger('judge.problem.pdf')
 
 

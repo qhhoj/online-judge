@@ -11,8 +11,16 @@ from django.core.files.storage import default_storage
 from django.utils.translation import gettext as _
 from moss import MOSS
 
-from judge.models import Contest, ContestMoss, ContestParticipation, ContestSubmission, Problem, Submission
+from judge.models import (
+    Contest,
+    ContestMoss,
+    ContestParticipation,
+    ContestSubmission,
+    Problem,
+    Submission
+)
 from judge.utils.celery import Progress
+
 
 __all__ = ('rescore_contest', 'run_moss', 'prepare_contest_data')
 rewildcard = re.compile(r'\*+')

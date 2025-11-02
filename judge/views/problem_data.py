@@ -2,30 +2,66 @@ import json
 import mimetypes
 import os
 from itertools import chain
-from zipfile import BadZipfile, ZipFile
+from zipfile import (
+    BadZipfile,
+    ZipFile
+)
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
-from django.forms import BaseModelFormSet, CharField, ChoiceField, HiddenInput, ModelForm, NumberInput, Select, \
+from django.forms import (
+    BaseModelFormSet,
+    CharField,
+    ChoiceField,
+    HiddenInput,
+    ModelForm,
+    NumberInput,
+    Select,
     formset_factory
-from django.http import Http404, HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+)
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseRedirect
+)
+from django.shortcuts import (
+    get_object_or_404,
+    render
+)
 from django.urls import reverse
-from django.utils.html import escape, format_html
+from django.utils.html import (
+    escape,
+    format_html
+)
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext as _, gettext_lazy
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 from django.views.generic import DetailView
 
 from judge.highlight_code import highlight_code
-from judge.models import Problem, ProblemData, ProblemTestCase, Submission, problem_data_storage
-from judge.models.problem_data import CUSTOM_CHECKERS, IO_METHODS
+from judge.models import (
+    Problem,
+    ProblemData,
+    ProblemTestCase,
+    Submission,
+    problem_data_storage
+)
+from judge.models.problem_data import (
+    CUSTOM_CHECKERS,
+    IO_METHODS
+)
 from judge.utils.problem_data import ProblemDataCompiler
 from judge.utils.unicode import utf8text
-from judge.utils.views import TitleMixin, add_file_response, generic_message
+from judge.utils.views import (
+    TitleMixin,
+    add_file_response,
+    generic_message
+)
 from judge.views.problem import ProblemMixin
 from judge.widgets import Select2Widget
+
 
 mimetypes.init()
 mimetypes.add_type('application/x-yaml', '.yml')

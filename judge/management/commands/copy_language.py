@@ -1,6 +1,12 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import (
+    BaseCommand,
+    CommandError
+)
 
-from judge.models import Language, LanguageLimit
+from judge.models import (
+    Language,
+    LanguageLimit
+)
 
 
 class Command(BaseCommand):

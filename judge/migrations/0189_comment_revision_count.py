@@ -1,5 +1,8 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import migrations, models
+from django.db import (
+    migrations,
+    models
+)
 
 
 def populate_revisions(apps, schema_editor):

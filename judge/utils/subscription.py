@@ -1,5 +1,6 @@
 from django.conf import settings
 
+
 if 'newsletter' in settings.INSTALLED_APPS:
     from newsletter.models import Subscription
 else:

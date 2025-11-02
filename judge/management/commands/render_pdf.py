@@ -3,7 +3,10 @@ from django.core.management.base import BaseCommand
 from django.template.loader import get_template
 from django.utils import translation
 
-from judge.models import Problem, ProblemTranslation
+from judge.models import (
+    Problem,
+    ProblemTranslation
+)
 from judge.utils.pdfoid import render_pdf
 
 

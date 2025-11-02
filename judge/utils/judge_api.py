@@ -6,6 +6,7 @@ from django.core.cache import cache
 
 from judge.models import Problem
 
+
 _TIMEOUT = settings.OJ_REQUESTS_TIMEOUT
 
 

@@ -9,7 +9,11 @@ from django.utils.html import format_html
 from mistune import escape
 
 from judge.utils.file_cache import HashFileCache
-from judge.utils.unicode import utf8bytes, utf8text
+from judge.utils.unicode import (
+    utf8bytes,
+    utf8text
+)
+
 
 logger = logging.getLogger('judge.mathoid')
 reescape = re.compile(r'(?<!\\)(?:\\{2})*[$]')

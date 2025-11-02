@@ -1,7 +1,12 @@
 import random
 from types import SimpleNamespace
 
-from judge.boring_avatars.utilities import getRandomColor, getUnit, hashCode
+from judge.boring_avatars.utilities import (
+    getRandomColor,
+    getUnit,
+    hashCode
+)
+
 
 ELEMENTS = 3
 SIZE = 80

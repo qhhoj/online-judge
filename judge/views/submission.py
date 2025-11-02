@@ -8,30 +8,80 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.cache import cache
-from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist, PermissionDenied
+from django.core.exceptions import (
+    ImproperlyConfigured,
+    ObjectDoesNotExist,
+    PermissionDenied
+)
 from django.core.files.storage import default_storage
-from django.db.models import Prefetch, Q
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseRedirect, \
+from django.db.models import (
+    Prefetch,
+    Q
+)
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseNotFound,
+    HttpResponseRedirect,
     JsonResponse
-from django.shortcuts import get_object_or_404, render
+)
+from django.shortcuts import (
+    get_object_or_404,
+    render
+)
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.html import escape, format_html
+from django.utils.html import (
+    escape,
+    format_html
+)
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext as _, gettext_lazy
-from django.views.decorators.http import require_GET, require_POST
-from django.views.generic import DetailView, ListView
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
+from django.views.decorators.http import (
+    require_GET,
+    require_POST
+)
+from django.views.generic import (
+    DetailView,
+    ListView
+)
 
 from judge.highlight_code import highlight_code
-from judge.models import Contest, Language, Organization, Problem, ProblemTranslation, Profile, Submission
-from judge.models.problem import ProblemTestcaseResultAccess, SubmissionSourceAccess
+from judge.models import (
+    Contest,
+    Language,
+    Organization,
+    Problem,
+    ProblemTranslation,
+    Profile,
+    Submission
+)
+from judge.models.problem import (
+    ProblemTestcaseResultAccess,
+    SubmissionSourceAccess
+)
 from judge.utils.infinite_paginator import InfinitePaginationMixin
 from judge.utils.lazy import memo_lazy
 from judge.utils.problem_data import get_problem_testcases_data
-from judge.utils.problems import get_result_data, user_completed_ids, user_editable_ids, user_tester_ids
-from judge.utils.raw_sql import join_sql_subquery, use_straight_join
-from judge.utils.views import DiggPaginatorMixin, TitleMixin, add_file_response, generic_message
+from judge.utils.problems import (
+    get_result_data,
+    user_completed_ids,
+    user_editable_ids,
+    user_tester_ids
+)
+from judge.utils.raw_sql import (
+    join_sql_subquery,
+    use_straight_join
+)
+from judge.utils.views import (
+    DiggPaginatorMixin,
+    TitleMixin,
+    add_file_response,
+    generic_message
+)
 
 
 def submission_related(queryset):
