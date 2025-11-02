@@ -435,7 +435,7 @@ MIDDLEWARE = (
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
     'judge.social_auth.SocialAuthExceptionMiddleware',
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
-    'judge.middlewares.user_activity_safe.UserActivityMiddleware',
+    'judge.middlewares.user_activity_batch.BatchUserActivityMiddleware',
 )
 
 IMPERSONATE_REQUIRE_SUPERUSER = True
