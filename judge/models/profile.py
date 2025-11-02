@@ -10,7 +10,11 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models import F, Max, Sum
+from django.db.models import (
+    F,
+    Max,
+    Sum,
+)
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes
@@ -21,11 +25,17 @@ from fernet_fields import EncryptedCharField
 from pyotp.utils import strings_equal
 from sortedm2m.fields import SortedManyToManyField
 
-from judge.models.choices import ACE_THEMES, MATH_ENGINES_CHOICES, SITE_THEMES, TIMEZONE
+from judge.models.choices import (
+    ACE_THEMES,
+    MATH_ENGINES_CHOICES,
+    SITE_THEMES,
+    TIMEZONE,
+)
 from judge.models.runtime import Language
 from judge.ratings import rating_class
 from judge.utils.float_compare import float_compare_equal
 from judge.utils.two_factor import webauthn_decode
+
 
 __all__ = ['Organization', 'Profile', 'OrganizationRequest', 'WebAuthnCredential']
 
@@ -39,30 +49,54 @@ class EncryptedNullCharField(EncryptedCharField):
 
 class Organization(models.Model):
     name = models.CharField(max_length=128, verbose_name=_('organization title'))
-    slug = models.SlugField(max_length=128, verbose_name=_('organization slug'),
-                            help_text=_('Organization name shown in URLs.'),
-                            validators=[RegexValidator(r'^[a-zA-Z]',
-                                                       _('Organization slugs must begin with a letter.'))],
-                            unique=True)
-    short_name = models.CharField(max_length=20, verbose_name=_('short name'),
-                                  help_text=_('Displayed beside user name during contests.'))
+    slug = models.SlugField(
+        max_length=128, verbose_name=_('organization slug'),
+        help_text=_('Organization name shown in URLs.'),
+        validators=[
+            RegexValidator(
+                r'^[a-zA-Z]',
+                _('Organization slugs must begin with a letter.'),
+            ),
+        ],
+        unique=True,
+    )
+    short_name = models.CharField(
+        max_length=20, verbose_name=_('short name'),
+        help_text=_('Displayed beside user name during contests.'),
+    )
     about = models.TextField(verbose_name=_('organization description'))
-    admins = models.ManyToManyField('Profile', verbose_name=_('administrators'), related_name='admin_of',
-                                    help_text=_('Those who can edit this organization.'))
+    admins = models.ManyToManyField(
+        'Profile', verbose_name=_('administrators'), related_name='admin_of',
+        help_text=_('Those who can edit this organization.'),
+    )
     creation_date = models.DateTimeField(verbose_name=_('creation date'), auto_now_add=True)
-    is_open = models.BooleanField(verbose_name=_('is open organization?'),
-                                  help_text=_('Allow joining organization.'), default=False)
-    is_unlisted = models.BooleanField(verbose_name=_('is unlisted organization?'),
-                                      help_text=_('Organization will not be listed'), default=True)
-    slots = models.IntegerField(verbose_name=_('maximum size'), null=True, blank=True,
-                                help_text=_('Maximum amount of users in this organization, '
-                                            'only applicable to private organizations.'))
-    access_code = models.CharField(max_length=7, help_text=_('Student access code.'),
-                                   verbose_name=_('access code'), null=True, blank=True)
-    logo_override_image = models.CharField(verbose_name=_('logo override image'), default='', max_length=150,
-                                           blank=True,
-                                           help_text=_('This image will replace the default site logo for users '
-                                                       'viewing the organization.'))
+    is_open = models.BooleanField(
+        verbose_name=_('is open organization?'),
+        help_text=_('Allow joining organization.'), default=False,
+    )
+    is_unlisted = models.BooleanField(
+        verbose_name=_('is unlisted organization?'),
+        help_text=_('Organization will not be listed'), default=True,
+    )
+    slots = models.IntegerField(
+        verbose_name=_('maximum size'), null=True, blank=True,
+        help_text=_(
+            'Maximum amount of users in this organization, '
+            'only applicable to private organizations.',
+        ),
+    )
+    access_code = models.CharField(
+        max_length=7, help_text=_('Student access code.'),
+        verbose_name=_('access code'), null=True, blank=True,
+    )
+    logo_override_image = models.CharField(
+        verbose_name=_('logo override image'), default='', max_length=150,
+        blank=True,
+        help_text=_(
+            'This image will replace the default site logo for users '
+            'viewing the organization.',
+        ),
+    )
     performance_points = models.FloatField(default=0)
     member_count = models.IntegerField(default=0)
 
@@ -134,10 +168,14 @@ class Badge(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(User, verbose_name=_('user associated'), on_delete=models.CASCADE)
     about = models.TextField(verbose_name=_('self-description'), null=True, blank=True)
-    timezone = models.CharField(max_length=50, verbose_name=_('time zone'), choices=TIMEZONE,
-                                default=settings.DEFAULT_USER_TIME_ZONE)
-    language = models.ForeignKey('Language', verbose_name=_('preferred language'), on_delete=models.SET_DEFAULT,
-                                 default=Language.get_default_language_pk)
+    timezone = models.CharField(
+        max_length=50, verbose_name=_('time zone'), choices=TIMEZONE,
+        default=settings.DEFAULT_USER_TIME_ZONE,
+    )
+    language = models.ForeignKey(
+        'Language', verbose_name=_('preferred language'), on_delete=models.SET_DEFAULT,
+        default=Language.get_default_language_pk,
+    )
     points = models.FloatField(default=0)
     performance_points = models.FloatField(default=0)
     contribution_points = models.IntegerField(default=0)
@@ -147,56 +185,105 @@ class Profile(models.Model):
     site_theme = models.CharField(max_length=10, verbose_name=_('site theme'), choices=SITE_THEMES, default='light')
     last_access = models.DateTimeField(verbose_name=_('last access time'), default=now)
     ip = models.GenericIPAddressField(verbose_name=_('last IP'), blank=True, null=True)
-    ip_auth = models.GenericIPAddressField(verbose_name=_('IP-based authentication'),
-                                           unique=True, blank=True, null=True)
+    ip_auth = models.GenericIPAddressField(
+        verbose_name=_('IP-based authentication'),
+        unique=True, blank=True, null=True,
+    )
     badges = models.ManyToManyField(Badge, verbose_name=_('badges'), blank=True, related_name='users')
     display_badge = models.ForeignKey(Badge, verbose_name=_('display badge'), null=True, on_delete=models.SET_NULL)
-    organizations = SortedManyToManyField(Organization, verbose_name=_('organization'), blank=True,
-                                          related_name='members', related_query_name='member')
-    display_rank = models.CharField(max_length=10, default='user', verbose_name=_('display rank'),
-                                    choices=settings.VNOJ_DISPLAY_RANKS)
-    mute = models.BooleanField(verbose_name=_('comment mute'), help_text=_('Some users are at their best when silent.'),
-                               default=False)
-    is_unlisted = models.BooleanField(verbose_name=_('unlisted user'), help_text=_('User will not be ranked.'),
-                                      default=False)
-    ban_reason = models.TextField(null=True, blank=True,
-                                  help_text=_('Show to banned user in login page.'))
-    allow_tagging = models.BooleanField(verbose_name=_('Allow tagging'),
-                                        help_text=_('User will be allowed to tag problems.'),
-                                        default=True)
+    organizations = SortedManyToManyField(
+        Organization, verbose_name=_('organization'), blank=True,
+        related_name='members', related_query_name='member',
+    )
+    display_rank = models.CharField(
+        max_length=10, default='user', verbose_name=_('display rank'),
+        choices=settings.VNOJ_DISPLAY_RANKS,
+    )
+    mute = models.BooleanField(
+        verbose_name=_('comment mute'), help_text=_('Some users are at their best when silent.'),
+        default=False,
+    )
+    is_unlisted = models.BooleanField(
+        verbose_name=_('unlisted user'), help_text=_('User will not be ranked.'),
+        default=False,
+    )
+    ban_reason = models.TextField(
+        null=True, blank=True,
+        help_text=_('Show to banned user in login page.'),
+    )
+    allow_tagging = models.BooleanField(
+        verbose_name=_('Allow tagging'),
+        help_text=_('User will be allowed to tag problems.'),
+        default=True,
+    )
     rating = models.IntegerField(null=True, default=None)
-    user_script = models.TextField(verbose_name=_('user script'), default='', blank=True, max_length=65536,
-                                   help_text=_('User-defined JavaScript for site customization.'))
-    current_contest = models.OneToOneField('ContestParticipation', verbose_name=_('current contest'),
-                                           null=True, blank=True, related_name='+', on_delete=models.SET_NULL)
-    math_engine = models.CharField(verbose_name=_('math engine'), choices=MATH_ENGINES_CHOICES, max_length=4,
-                                   default=settings.MATHOID_DEFAULT_TYPE,
-                                   help_text=_('The rendering engine used to render math.'))
-    is_totp_enabled = models.BooleanField(verbose_name=_('TOTP 2FA enabled'), default=False,
-                                          help_text=_('Check to enable TOTP-based two-factor authentication.'))
-    is_webauthn_enabled = models.BooleanField(verbose_name=_('WebAuthn 2FA enabled'), default=False,
-                                              help_text=_('Check to enable WebAuthn-based two-factor authentication.'))
-    totp_key = EncryptedNullCharField(max_length=32, null=True, blank=True, verbose_name=_('TOTP key'),
-                                      help_text=_('32-character Base32-encoded key for TOTP.'),
-                                      validators=[RegexValidator('^$|^[A-Z2-7]{32}$',
-                                                                 _('TOTP key must be empty or Base32.'))])
-    scratch_codes = EncryptedNullCharField(max_length=255, null=True, blank=True, verbose_name=_('scratch codes'),
-                                           help_text=_('JSON array of 16-character Base32-encoded codes '
-                                                       'for scratch codes.'),
-                                           validators=[
-                                               RegexValidator(r'^(\[\])?$|^\[("[A-Z0-9]{16}", *)*"[A-Z0-9]{16}"\]$',
-                                                              _('Scratch codes must be empty or a JSON array of '
-                                                                '16-character Base32 codes.'))])
+    user_script = models.TextField(
+        verbose_name=_('user script'), default='', blank=True, max_length=65536,
+        help_text=_('User-defined JavaScript for site customization.'),
+    )
+    current_contest = models.OneToOneField(
+        'ContestParticipation', verbose_name=_('current contest'),
+        null=True, blank=True, related_name='+', on_delete=models.SET_NULL,
+    )
+    math_engine = models.CharField(
+        verbose_name=_('math engine'), choices=MATH_ENGINES_CHOICES, max_length=4,
+        default=settings.MATHOID_DEFAULT_TYPE,
+        help_text=_('The rendering engine used to render math.'),
+    )
+    is_totp_enabled = models.BooleanField(
+        verbose_name=_('TOTP 2FA enabled'), default=False,
+        help_text=_('Check to enable TOTP-based two-factor authentication.'),
+    )
+    is_webauthn_enabled = models.BooleanField(
+        verbose_name=_('WebAuthn 2FA enabled'), default=False,
+        help_text=_('Check to enable WebAuthn-based two-factor authentication.'),
+    )
+    totp_key = EncryptedNullCharField(
+        max_length=32, null=True, blank=True, verbose_name=_('TOTP key'),
+        help_text=_('32-character Base32-encoded key for TOTP.'),
+        validators=[
+            RegexValidator(
+                '^$|^[A-Z2-7]{32}$',
+                _('TOTP key must be empty or Base32.'),
+            ),
+        ],
+    )
+    scratch_codes = EncryptedNullCharField(
+        max_length=255, null=True, blank=True, verbose_name=_('scratch codes'),
+        help_text=_(
+            'JSON array of 16-character Base32-encoded codes '
+            'for scratch codes.',
+        ),
+        validators=[
+            RegexValidator(
+                r'^(\[\])?$|^\[("[A-Z0-9]{16}", *)*"[A-Z0-9]{16}"\]$',
+                _(
+                    'Scratch codes must be empty or a JSON array of '
+                    '16-character Base32 codes.',
+                ),
+            ),
+        ],
+    )
     last_totp_timecode = models.IntegerField(verbose_name=_('last TOTP timecode'), default=0)
-    api_token = models.CharField(max_length=64, null=True, verbose_name=_('API token'),
-                                 help_text=_('64-character hex-encoded API access token.'),
-                                 validators=[RegexValidator('^[a-f0-9]{64}$',
-                                                            _('API token must be None or hexadecimal'))])
-    notes = models.TextField(verbose_name=_('internal notes'), null=True, blank=True,
-                             help_text=_('Notes for administrators regarding this user.'))
+    api_token = models.CharField(
+        max_length=64, null=True, verbose_name=_('API token'),
+        help_text=_('64-character hex-encoded API access token.'),
+        validators=[
+            RegexValidator(
+                '^[a-f0-9]{64}$',
+                _('API token must be None or hexadecimal'),
+            ),
+        ],
+    )
+    notes = models.TextField(
+        verbose_name=_('internal notes'), null=True, blank=True,
+        help_text=_('Notes for administrators regarding this user.'),
+    )
     data_last_downloaded = models.DateTimeField(verbose_name=_('last data download time'), null=True, blank=True)
-    username_display_override = models.CharField(max_length=100, blank=True, verbose_name=_('display name override'),
-                                                 help_text=_('Name displayed in place of username.'))
+    username_display_override = models.CharField(
+        max_length=100, blank=True, verbose_name=_('display name override'),
+        help_text=_('Name displayed in place of username.'),
+    )
 
     @cached_property
     def organization(self):
@@ -266,8 +353,10 @@ class Profile(models.Model):
         bonus_function = settings.DMOJ_PP_BONUS_FUNCTION
         points = sum(data)
         problems = (
-            public_problems.filter(submission__user=self, submission__result='AC',
-                                   submission__case_points__gte=F('submission__case_total'))
+            public_problems.filter(
+                submission__user=self, submission__result='AC',
+                submission__case_points__gte=F('submission__case_total'),
+            )
             .values('id').distinct().count()
         )
         pp = sum(x * y for x, y in zip(table, data)) + bonus_function(problems)
@@ -285,7 +374,11 @@ class Profile(models.Model):
     calculate_points.alters_data = True
 
     def calculate_contribution_points(self):
-        from judge.models import BlogPost, Comment, Ticket
+        from judge.models import (
+            BlogPost,
+            Comment,
+            Ticket,
+        )
         old_pp = self.contribution_points
         # Because the aggregate function can return None
         # So we use `X or 0` to get 0 if X is None
@@ -426,8 +519,10 @@ class Profile(models.Model):
 
 
 class WebAuthnCredential(models.Model):
-    user = models.ForeignKey(Profile, verbose_name=_('user'), related_name='webauthn_credentials',
-                             on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        Profile, verbose_name=_('user'), related_name='webauthn_credentials',
+        on_delete=models.CASCADE,
+    )
     name = models.CharField(verbose_name=_('device name'), max_length=100)
     cred_id = models.CharField(verbose_name=_('credential ID'), max_length=255, unique=True)
     public_key = models.TextField(verbose_name=_('public key'))
@@ -458,14 +553,18 @@ class WebAuthnCredential(models.Model):
 
 class OrganizationRequest(models.Model):
     user = models.ForeignKey(Profile, verbose_name=_('user'), related_name='requests', on_delete=models.CASCADE)
-    organization = models.ForeignKey(Organization, verbose_name=_('organization'), related_name='requests',
-                                     on_delete=models.CASCADE)
+    organization = models.ForeignKey(
+        Organization, verbose_name=_('organization'), related_name='requests',
+        on_delete=models.CASCADE,
+    )
     time = models.DateTimeField(verbose_name=_('request time'), auto_now_add=True)
-    state = models.CharField(max_length=1, verbose_name=_('state'), choices=(
-        ('P', _('Pending')),
-        ('A', _('Approved')),
-        ('R', _('Rejected')),
-    ))
+    state = models.CharField(
+        max_length=1, verbose_name=_('state'), choices=(
+            ('P', _('Pending')),
+            ('A', _('Approved')),
+            ('R', _('Rejected')),
+        ),
+    )
     reason = models.TextField(verbose_name=_('reason'))
 
     class Meta:

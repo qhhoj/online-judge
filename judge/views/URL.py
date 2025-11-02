@@ -1,4 +1,7 @@
-from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from django.http import (
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+)
 from django.shortcuts import render
 
 from judge.forms import URLForm

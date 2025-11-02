@@ -1,6 +1,10 @@
 from django.test import TestCase
 
-from judge.models.tests.util import CommonDataMixin, create_blogpost, create_user
+from judge.models.tests.util import (
+    CommonDataMixin,
+    create_blogpost,
+    create_user,
+)
 
 
 class BlogPostTestCase(CommonDataMixin, TestCase):

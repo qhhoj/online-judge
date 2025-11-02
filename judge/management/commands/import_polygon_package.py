@@ -1,10 +1,16 @@
 from django.contrib.sites.models import Site
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import (
+    BaseCommand,
+    CommandError,
+)
 from django.urls import reverse
 from django.utils import translation
 
 from judge.models import Profile
-from judge.utils.codeforces_polygon import ImportPolygonError, PolygonImporter
+from judge.utils.codeforces_polygon import (
+    ImportPolygonError,
+    PolygonImporter,
+)
 
 
 class Command(BaseCommand):

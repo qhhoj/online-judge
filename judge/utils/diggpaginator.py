@@ -1,7 +1,12 @@
 import math
 from functools import reduce
 
-from django.core.paginator import InvalidPage, Page, Paginator
+from django.core.paginator import (
+    InvalidPage,
+    Page,
+    Paginator,
+)
+
 
 __all__ = (
     'InvalidPage',
@@ -209,9 +214,14 @@ class DiggPaginator(ExPaginator):
             self.num_pages, self.body, self.tail, self.padding, self.margin
 
         # put active page in middle of main range
-        main_range = list(map(int, [
-            math.floor(number - body / 2.0) + 1,  # +1 = shift odd body to right
-            math.floor(number + body / 2.0)]))
+        main_range = list(
+            map(
+                int, [
+                    math.floor(number - body / 2.0) + 1,  # +1 = shift odd body to right
+                    math.floor(number + body / 2.0),
+                ],
+            ),
+        )
         # adjust bounds
         if main_range[0] < 1:
             main_range = list(map(abs(main_range[0] - 1).__add__, main_range))
@@ -266,8 +276,10 @@ class DiggPaginator(ExPaginator):
         page.main_range = list(range(main_range[0], main_range[1] + 1))
         page.leading_range = leading
         page.trailing_range = trailing
-        page.page_range = reduce(lambda x, y: x + ((x and y) and [False]) + y,
-                                 [page.leading_range, page.main_range, page.trailing_range])
+        page.page_range = reduce(
+            lambda x, y: x + ((x and y) and [False]) + y,
+            [page.leading_range, page.main_range, page.trailing_range],
+        )
 
         page.__class__ = DiggPage
         return page
@@ -275,10 +287,15 @@ class DiggPaginator(ExPaginator):
 
 class DiggPage(Page):
     def __str__(self):
-        return ' ... '.join(filter(None, [
-            ' '.join(map(str, self.leading_range)),
-            ' '.join(map(str, self.main_range)),
-            ' '.join(map(str, self.trailing_range))]))
+        return ' ... '.join(
+            filter(
+                None, [
+                    ' '.join(map(str, self.leading_range)),
+                    ' '.join(map(str, self.main_range)),
+                    ' '.join(map(str, self.trailing_range)),
+                ],
+            ),
+        )
 
     @property
     def num_pages(self):

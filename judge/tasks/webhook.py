@@ -1,15 +1,29 @@
 import pytz
 from celery import shared_task
-from discord_webhook import DiscordEmbed, DiscordWebhook
+from discord_webhook import (
+    DiscordEmbed,
+    DiscordWebhook,
+)
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 
-
 from judge.jinja2.gravatar import gravatar
-from judge.models import BlogPost, Comment, Contest, Problem, Tag, TagProblem, Ticket, TicketMessage
+from judge.models import (
+    BlogPost,
+    Comment,
+    Contest,
+    Problem,
+    Tag,
+    TagProblem,
+    Ticket,
+    TicketMessage,
+)
 
-__all__ = ('on_new_ticket', 'on_new_comment', 'on_new_problem', 'on_new_tag_problem', 'on_new_tag', 'on_new_contest',
-           'on_new_blogpost', 'on_new_ticket_message')
+
+__all__ = (
+    'on_new_ticket', 'on_new_comment', 'on_new_problem', 'on_new_tag_problem', 'on_new_tag', 'on_new_contest',
+    'on_new_blogpost', 'on_new_ticket_message',
+)
 
 
 def get_webhook_url(event_name):

@@ -2,12 +2,22 @@ from collections import defaultdict
 from math import e
 
 from django.core.cache import cache
-from django.db.models import Case, Count, ExpressionWrapper, F, When
+from django.db.models import (
+    Case,
+    Count,
+    ExpressionWrapper,
+    F,
+    When,
+)
 from django.db.models.fields import FloatField
 from django.utils import timezone
 from django.utils.translation import gettext_noop
 
-from judge.models import Problem, Submission
+from judge.models import (
+    Problem,
+    Submission,
+)
+
 
 __all__ = ['contest_completed_ids', 'get_result_data', 'user_completed_ids', 'user_editable_ids', 'user_tester_ids']
 
@@ -24,8 +34,10 @@ def contest_completed_ids(participation):
     key = 'contest_complete:%d' % participation.id
     result = cache.get(key)
     if result is None:
-        result = set(participation.submissions.filter(submission__result='AC', points__gte=F('problem__points'))
-                     .values_list('problem__problem_id', flat=True).distinct())
+        result = set(
+            participation.submissions.filter(submission__result='AC', points__gte=F('problem__points'))
+            .values_list('problem__problem_id', flat=True).distinct(),
+        )
         cache.set(key, result, 86400)
     return result
 
@@ -34,8 +46,10 @@ def user_completed_ids(profile):
     key = 'user_complete:%d' % profile.id
     result = cache.get(key)
     if result is None:
-        result = set(Submission.objects.filter(user=profile, result='AC', case_points__gte=F('case_total'))
-                     .values_list('problem_id', flat=True).distinct())
+        result = set(
+            Submission.objects.filter(user=profile, result='AC', case_points__gte=F('case_total'))
+            .values_list('problem_id', flat=True).distinct(),
+        )
         cache.set(key, result, 86400)
     return result
 
@@ -67,8 +81,11 @@ def _get_result_data(results):
             {'code': 'WA', 'name': gettext_noop('Wrong'), 'count': results['WA']},
             {'code': 'CE', 'name': gettext_noop('Compile Error'), 'count': results['CE']},
             {'code': 'TLE', 'name': gettext_noop('Timeout'), 'count': results['TLE']},
-            {'code': 'ERR', 'name': gettext_noop('Error'),
-             'count': results['MLE'] + results['OLE'] + results['IR'] + results['RTE'] + results['AB'] + results['IE']},
+            {
+                'code': 'ERR', 'name': gettext_noop('Error'),  # noqa: E501
+                'count': results['MLE'] + results['OLE'] + results['IR'] + results['RTE'] + results['AB'] +
+                results['IE'],
+            },
             {'code': 'RJ', 'name': gettext_noop('Rejected'), 'count': results['RJ']},
         ],
         'total': sum(results.values()),
@@ -101,25 +118,35 @@ def hot_problems(duration, limit):
 
         qs = qs.annotate(unique_user_count=Count('submission__user', distinct=True))
         # fix braindamage in excluding CE
-        qs = qs.annotate(submission_volume=Count(Case(
-            When(submission__result='AC', then=1),
-            When(submission__result='WA', then=1),
-            When(submission__result='IR', then=1),
-            When(submission__result='RTE', then=1),
-            When(submission__result='TLE', then=1),
-            When(submission__result='OLE', then=1),
-            output_field=FloatField(),
-        )))
-        qs = qs.annotate(ac_volume=Count(Case(
-            When(submission__result='AC', then=1),
-            output_field=FloatField(),
-        )))
+        qs = qs.annotate(
+            submission_volume=Count(
+                Case(
+                    When(submission__result='AC', then=1),
+                    When(submission__result='WA', then=1),
+                    When(submission__result='IR', then=1),
+                    When(submission__result='RTE', then=1),
+                    When(submission__result='TLE', then=1),
+                    When(submission__result='OLE', then=1),
+                    output_field=FloatField(),
+                ),
+            ),
+        )
+        qs = qs.annotate(
+            ac_volume=Count(
+                Case(
+                    When(submission__result='AC', then=1),
+                    output_field=FloatField(),
+                ),
+            ),
+        )
         qs = qs.filter(unique_user_count__gt=max(mx / 3.0, 1))
 
-        qs = qs.annotate(ordering=ExpressionWrapper(
-            0.5 * F('points') * (0.4 * F('ac_volume') / F('submission_volume') + 0.6 * F('ac_rate')) +
-            100 * e ** (F('unique_user_count') / mx), output_field=FloatField(),
-        )).order_by('-ordering').defer('description')[:limit]
+        qs = qs.annotate(
+            ordering=ExpressionWrapper(
+                0.5 * F('points') * (0.4 * F('ac_volume') / F('submission_volume') + 0.6 * F('ac_rate')) +
+                100 * e ** (F('unique_user_count') / mx), output_field=FloatField(),
+            ),
+        ).order_by('-ordering').defer('description')[:limit]
 
         cache.set(cache_key, qs, 900)
     return qs

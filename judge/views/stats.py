@@ -2,15 +2,32 @@ import bisect
 import datetime
 
 from django.conf import settings
-from django.db.models import Count, DateField, F, FloatField, Q
+from django.db.models import (
+    Count,
+    DateField,
+    F,
+    FloatField,
+    Q,
+)
 from django.db.models.functions import Cast
-from django.http import HttpResponseForbidden, JsonResponse
+from django.http import (
+    HttpResponseForbidden,
+    JsonResponse,
+)
 from django.http.response import HttpResponseBadRequest
 from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext_lazy as _
 
-from judge.models import Language, Problem, Submission
-from judge.utils.stats import get_bar_chart, get_pie_chart, get_stacked_bar_chart
+from judge.models import (
+    Language,
+    Problem,
+    Submission,
+)
+from judge.utils.stats import (
+    get_bar_chart,
+    get_pie_chart,
+    get_stacked_bar_chart,
+)
 
 
 def generate_day_labels(start_date, end_date, utc_offset):

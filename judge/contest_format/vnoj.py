@@ -7,12 +7,20 @@ from django.template.defaultfilters import floatformat
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext as _, gettext_lazy, ngettext
+from django.utils.translation import gettext as _
+from django.utils.translation import (
+    gettext_lazy,
+    ngettext,
+)
 
 from judge.contest_format.default import DefaultContestFormat
 from judge.contest_format.registry import register_contest_format
-from judge.timezone import from_database_time, to_database_time
+from judge.timezone import (
+    from_database_time,
+    to_database_time,
+)
 from judge.utils.timedelta import nice_repr
+
 
 ParticipationInfo = namedtuple('ParticipationInfo', 'cumtime score tiebreaker format_data')
 
@@ -90,8 +98,12 @@ class VNOJContestFormat(DefaultContestFormat):
                 cursor.execute(DEFAULT_RANKING_SQL, (participation.id, participation.id))
             else:
                 db_time = to_database_time(frozen_time)
-                cursor.execute(FROZEN_RANKING_SQL, (participation.id, db_time,
-                                                    participation.id, db_time))
+                cursor.execute(
+                    FROZEN_RANKING_SQL, (
+                        participation.id, db_time,
+                        participation.id, db_time,
+                    ),
+                )
 
             for points, time, prob in cursor.fetchall():
                 time = from_database_time(time)
@@ -196,8 +208,10 @@ class VNOJContestFormat(DefaultContestFormat):
 
         if format_data:
             first_solved = first_solves.get(str(contest_problem.id), None) == participation.id
-            url = reverse('contest_user_submissions',
-                          args=[self.contest.key, participation.user.user.username, contest_problem.problem.code])
+            url = reverse(
+                'contest_user_submissions',
+                args=[self.contest.key, participation.user.user.username, contest_problem.problem.code],
+            )
 
             if not frozen:
                 # Fast path for non-frozen contests
@@ -244,8 +258,10 @@ class VNOJContestFormat(DefaultContestFormat):
 
             points = floatformat(format_data[prefix + 'points'], -self.contest.points_precision)
             time = nice_repr(timedelta(seconds=format_data[prefix + 'time']), 'noday')
-            pending = format_html(' <small style="color:black;">[{pending}]</small>',
-                                  pending=floatformat(format_data['pending'])) if has_pending else ''
+            pending = format_html(
+                ' <small style="color:black;">[{pending}]</small>',
+                pending=floatformat(format_data['pending']),
+            ) if has_pending else ''
 
             if has_pending:
                 time = '?'
@@ -281,8 +297,10 @@ class VNOJContestFormat(DefaultContestFormat):
             cumtime = participation.cumtime
         return format_html(
             '<td class="user-points"><a href="{url}">{points}<div class="solving-time">{cumtime}</div></a></td>',
-            url=reverse('contest_all_user_submissions',
-                        args=[self.contest.key, participation.user.user.username]),
+            url=reverse(
+                'contest_all_user_submissions',
+                args=[self.contest.key, participation.user.user.username],
+            ),
             points=floatformat(points, -self.contest.points_precision),
             cumtime=nice_repr(timedelta(seconds=cumtime), 'noday'),
         )
@@ -300,15 +318,19 @@ class VNOJContestFormat(DefaultContestFormat):
             if self.config['LSO']:
                 yield _('Ties will be broken by the time of the last score altering submission (including penalty).')
             else:
-                yield _('Ties will be broken by the sum of the last score altering submission time on problems with '
-                        'a non-zero score (including penalty), followed by the time of the last score altering '
-                        'submission.')
+                yield _(
+                    'Ties will be broken by the sum of the last score altering submission time on problems with '
+                    'a non-zero score (including penalty), followed by the time of the last score altering '
+                    'submission.',
+                )
         else:
             if self.config['LSO']:
                 yield _('Ties will be broken by the time of the last score altering submission.')
             else:
-                yield _('Ties will be broken by the sum of the last score altering submission time on problems with '
-                        'a non-zero score, followed by the time of the last score altering submission.')
+                yield _(
+                    'Ties will be broken by the sum of the last score altering submission time on problems with '
+                    'a non-zero score, followed by the time of the last score altering submission.',
+                )
 
         if self.contest.frozen_last_minutes:
             yield ngettext(

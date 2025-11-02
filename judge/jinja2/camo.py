@@ -1,5 +1,6 @@
 from judge.utils.camo import client as camo_client
-from . import registry
+
+from . import registry  # noqa: I202
 
 
 @registry.filter

@@ -1,5 +1,9 @@
 import unicodedata
-from typing import AnyStr, Optional, overload
+from typing import (
+    AnyStr,
+    Optional,
+    overload,
+)
 
 
 @overload

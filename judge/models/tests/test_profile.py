@@ -8,7 +8,11 @@ from django.utils import timezone
 from django.utils.encoding import force_bytes
 
 from judge.models import Profile
-from judge.models.tests.util import CommonDataMixin, create_contest, create_contest_participation
+from judge.models.tests.util import (
+    CommonDataMixin,
+    create_contest,
+    create_contest_participation,
+)
 
 
 class OrganizationTestCase(CommonDataMixin, TestCase):

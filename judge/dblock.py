@@ -1,14 +1,19 @@
 from itertools import chain
 
-from django.db import connection, transaction
+from django.db import (
+    connection,
+    transaction,
+)
 
 
 class LockModel(object):
     def __init__(self, write, read=()):
-        self.tables = ', '.join(chain(
-            ('`%s` WRITE' % model._meta.db_table for model in write),
-            ('`%s` READ' % model._meta.db_table for model in read),
-        ))
+        self.tables = ', '.join(
+            chain(
+                ('`%s` WRITE' % model._meta.db_table for model in write),
+                ('`%s` READ' % model._meta.db_table for model in read),
+            ),
+        )
         self.cursor = connection.cursor()
 
     def __enter__(self):

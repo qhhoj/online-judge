@@ -1,9 +1,20 @@
 from bisect import bisect
-from math import pi, sqrt, tanh
-from operator import attrgetter, itemgetter
+from math import (
+    pi,
+    sqrt,
+    tanh,
+)
+from operator import (
+    attrgetter,
+    itemgetter,
+)
 
 from django.db import transaction
-from django.db.models import Count, OuterRef, Subquery
+from django.db.models import (
+    Count,
+    OuterRef,
+    Subquery,
+)
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
@@ -140,16 +151,25 @@ def recalculate_ratings(ranking, old_mean, times_ranked, historical_p):
 
 
 def rate_contest(contest):
-    from judge.models import Rating, Profile
+    from judge.models import (
+        Profile,
+        Rating,
+    )
 
     rating_subquery = Rating.objects.filter(user=OuterRef('user'))
     rating_sorted = rating_subquery.order_by('-contest__end_time')
     users = contest.users.order_by('is_disqualified', '-score', 'cumtime', 'tiebreaker') \
-        .annotate(submissions=Count('submission'),
-                  last_rating=Coalesce(Subquery(rating_sorted.values('rating')[:1]), RATING_INIT),
-                  last_mean=Coalesce(Subquery(rating_sorted.values('mean')[:1]), MEAN_INIT),
-                  times=Coalesce(Subquery(rating_subquery.order_by().values('user_id')
-                                          .annotate(count=Count('id')).values('count')), 0)) \
+        .annotate(
+            submissions=Count('submission'),
+            last_rating=Coalesce(Subquery(rating_sorted.values('rating')[:1]), RATING_INIT),
+            last_mean=Coalesce(Subquery(rating_sorted.values('mean')[:1]), MEAN_INIT),
+            times=Coalesce(
+                Subquery(
+                    rating_subquery.order_by().values('user_id')
+                    .annotate(count=Count('id')).values('count'),
+                ), 0,
+            ),
+    ) \
         .exclude(user_id__in=contest.rate_exclude.all()) \
         .filter(virtual=0).values('id', 'user_id', 'score', 'cumtime', 'tiebreaker', 'last_mean', 'times')
     if not contest.rate_all:
@@ -177,23 +197,34 @@ def rate_contest(contest):
     rating, mean, performance = recalculate_ratings(ranking, old_mean, times_ranked, historical_p)
 
     now = timezone.now()
-    ratings = [Rating(user_id=i, contest=contest, rating=r, mean=m, performance=perf,
-                      last_rated=now, participation_id=pid, rank=z)
-               for i, pid, r, m, perf, z in zip(user_ids, participation_ids, rating, mean, performance, ranking)]
+    ratings = [
+        Rating(
+            user_id=i, contest=contest, rating=r, mean=m, performance=perf,
+            last_rated=now, participation_id=pid, rank=z,
+        )
+        for i, pid, r, m, perf, z in zip(user_ids, participation_ids, rating, mean, performance, ranking)
+    ]
     with transaction.atomic():
         Rating.objects.bulk_create(ratings)
 
         Profile.objects.filter(contest_history__contest=contest, contest_history__virtual=0).update(
-            rating=Subquery(Rating.objects.filter(user=OuterRef('id'))
-                            .order_by('-contest__end_time').values('rating')[:1]))
+            rating=Subquery(
+                Rating.objects.filter(user=OuterRef('id'))
+                .order_by('-contest__end_time').values('rating')[:1],
+            ),
+        )
 
 
-RATING_LEVELS = ['Newbie', 'Pupil', 'Specialist', 'Expert', 'Candidate Master', 'Master', 'International Master',
-                 'Grandmaster', 'International Grandmaster', 'Legendary Grandmaster']
+RATING_LEVELS = [
+    'Newbie', 'Pupil', 'Specialist', 'Expert', 'Candidate Master', 'Master', 'International Master',
+    'Grandmaster', 'International Grandmaster', 'Legendary Grandmaster',
+]
 RATING_VALUES = [1200, 1400, 1600, 1900, 2200, 2300, 2400, 2600, 2900]
-RATING_CLASS = ['rate-newbie', 'rate-pupil', 'rate-specialist', 'rate-expert', 'rate-candidate-master', 'rate-master',
-                'rate-international-master', 'rate-grandmaster', 'rate-international-grandmaster',
-                'rate-legendary-grandmaster']
+RATING_CLASS = [
+    'rate-newbie', 'rate-pupil', 'rate-specialist', 'rate-expert', 'rate-candidate-master', 'rate-master',
+    'rate-international-master', 'rate-grandmaster', 'rate-international-grandmaster',
+    'rate-legendary-grandmaster',
+]
 
 
 def rating_level(rating):

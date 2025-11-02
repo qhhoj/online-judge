@@ -2,7 +2,11 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from moss import *
 
-from judge.models import Contest, ContestParticipation, Submission
+from judge.models import (
+    Contest,
+    ContestParticipation,
+    Submission,
+)
 
 
 class Command(BaseCommand):
@@ -40,8 +44,10 @@ class Command(BaseCommand):
                     print('<no submissions>')
                     continue
 
-                moss_call = MOSS(moss_api_key, language=moss_lang, matching_file_limit=100,
-                                 comment='%s - %s' % (contest, problem.code))
+                moss_call = MOSS(
+                    moss_api_key, language=moss_lang, matching_file_limit=100,
+                    comment='%s - %s' % (contest, problem.code),
+                )
 
                 users = set()
 

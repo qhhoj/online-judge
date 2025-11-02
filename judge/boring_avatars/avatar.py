@@ -5,6 +5,7 @@ from judge.boring_avatars.avatar_pixel import AvatarPixel
 from judge.boring_avatars.avatar_ring import AvatarRing
 from judge.boring_avatars.avatar_sunset import AvatarSunset
 
+
 DEFAULT_GENRE = 'beam'
 MATCH_GENRE_FROM_STRING = {
     'bauhaus': AvatarBauhaus,

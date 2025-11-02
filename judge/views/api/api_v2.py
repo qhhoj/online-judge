@@ -1,20 +1,46 @@
 from operator import attrgetter
 
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
-from django.db.models import Count, F, OuterRef, Prefetch, Q, Subquery
-from django.http import Http404, JsonResponse
+from django.core.exceptions import (
+    ObjectDoesNotExist,
+    PermissionDenied,
+    ValidationError,
+)
+from django.db.models import (
+    Count,
+    F,
+    OuterRef,
+    Prefetch,
+    Q,
+    Subquery,
+)
+from django.http import (
+    Http404,
+    JsonResponse,
+)
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.views.generic.detail import BaseDetailView
 from django.views.generic.list import BaseListView
 
 from judge.models import (
-    Contest, ContestParticipation, ContestTag, Judge, Language, Organization, Problem, ProblemType, Profile, Rating,
+    Contest,
+    ContestParticipation,
+    ContestTag,
+    Judge,
+    Language,
+    Organization,
+    Problem,
+    ProblemType,
+    Profile,
+    Rating,
     Submission,
 )
 from judge.utils.infinite_paginator import InfinitePaginationMixin
-from judge.utils.raw_sql import join_sql_subquery, use_straight_join
+from judge.utils.raw_sql import (
+    join_sql_subquery,
+    use_straight_join,
+)
 from judge.views.submission import group_test_cases
 
 
@@ -101,10 +127,12 @@ class APIMixin:
         if exception_type in caught_exceptions:
             status_code, message = caught_exceptions[exception_type]
             return JsonResponse(
-                self.get_base_response(error={
-                    'code': status_code,
-                    'message': message,
-                }),
+                self.get_base_response(
+                    error={
+                        'code': status_code,
+                        'message': message,
+                    },
+                ),
                 status=status_code,
             )
         else:
@@ -149,9 +177,11 @@ class APIListView(APIMixin, InfinitePaginationMixin, BaseListView):
                     queryset = queryset.filter(**filter_name.to_filter(self.request.GET.get(key)))
                 else:
                     # May raise ValueError or ValidationError, but is caught in APIMixin
-                    queryset = queryset.filter(**{
-                        filter_name: self.request.GET.get(key),
-                    })
+                    queryset = queryset.filter(
+                        **{
+                            filter_name: self.request.GET.get(key),
+                        },
+                    )
                 self.used_basic_filters.add(key)
 
         for key, filter_name in self.list_filters:
@@ -160,9 +190,11 @@ class APIListView(APIMixin, InfinitePaginationMixin, BaseListView):
                     queryset = queryset.filter(**filter_name.to_filter(self.request.GET.getlist(key)))
                 else:
                     # May raise ValueError or ValidationError, but is caught in APIMixin
-                    queryset = queryset.filter(**{
-                        filter_name + '__in': self.request.GET.getlist(key),
-                    })
+                    queryset = queryset.filter(
+                        **{
+                            filter_name + '__in': self.request.GET.getlist(key),
+                        },
+                    )
                 self.used_list_filters.add(key)
 
         return queryset
@@ -285,9 +317,11 @@ class APIContestDetail(APIDetailView):
             'has_rating': contest.ratings.exists(),
             'rating_floor': contest.rating_floor,
             'rating_ceiling': contest.rating_ceiling,
-            'hidden_scoreboard': contest.scoreboard_visibility in (contest.SCOREBOARD_AFTER_CONTEST,
-                                                                   contest.SCOREBOARD_AFTER_PARTICIPATION,
-                                                                   contest.SCOREBOARD_HIDDEN),
+            'hidden_scoreboard': contest.scoreboard_visibility in (
+                contest.SCOREBOARD_AFTER_CONTEST,
+                contest.SCOREBOARD_AFTER_PARTICIPATION,
+                contest.SCOREBOARD_HIDDEN,
+            ),
             'scoreboard_visibility': contest.scoreboard_visibility,
             'is_organization_private': contest.is_organization_private,
             'organizations': list(

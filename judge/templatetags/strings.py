@@ -1,5 +1,6 @@
 from django import template
 
+
 register = template.Library()
 
 
@@ -16,6 +17,3 @@ def cutoff(value, length):
 @register.filter(name='roundfloat')
 def roundfloat(value, at):
     return str(round(value, int(at)))
-
-
-

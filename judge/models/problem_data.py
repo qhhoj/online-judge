@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 from judge.utils.problem_data import ProblemDataStorage
 
+
 __all__ = ['problem_data_storage', 'problem_directory_file', 'ProblemData', 'ProblemTestCase', 'CHECKERS']
 
 problem_data_storage = ProblemDataStorage()
@@ -53,12 +54,18 @@ CUSTOM_CHECKERS = (
 
 
 class ProblemData(models.Model):
-    problem = models.OneToOneField('Problem', verbose_name=_('problem'), related_name='data_files',
-                                   on_delete=models.CASCADE)
-    zipfile = models.FileField(verbose_name=_('data zip file'), storage=problem_data_storage, null=True, blank=True,
-                               upload_to=problem_directory_file)
-    generator = models.FileField(verbose_name=_('generator file'), storage=problem_data_storage, null=True, blank=True,
-                                 upload_to=problem_directory_file)
+    problem = models.OneToOneField(
+        'Problem', verbose_name=_('problem'), related_name='data_files',
+        on_delete=models.CASCADE,
+    )
+    zipfile = models.FileField(
+        verbose_name=_('data zip file'), storage=problem_data_storage, null=True, blank=True,
+        upload_to=problem_directory_file,
+    )
+    generator = models.FileField(
+        verbose_name=_('generator file'), storage=problem_data_storage, null=True, blank=True,
+        upload_to=problem_directory_file,
+    )
     output_prefix = models.IntegerField(verbose_name=_('output prefix length'), blank=True, null=True)
     output_limit = models.IntegerField(verbose_name=_('output limit length'), blank=True, null=True)
     feedback = models.TextField(verbose_name=_('init.yml generation feedback'), blank=True)
@@ -66,31 +73,43 @@ class ProblemData(models.Model):
     grader = models.CharField(max_length=30, verbose_name=_('Grader'), choices=GRADERS, default='standard')
     unicode = models.BooleanField(verbose_name=_('enable unicode'), null=True, blank=True)
     nobigmath = models.BooleanField(verbose_name=_('disable bigInteger / bigDecimal'), null=True, blank=True)
-    checker_args = models.TextField(verbose_name=_('checker arguments'), blank=True,
-                                    help_text=_('Checker arguments as a JSON object.'))
+    checker_args = models.TextField(
+        verbose_name=_('checker arguments'), blank=True,
+        help_text=_('Checker arguments as a JSON object.'),
+    )
 
-    custom_checker = models.FileField(verbose_name=_('custom checker file'), storage=problem_data_storage,
-                                      null=True,
-                                      blank=True,
-                                      upload_to=problem_directory_file,
-                                      validators=[FileExtensionValidator(
-                                          allowed_extensions=['cpp', 'pas', 'java', 'py'],
-                                      )])
+    custom_checker = models.FileField(
+        verbose_name=_('custom checker file'), storage=problem_data_storage,
+        null=True,
+        blank=True,
+        upload_to=problem_directory_file,
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=['cpp', 'pas', 'java', 'py'],
+            ),
+        ],
+    )
 
-    custom_grader = models.FileField(verbose_name=_('custom grader file'), storage=problem_data_storage,
-                                     null=True,
-                                     blank=True,
-                                     upload_to=problem_directory_file,
-                                     validators=[FileExtensionValidator(allowed_extensions=['cpp'])])
+    custom_grader = models.FileField(
+        verbose_name=_('custom grader file'), storage=problem_data_storage,
+        null=True,
+        blank=True,
+        upload_to=problem_directory_file,
+        validators=[FileExtensionValidator(allowed_extensions=['cpp'])],
+    )
 
-    custom_header = models.FileField(verbose_name=_('custom header file'), storage=problem_data_storage,
-                                     null=True,
-                                     blank=True,
-                                     upload_to=problem_directory_file,
-                                     validators=[FileExtensionValidator(allowed_extensions=['h'])])
+    custom_header = models.FileField(
+        verbose_name=_('custom header file'), storage=problem_data_storage,
+        null=True,
+        blank=True,
+        upload_to=problem_directory_file,
+        validators=[FileExtensionValidator(allowed_extensions=['h'])],
+    )
 
-    grader_args = models.TextField(verbose_name=_('grader arguments'), blank=True,
-                                   help_text=_('grader arguments as a JSON object'))
+    grader_args = models.TextField(
+        verbose_name=_('grader arguments'), blank=True,
+        help_text=_('grader arguments as a JSON object'),
+    )
 
     def has_yml(self):
         return problem_data_storage.exists('%s/init.yml' % self.problem.code)
@@ -116,14 +135,20 @@ class ProblemData(models.Model):
 
 
 class ProblemTestCase(models.Model):
-    dataset = models.ForeignKey('Problem', verbose_name=_('problem data set'), related_name='cases',
-                                on_delete=models.CASCADE)
+    dataset = models.ForeignKey(
+        'Problem', verbose_name=_('problem data set'), related_name='cases',
+        on_delete=models.CASCADE,
+    )
     order = models.IntegerField(verbose_name=_('case position'))
-    type = models.CharField(max_length=1, verbose_name=_('case type'),
-                            choices=(('C', _('Normal case')),
-                                     ('S', _('Batch start')),
-                                     ('E', _('Batch end'))),
-                            default='C')
+    type = models.CharField(
+        max_length=1, verbose_name=_('case type'),
+        choices=(
+            ('C', _('Normal case')),
+            ('S', _('Batch start')),
+            ('E', _('Batch end')),
+        ),
+        default='C',
+    )
     input_file = models.CharField(max_length=100, verbose_name=_('input file name'), blank=True)
     output_file = models.CharField(max_length=100, verbose_name=_('output file name'), blank=True)
     generator_args = models.TextField(verbose_name=_('generator arguments'), blank=True)
@@ -132,5 +157,7 @@ class ProblemTestCase(models.Model):
     output_prefix = models.IntegerField(verbose_name=_('output prefix length'), blank=True, null=True)
     output_limit = models.IntegerField(verbose_name=_('output limit length'), blank=True, null=True)
     checker = models.CharField(max_length=10, verbose_name=_('checker'), choices=CHECKERS, blank=True)
-    checker_args = models.TextField(verbose_name=_('checker arguments'), blank=True,
-                                    help_text=_('Checker arguments as a JSON object.'))
+    checker_args = models.TextField(
+        verbose_name=_('checker arguments'), blank=True,
+        help_text=_('Checker arguments as a JSON object.'),
+    )

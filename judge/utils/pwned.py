@@ -44,6 +44,7 @@ from django.utils.translation import gettext as _
 
 from judge.utils.unicode import utf8bytes
 
+
 log = logging.getLogger(__name__)
 
 API_ENDPOINT = 'https://api.pwnedpasswords.com/range/{}'

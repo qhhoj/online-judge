@@ -1,25 +1,58 @@
-from adminsortable2.admin import SortableAdminBase, SortableInlineAdminMixin
+from adminsortable2.admin import (
+    SortableAdminBase,
+    SortableInlineAdminMixin,
+)
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
-from django.db import connection, transaction
-from django.db.models import Q, TextField
-from django.forms import ModelForm, ModelMultipleChoiceField
-from django.http import Http404, HttpResponseRedirect
+from django.db import (
+    connection,
+    transaction,
+)
+from django.db.models import (
+    Q,
+    TextField,
+)
+from django.forms import (
+    ModelForm,
+    ModelMultipleChoiceField,
+)
+from django.http import (
+    Http404,
+    HttpResponseRedirect,
+)
 from django.shortcuts import get_object_or_404
-from django.urls import path, reverse, reverse_lazy
+from django.urls import (
+    path,
+    reverse,
+    reverse_lazy,
+)
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.html import format_html
-from django.utils.translation import gettext_lazy as _, ngettext
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
 from django.views.decorators.http import require_POST
 from reversion.admin import VersionAdmin
 
 from django_ace import AceWidget
-from judge.models import Contest, ContestAnnouncement, ContestProblem, ContestSubmission, Profile, Rating, Submission
+from judge.models import (
+    Contest,
+    ContestAnnouncement,
+    ContestProblem,
+    ContestSubmission,
+    Profile,
+    Rating,
+    Submission,
+)
 from judge.ratings import rate_contest
 from judge.utils.views import NoBatchDeleteMixin
-from judge.widgets import AdminHeavySelect2MultipleWidget, AdminHeavySelect2Widget, AdminMartorWidget, \
-    AdminSelect2MultipleWidget, AdminSelect2Widget
+from judge.widgets import (
+    AdminHeavySelect2MultipleWidget,
+    AdminHeavySelect2Widget,
+    AdminMartorWidget,
+    AdminSelect2MultipleWidget,
+    AdminSelect2Widget,
+)
 
 
 class AdminHeavySelect2Widget(AdminHeavySelect2Widget):
@@ -33,7 +66,8 @@ class ContestTagForm(ModelForm):
         label=_('Included contests'),
         queryset=Contest.objects.all(),
         required=False,
-        widget=AdminHeavySelect2MultipleWidget(data_view='contest_select2'))
+        widget=AdminHeavySelect2MultipleWidget(data_view='contest_select2'),
+    )
 
 
 class ContestTagAdmin(admin.ModelAdmin):
@@ -66,8 +100,10 @@ class ContestProblemInline(SortableInlineAdminMixin, admin.TabularInline):
     model = ContestProblem
     verbose_name = _('Problem')
     verbose_name_plural = _('Problems')
-    fields = ('problem', 'points', 'partial', 'is_pretested', 'max_submissions', 'output_prefix_override', 'order',
-              'rejudge_column', 'rescore_column')
+    fields = (
+        'problem', 'points', 'partial', 'is_pretested', 'max_submissions', 'output_prefix_override', 'order',
+        'rejudge_column', 'rescore_column',
+    )
     readonly_fields = ('rejudge_column', 'rescore_column')
     form = ContestProblemInlineForm
 
@@ -75,15 +111,19 @@ class ContestProblemInline(SortableInlineAdminMixin, admin.TabularInline):
     def rejudge_column(self, obj):
         if obj.id is None:
             return ''
-        return format_html('<a class="button rejudge-link action-link" href="{0}">{1}</a>',
-                           reverse('admin:judge_contest_rejudge', args=(obj.contest.id, obj.id)), _('Rejudge'))
+        return format_html(
+            '<a class="button rejudge-link action-link" href="{0}">{1}</a>',
+            reverse('admin:judge_contest_rejudge', args=(obj.contest.id, obj.id)), _('Rejudge'),
+        )
 
     @admin.display(description='')
     def rescore_column(self, obj):
         if obj.id is None:
             return ''
-        return format_html('<a class="button rescore-link action-link" href="{}">Rescore</a>',
-                           reverse('admin:judge_contest_rescore', args=(obj.contest.id, obj.id)))
+        return format_html(
+            '<a class="button rescore-link action-link" href="{}">Rescore</a>',
+            reverse('admin:judge_contest_rescore', args=(obj.contest.id, obj.id)),
+        )
 
 
 class ContestAnnouncementInlineForm(ModelForm):
@@ -102,8 +142,10 @@ class ContestAnnouncementInline(admin.StackedInline):
     def resend(self, obj):
         if obj.id is None:
             return 'Not available'
-        return format_html('<a class="button resend-link action-link" href="{}">Resend</a>',
-                           reverse('admin:judge_contest_resend', args=(obj.contest.id, obj.id)))
+        return format_html(
+            '<a class="button resend-link action-link" href="{}">Resend</a>',
+            reverse('admin:judge_contest_resend', args=(obj.contest.id, obj.id)),
+        )
 
 
 class ContestForm(ModelForm):
@@ -132,14 +174,20 @@ class ContestForm(ModelForm):
             'authors': AdminHeavySelect2MultipleWidget(data_view='profile_select2'),
             'curators': AdminHeavySelect2MultipleWidget(data_view='profile_select2'),
             'testers': AdminHeavySelect2MultipleWidget(data_view='profile_select2'),
-            'private_contestants': AdminHeavySelect2MultipleWidget(data_view='profile_select2',
-                                                                   attrs={'style': 'width: 100%'}),
+            'private_contestants': AdminHeavySelect2MultipleWidget(
+                data_view='profile_select2',
+                attrs={'style': 'width: 100%'},
+            ),
             'organizations': AdminHeavySelect2MultipleWidget(data_view='organization_select2'),
             'tags': AdminSelect2MultipleWidget,
-            'banned_users': AdminHeavySelect2MultipleWidget(data_view='profile_select2',
-                                                            attrs={'style': 'width: 100%'}),
-            'view_contest_scoreboard': AdminHeavySelect2MultipleWidget(data_view='profile_select2',
-                                                                       attrs={'style': 'width: 100%'}),
+            'banned_users': AdminHeavySelect2MultipleWidget(
+                data_view='profile_select2',
+                attrs={'style': 'width: 100%'},
+            ),
+            'view_contest_scoreboard': AdminHeavySelect2MultipleWidget(
+                data_view='profile_select2',
+                attrs={'style': 'width: 100%'},
+            ),
             'description': AdminMartorWidget(attrs={'data-markdownfy-url': reverse_lazy('contest_preview')}),
             'banned_judges': AdminSelect2MultipleWidget(attrs={'style': 'width: 100%'}),
         }
@@ -148,23 +196,43 @@ class ContestForm(ModelForm):
 class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
     fieldsets = (
         (None, {'fields': ('key', 'name', 'authors', 'curators', 'testers')}),
-        (_('Settings'), {'fields': ('is_visible', 'use_clarifications', 'push_announcements', 'disallow_virtual',
-                                    'hide_problem_tags', 'hide_problem_authors', 'show_short_display',
-                                    'run_pretests_only', 'locked_after', 'scoreboard_visibility',
-                                    'ranking_access_code', 'scoreboard_cache_timeout', 'show_submission_list',
-                                    'points_precision', 'banned_judges')}),
-        (_('Scheduling'), {'fields': ('start_time', 'end_time', 'registration_start', 'registration_end',
-                                      'time_limit')}),
+        (
+            _('Settings'), {
+                'fields': (
+                    'is_visible', 'use_clarifications', 'push_announcements', 'disallow_virtual',
+                    'hide_problem_tags', 'hide_problem_authors', 'show_short_display',
+                    'run_pretests_only', 'locked_after', 'scoreboard_visibility',
+                    'ranking_access_code', 'scoreboard_cache_timeout', 'show_submission_list',
+                    'points_precision', 'banned_judges',
+                ),
+            },
+        ),
+        (
+            _('Scheduling'), {
+                'fields': (
+                    'start_time', 'end_time', 'registration_start', 'registration_end',
+                    'time_limit',
+                ),
+            },
+        ),
         (_('Details'), {'fields': ('description', 'og_image', 'logo_override_image', 'tags', 'summary')}),
         (_('Format'), {'fields': ('format_name', 'frozen_last_minutes', 'format_config', 'problem_label_script')}),
         (_('Rating'), {'fields': ('is_rated', 'rate_all', 'rating_floor', 'rating_ceiling', 'rate_exclude')}),
-        (_('Access'), {'fields': ('access_code', 'is_private', 'private_contestants', 'is_organization_private',
-                                  'organizations', 'view_contest_scoreboard')}),
+        (
+            _('Access'), {
+                'fields': (
+                    'access_code', 'is_private', 'private_contestants', 'is_organization_private',
+                    'organizations', 'view_contest_scoreboard',
+                ),
+            },
+        ),
         (_('Justice'), {'fields': ('banned_users',)}),
         (_('Ranking'), {'fields': ('csv_ranking',)}),
     )
-    list_display = ('key', 'name', 'is_visible', 'is_rated', 'locked_after', 'start_time', 'end_time', 'time_limit',
-                    'user_count')
+    list_display = (
+        'key', 'name', 'is_visible', 'is_rated', 'locked_after', 'start_time', 'end_time', 'time_limit',
+        'user_count',
+    )
     search_fields = ('key', 'name')
     inlines = [ContestProblemInline, ContestAnnouncementInline]
     actions_on_top = True
@@ -253,43 +321,61 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
         if not request.user.has_perm('judge.change_contest_visibility'):
             queryset = queryset.filter(Q(is_private=True) | Q(is_organization_private=True))
         count = queryset.update(is_visible=True)
-        self.message_user(request, ngettext('%d contest successfully marked as visible.',
-                                            '%d contests successfully marked as visible.',
-                                            count) % count)
+        self.message_user(
+            request, ngettext(
+                '%d contest successfully marked as visible.',
+                '%d contests successfully marked as visible.',
+                count,
+            ) % count,
+        )
 
     @admin.display(description=_('Mark contests as hidden'))
     def make_hidden(self, request, queryset):
         if not request.user.has_perm('judge.change_contest_visibility'):
             queryset = queryset.filter(Q(is_private=True) | Q(is_organization_private=True))
         count = queryset.update(is_visible=True)
-        self.message_user(request, ngettext('%d contest successfully marked as hidden.',
-                                            '%d contests successfully marked as hidden.',
-                                            count) % count)
+        self.message_user(
+            request, ngettext(
+                '%d contest successfully marked as hidden.',
+                '%d contests successfully marked as hidden.',
+                count,
+            ) % count,
+        )
 
     @admin.display(description=_('Lock contest submissions'))
     def set_locked(self, request, queryset):
         for row in queryset:
             self.set_locked_after(row, timezone.now())
         count = queryset.count()
-        self.message_user(request, ngettext('%d contest successfully locked.',
-                                            '%d contests successfully locked.',
-                                            count) % count)
+        self.message_user(
+            request, ngettext(
+                '%d contest successfully locked.',
+                '%d contests successfully locked.',
+                count,
+            ) % count,
+        )
 
     @admin.display(description=_('Unlock contest submissions'))
     def set_unlocked(self, request, queryset):
         for row in queryset:
             self.set_locked_after(row, None)
         count = queryset.count()
-        self.message_user(request, ngettext('%d contest successfully unlocked.',
-                                            '%d contests successfully unlocked.',
-                                            count) % count)
+        self.message_user(
+            request, ngettext(
+                '%d contest successfully unlocked.',
+                '%d contests successfully unlocked.',
+                count,
+            ) % count,
+        )
 
     def set_locked_after(self, contest, locked_after):
         with transaction.atomic():
             contest.locked_after = locked_after
             contest.save()
-            Submission.objects.filter(contest_object=contest,
-                                      contest__participation__virtual=0).update(locked_after=locked_after)
+            Submission.objects.filter(
+                contest_object=contest,
+                contest__participation__virtual=0,
+            ).update(locked_after=locked_after)
 
     def get_urls(self):
         return [
@@ -305,14 +391,20 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
         contest = get_object_or_404(Contest, id=contest_id)
         if not request.user.is_staff or not self.has_change_permission(request, contest):
             raise PermissionDenied()
-        queryset = ContestSubmission.objects.filter(participation__contest_id=contest_id,
-                                                    problem_id=problem_id).select_related('submission')
+        queryset = ContestSubmission.objects.filter(
+            participation__contest_id=contest_id,
+            problem_id=problem_id,
+        ).select_related('submission')
         for model in queryset:
             model.submission.judge(rejudge=True, rejudge_user=request.user)
 
-        self.message_user(request, ngettext('%d submission was successfully scheduled for rejudging.',
-                                            '%d submissions were successfully scheduled for rejudging.',
-                                            len(queryset)) % len(queryset))
+        self.message_user(
+            request, ngettext(
+                '%d submission was successfully scheduled for rejudging.',
+                '%d submissions were successfully scheduled for rejudging.',
+                len(queryset),
+            ) % len(queryset),
+        )
         return HttpResponseRedirect(reverse('admin:judge_contest_change', args=(contest_id,)))
 
     @method_decorator(require_POST)
@@ -320,14 +412,20 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
         contest = get_object_or_404(Contest, id=contest_id)
         if not request.user.is_staff or not self.has_change_permission(request, contest):
             raise PermissionDenied()
-        queryset = ContestSubmission.objects.filter(participation__contest_id=contest_id,
-                                                    problem_id=problem_id).select_related('submission')
+        queryset = ContestSubmission.objects.filter(
+            participation__contest_id=contest_id,
+            problem_id=problem_id,
+        ).select_related('submission')
         for model in queryset:
             model.submission.update_contest()
 
-        self.message_user(request, ngettext('%d submission was successfully rescored.',
-                                            '%d submissions were successfully rescored.',
-                                            len(queryset)) % len(queryset))
+        self.message_user(
+            request, ngettext(
+                '%d submission was successfully rescored.',
+                '%d submissions were successfully rescored.',
+                len(queryset),
+            ) % len(queryset),
+        )
         return HttpResponseRedirect(reverse('admin:judge_contest_change', args=(contest_id,)))
 
     @method_decorator(require_POST)
@@ -414,9 +512,13 @@ class ContestParticipationAdmin(admin.ModelAdmin):
         for participation in queryset:
             participation.recompute_results()
             count += 1
-        self.message_user(request, ngettext('%d participation recalculated.',
-                                            '%d participations recalculated.',
-                                            count) % count)
+        self.message_user(
+            request, ngettext(
+                '%d participation recalculated.',
+                '%d participations recalculated.',
+                count,
+            ) % count,
+        )
 
     @admin.display(description=_('username'), ordering='user__user__username')
     def username(self, obj):

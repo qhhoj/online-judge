@@ -1,7 +1,14 @@
 import random
 from types import SimpleNamespace
 
-from judge.boring_avatars.utilities import getBoolean, getContrast, getRandomColor, getUnit, hashCode
+from judge.boring_avatars.utilities import (
+    getBoolean,
+    getContrast,
+    getRandomColor,
+    getUnit,
+    hashCode,
+)
+
 
 SIZE = 36
 

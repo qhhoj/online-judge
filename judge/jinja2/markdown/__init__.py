@@ -1,22 +1,28 @@
 import logging
 import re
-from html.parser import HTMLParser
-from urllib.parse import urlparse
 
 import markdown2
 from bleach.css_sanitizer import CSSSanitizer
 from bleach.sanitizer import Cleaner
 from django.conf import settings
 from lxml import html
-from lxml.etree import ParserError, XMLSyntaxError
+from lxml.etree import (
+    ParserError,
+    XMLSyntaxError,
+)
 from markupsafe import Markup
 
-from judge.highlight_code import highlight_code
-from judge.jinja2.markdown.lazy_load import lazy_load as lazy_load_processor
+from judge.jinja2.markdown.lazy_load import \
+    lazy_load as lazy_load_processor  # noqa: I100,I202
 from judge.utils.camo import client as camo_client
-from judge.utils.texoid import TEXOID_ENABLED, TexoidRenderer
-from .bleach_whitelist import all_styles, mathml_attrs, mathml_tags
-from .. import registry
+
+from .. import registry  # noqa: I202
+from .bleach_whitelist import (  # noqa: I100
+    all_styles,
+    mathml_attrs,
+    mathml_tags,
+)
+
 
 logger = logging.getLogger('judge.html')
 
@@ -119,7 +125,16 @@ def markdown(text, style, math_engine=None, lazy_load=False, strip_paragraphs=Fa
     else:
         safe_mode = None
 
-    extras = ['spoiler', 'fenced-code-blocks', 'cuddled-lists', 'tables', 'strike', 'smarty-pants', 'wikilinks', 'target-blank']
+    extras = [
+        'spoiler',
+        'fenced-code-blocks',
+        'cuddled-lists',
+        'tables',
+        'strike',
+        'smarty-pants',
+        'wikilinks',
+        'target-blank',
+    ]
     if styles.get('nofollow', True):
         extras.append('nofollow')
 

@@ -1,7 +1,10 @@
 import json
 import os
 import zipfile
-from operator import attrgetter, itemgetter
+from operator import (
+    attrgetter,
+    itemgetter,
+)
 
 import pyotp
 import webauthn
@@ -10,22 +13,58 @@ from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator, RegexValidator
+from django.core.validators import (
+    FileExtensionValidator,
+    RegexValidator,
+)
 from django.db.models import Q
-from django.forms import BooleanField, CharField, ChoiceField, DateInput, Form, ModelForm, MultipleChoiceField, \
-    formset_factory, inlineformset_factory
+from django.forms import (
+    BooleanField,
+    CharField,
+    ChoiceField,
+    DateInput,
+    Form,
+    ModelForm,
+    MultipleChoiceField,
+    formset_factory,
+    inlineformset_factory,
+)
 from django.forms.widgets import DateTimeInput
 from django.template.defaultfilters import filesizeformat
-from django.urls import reverse, reverse_lazy
+from django.urls import (
+    reverse,
+    reverse_lazy,
+)
 from django.utils.text import format_lazy
-from django.utils.translation import gettext_lazy as _, ngettext_lazy
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext_lazy
 
 from django_ace import AceWidget
-from judge.models import BlogPost, Contest, ContestAnnouncement, ContestProblem, Language, LanguageLimit, \
-    Organization, Problem, Profile, Solution, Submission, Tag, URL, WebAuthnCredential
+from judge.models import (  # noqa: I101
+    URL,
+    BlogPost,
+    Contest,
+    ContestAnnouncement,
+    ContestProblem,
+    Language,
+    LanguageLimit,
+    Organization,
+    Problem,
+    Profile,
+    Solution,
+    Submission,
+    Tag,
+    WebAuthnCredential,
+)
 from judge.utils.subscription import newsletter_id
-from judge.widgets import HeavySelect2MultipleWidget, HeavySelect2Widget, MartorWidget, \
-    Select2MultipleWidget, Select2Widget
+from judge.widgets import (
+    HeavySelect2MultipleWidget,
+    HeavySelect2Widget,
+    MartorWidget,
+    Select2MultipleWidget,
+    Select2Widget,
+)
+
 
 TOTP_CODE_LENGTH = 6
 
@@ -33,9 +72,13 @@ two_factor_validators_by_length = {
     TOTP_CODE_LENGTH: {
         'regex_validator': RegexValidator(
             f'^[0-9]{{{TOTP_CODE_LENGTH}}}$',
-            format_lazy(ngettext_lazy('Two-factor authentication tokens must be {count} decimal digit.',
-                                      'Two-factor authentication tokens must be {count} decimal digits.',
-                                      TOTP_CODE_LENGTH), count=TOTP_CODE_LENGTH),
+            format_lazy(
+                ngettext_lazy(
+                    'Two-factor authentication tokens must be {count} decimal digit.',
+                    'Two-factor authentication tokens must be {count} decimal digits.',
+                    TOTP_CODE_LENGTH,
+                ), count=TOTP_CODE_LENGTH,
+            ),
         ),
         'verify': lambda code, profile: not profile.check_totp_code(code),
         'err': _('Invalid two-factor authentication token.'),
@@ -55,8 +98,10 @@ class ProfileForm(ModelForm):
 
     class Meta:
         model = Profile
-        fields = ['about', 'display_badge', 'organizations', 'timezone', 'language', 'ace_theme',
-                  'site_theme', 'user_script']
+        fields = [
+            'about', 'display_badge', 'organizations', 'timezone', 'language', 'ace_theme',
+            'site_theme', 'user_script',
+        ]
         widgets = {
             'display_badge': Select2Widget(attrs={'style': 'width:200px'}),
             'timezone': Select2Widget(attrs={'style': 'width:200px'}),
@@ -79,8 +124,10 @@ class ProfileForm(ModelForm):
 
     def clean_about(self):
         if 'about' in self.changed_data and not self.instance.has_enough_solves:
-            raise ValidationError(_('You must solve at least %d problems before you can update your profile.')
-                                  % settings.VNOJ_INTERACT_MIN_PROBLEM_COUNT)
+            raise ValidationError(
+                _('You must solve at least %d problems before you can update your profile.')
+                % settings.VNOJ_INTERACT_MIN_PROBLEM_COUNT,
+            )
         return self.cleaned_data['about']
 
     def clean(self):
@@ -88,9 +135,13 @@ class ProfileForm(ModelForm):
         max_orgs = settings.DMOJ_USER_MAX_ORGANIZATION_COUNT
 
         if sum(org.is_open for org in organizations) > max_orgs:
-            raise ValidationError(ngettext_lazy('You may not be part of more than {count} public organization.',
-                                                'You may not be part of more than {count} public organizations.',
-                                                max_orgs).format(count=max_orgs))
+            raise ValidationError(
+                ngettext_lazy(
+                    'You may not be part of more than {count} public organization.',
+                    'You may not be part of more than {count} public organizations.',
+                    max_orgs,
+                ).format(count=max_orgs),
+            )
 
         return self.cleaned_data
 
@@ -147,9 +198,11 @@ class LanguageLimitForm(ModelForm):
         has_high_perm = self.user and self.user.has_perm('judge.high_problem_timelimit')
         timelimit = self.cleaned_data['time_limit']
         if timelimit and timelimit > settings.VNOJ_PROBLEM_TIMELIMIT_LIMIT and not has_high_perm:
-            raise forms.ValidationError(_('You cannot set time limit higher than %d seconds')
-                                        % settings.VNOJ_PROBLEM_TIMELIMIT_LIMIT,
-                                        'problem_timelimit_too_long')
+            raise forms.ValidationError(
+                _('You cannot set time limit higher than %d seconds')
+                % settings.VNOJ_PROBLEM_TIMELIMIT_LIMIT,
+                'problem_timelimit_too_long',
+            )
         return self.cleaned_data['time_limit']
 
     class Meta:
@@ -188,8 +241,10 @@ class ProblemEditForm(ModelForm):
             self.fields['testers'].label = _('Private users')
             self.fields['testers'].help_text = _('If private, only these users may see the problem.')
             self.fields['testers'].widget.data_view = None
-            self.fields['testers'].widget.data_url = reverse('organization_profile_select2',
-                                                             args=(org_pk, ))
+            self.fields['testers'].widget.data_url = reverse(
+                'organization_profile_select2',
+                args=(org_pk,),
+            )
 
         self.fields['testers'].help_text = \
             str(self.fields['testers'].help_text) + ' ' + \
@@ -202,20 +257,26 @@ class ProblemEditForm(ModelForm):
         org = Organization.objects.get(pk=self.org_pk)
         prefix = ''.join(x for x in org.slug.lower() if x.isalnum()) + '_'
         if not code.startswith(prefix):
-            raise forms.ValidationError(_('Problem id code must starts with `%s`') % (prefix, ),
-                                        'problem_id_invalid_prefix')
+            raise forms.ValidationError(
+                _('Problem id code must starts with `%s`') % (prefix,),
+                'problem_id_invalid_prefix',
+            )
         return code
 
     def clean_statement_file(self):
         content = self.files.get('statement_file', None)
         if content is not None:
             if content.size > settings.PDF_STATEMENT_MAX_FILE_SIZE:
-                raise forms.ValidationError(_('File size is too big! Maximum file size is %s') %
-                                            filesizeformat(settings.PDF_STATEMENT_MAX_FILE_SIZE),
-                                            'big_file_size')
+                raise forms.ValidationError(
+                    _('File size is too big! Maximum file size is %s') %
+                    filesizeformat(settings.PDF_STATEMENT_MAX_FILE_SIZE),
+                    'big_file_size',
+                )
             if self.user and not self.user.has_perm('judge.upload_file_statement'):
-                raise forms.ValidationError(_("You don't have permission to upload file-type statement."),
-                                            'pdf_upload_permission_denined')
+                raise forms.ValidationError(
+                    _("You don't have permission to upload file-type statement."),
+                    'pdf_upload_permission_denined',
+                )
 
         return content
 
@@ -223,12 +284,16 @@ class ProblemEditForm(ModelForm):
         content = self.files.get('problem_material_file', None)
         if content is not None:
             if content.size > settings.PROBLEM_MATERIAL_MAX_FILE_SIZE:
-                raise forms.ValidationError(_('File size is too big! Maximum file size is %s') %
-                                            filesizeformat(settings.PROBLEM_MATERIAL_MAX_FILE_SIZE),
-                                            'big_file_size')
+                raise forms.ValidationError(
+                    _('File size is too big! Maximum file size is %s') %
+                    filesizeformat(settings.PROBLEM_MATERIAL_MAX_FILE_SIZE),
+                    'big_file_size',
+                )
             if self.user and not self.user.has_perm('judge.upload_problem_material'):
-                raise forms.ValidationError(_("You don't have permission to upload problem material."),
-                                            'problem_material_upload_permission_denined')
+                raise forms.ValidationError(
+                    _("You don't have permission to upload problem material."),
+                    'problem_material_upload_permission_denined',
+                )
 
         return content
 
@@ -236,17 +301,21 @@ class ProblemEditForm(ModelForm):
         has_high_perm = self.user and self.user.has_perm('judge.high_problem_timelimit')
         timelimit = self.cleaned_data['time_limit']
         if timelimit and timelimit > settings.VNOJ_PROBLEM_TIMELIMIT_LIMIT and not has_high_perm:
-            raise forms.ValidationError(_('You cannot set time limit higher than %d seconds')
-                                        % settings.VNOJ_PROBLEM_TIMELIMIT_LIMIT,
-                                        'problem_timelimit_too_long')
+            raise forms.ValidationError(
+                _('You cannot set time limit higher than %d seconds')
+                % settings.VNOJ_PROBLEM_TIMELIMIT_LIMIT,
+                'problem_timelimit_too_long',
+            )
         return self.cleaned_data['time_limit']
 
     class Meta:
         model = Problem
-        fields = ['is_public', 'code', 'name', 'time_limit', 'memory_limit', 'points', 'partial',
-                  'statement_file', 'problem_material_file', 'source', 'types', 'group',
-                  'submission_source_visibility_mode',
-                  'testcase_visibility_mode', 'description', 'testers']
+        fields = [
+            'is_public', 'code', 'name', 'time_limit', 'memory_limit', 'points', 'partial',
+            'statement_file', 'problem_material_file', 'source', 'types', 'group',
+            'submission_source_visibility_mode',
+            'testcase_visibility_mode', 'description', 'testers',
+        ]
         widgets = {
             'types': Select2MultipleWidget,
             'group': Select2Widget,
@@ -262,10 +331,13 @@ class ProblemEditForm(ModelForm):
             'is_public': _(
                 'If public, all members in organization can view it. <strong>Set it as private '
                 'if you want to use it in a contest, otherwise, users can see the problem '
-                'even if they do not join the contest!</strong>'),
+                'even if they do not join the contest!</strong>',
+            ),
             'code': _('Problem code, e.g: voi19_post'),
-            'name': _('The full name of the problem, '
-                      'as shown in the problem list. For example: VOI19 - A cong B'),
+            'name': _(
+                'The full name of the problem, '
+                'as shown in the problem list. For example: VOI19 - A cong B',
+            ),
             'points': _('Points awarded for problem completion. From 800 to 3500.'),
         }
         error_messages = {
@@ -283,8 +355,10 @@ class ProblemImportPolygonForm(Form):
     )
     ignore_zero_point_batches = forms.BooleanField(required=False, label=_('Ignore zero-point batches'))
     ignore_zero_point_cases = forms.BooleanField(required=False, label=_('Ignore zero-point cases'))
-    append_main_solution_to_tutorial = forms.BooleanField(required=False, initial=True,
-                                                          label=_('Append main solution to tutorial'))
+    append_main_solution_to_tutorial = forms.BooleanField(
+        required=False, initial=True,
+        label=_('Append main solution to tutorial'),
+    )
     main_tutorial_language = forms.CharField(required=False)
     do_update = forms.BooleanField(required=False, initial=False, disabled=True, widget=forms.HiddenInput())
 
@@ -401,21 +475,29 @@ class ProblemSubmitForm(ModelForm):
             ext = os.path.splitext(content.name)[1][1:]
 
             if ext.lower() != lang_obj.extension.lower():
-                raise forms.ValidationError(_('Wrong file type for language %(lang)s, expected %(lang_ext)s'
-                                              ', found %(ext)s')
-                                            % {'lang': language, 'lang_ext': lang_obj.extension, 'ext': ext})
+                raise forms.ValidationError(
+                    _(
+                        'Wrong file type for language %(lang)s, expected %(lang_ext)s'
+                        ', found %(ext)s',
+                    )
+                    % {'lang': language, 'lang_ext': lang_obj.extension, 'ext': ext},
+                )
 
             elif content.size > max_file_size:
-                raise forms.ValidationError(_('File size is too big! Maximum file size is %s')
-                                            % filesizeformat(max_file_size))
+                raise forms.ValidationError(
+                    _('File size is too big! Maximum file size is %s')
+                    % filesizeformat(max_file_size),
+                )
 
             if lang_obj.key == 'SCRATCH':
                 try:
                     archive = zipfile.ZipFile(content.file)
                     info = archive.getinfo('project.json')
                     if info.file_size > max_file_size:
-                        raise forms.ValidationError(_('project.json is too big! Maximum file size is %s')
-                                                    % filesizeformat(max_file_size))
+                        raise forms.ValidationError(
+                            _('project.json is too big! Maximum file size is %s')
+                            % filesizeformat(max_file_size),
+                        )
 
                     self.files['submission_file'].file = archive.open('project.json')
                 except (zipfile.BadZipFile, KeyError):
@@ -439,11 +521,15 @@ class ProblemSubmitForm(ModelForm):
 
 
 class TagProblemCreateForm(Form):
-    problem_url = forms.URLField(max_length=200,
-                                 label=_('Problem URL'),
-                                 help_text=_('Full URL to the problem, '
-                                             'e.g. https://qhhoj.com/problem/post'),
-                                 widget=forms.TextInput(attrs={'style': 'width:100%'}))
+    problem_url = forms.URLField(
+        max_length=200,
+        label=_('Problem URL'),
+        help_text=_(
+            'Full URL to the problem, '
+            'e.g. https://qhhoj.com/problem/post',
+        ),
+        widget=forms.TextInput(attrs={'style': 'width:100%'}),
+    )
 
     def __init__(self, problem_url=None, *args, **kwargs):
         super(TagProblemCreateForm, self).__init__(*args, **kwargs)
@@ -478,8 +564,10 @@ class OrganizationForm(ModelForm):
 
 class SocialAuthMixin:
     def _has_social_auth(self, key):
-        return (getattr(settings, 'SOCIAL_AUTH_%s_KEY' % key, None) and
-                getattr(settings, 'SOCIAL_AUTH_%s_SECRET' % key, None))
+        return (
+            getattr(settings, 'SOCIAL_AUTH_%s_KEY' % key, None) and
+            getattr(settings, 'SOCIAL_AUTH_%s_SECRET' % key, None)
+        )
 
     @property
     def has_google_auth(self):
@@ -680,7 +768,8 @@ class ProposeContestProblemFormSet(
             ContestProblem,
             form=ProposeContestProblemForm,
             can_delete=True,
-        )):
+        ),
+):
 
     def clean(self) -> None:
         """Checks that no Contest problems have the same order."""
@@ -731,8 +820,10 @@ class ContestForm(ModelForm):
         # just update the data url is fine
         if org_pk:
             self.fields['private_contestants'].widget.data_view = None
-            self.fields['private_contestants'].widget.data_url = reverse('organization_profile_select2',
-                                                                         args=(org_pk, ))
+            self.fields['private_contestants'].widget.data_url = reverse(
+                'organization_profile_select2',
+                args=(org_pk,),
+            )
 
         self.fields['private_contestants'].help_text = \
             str(self.fields['private_contestants'].help_text) + ' ' + \
@@ -746,9 +837,11 @@ class ContestForm(ModelForm):
         has_long_perm = self.user and self.user.has_perm('judge.long_contest_duration')
         if end_time and start_time and \
            (end_time - start_time).days > settings.VNOJ_CONTEST_DURATION_LIMIT and not has_long_perm:
-            raise forms.ValidationError(_('Contest duration cannot be longer than %d days')
-                                        % settings.VNOJ_CONTEST_DURATION_LIMIT,
-                                        'contest_duration_too_long')
+            raise forms.ValidationError(
+                _('Contest duration cannot be longer than %d days')
+                % settings.VNOJ_CONTEST_DURATION_LIMIT,
+                'contest_duration_too_long',
+            )
         return cleaned_data
 
     def clean_key(self):
@@ -758,8 +851,10 @@ class ContestForm(ModelForm):
         org = Organization.objects.get(pk=self.org_pk)
         prefix = ''.join(x for x in org.slug.lower() if x.isalnum()) + '_'
         if not key.startswith(prefix):
-            raise forms.ValidationError(_('Contest id must starts with `%s`') % (prefix, ),
-                                        'contest_id_invalid_prefix')
+            raise forms.ValidationError(
+                _('Contest id must starts with `%s`') % (prefix,),
+                'contest_id_invalid_prefix',
+            )
         return key
 
     class Meta:
@@ -790,8 +885,10 @@ class ContestForm(ModelForm):
             ),
         }
         help_texts = {
-            'end_time': _('Users are able to pratice contest problems even if the contest has ended, '
-                          "so don't set the contest time too high if you don't really need it."),
+            'end_time': _(
+                'Users are able to pratice contest problems even if the contest has ended, '
+                "so don't set the contest time too high if you don't really need it.",
+            ),
         }
         error_messages = {
             'key': {

@@ -3,6 +3,7 @@ import os
 
 from ua_parser import user_agent_parser
 
+
 with open(os.path.join(os.path.dirname(__file__), '..', '..', 'resources', 'caniuse.json')) as f:
     _SUPPORT_DATA = json.loads(f.read())['data']
 

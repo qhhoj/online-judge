@@ -7,45 +7,119 @@ from operator import itemgetter
 from random import randrange
 
 from django.conf import settings
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+    PermissionRequiredMixin,
+)
+from django.core.exceptions import (
+    ObjectDoesNotExist,
+    PermissionDenied,
+)
 from django.db import transaction
-from django.db.models import BooleanField, Case, F, Prefetch, Q, When
+from django.db.models import (
+    BooleanField,
+    Case,
+    F,
+    Prefetch,
+    Q,
+    When,
+)
 from django.db.utils import ProgrammingError
-from django.http import Http404, HttpResponse, HttpResponseForbidden, HttpResponseRedirect
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseForbidden,
+    HttpResponseRedirect,
+)
 from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
 from django.urls import reverse
-from django.utils import timezone, translation
+from django.utils import (
+    timezone,
+    translation,
+)
 from django.utils.functional import cached_property
-from django.utils.html import escape, format_html
+from django.utils.html import (
+    escape,
+    format_html,
+)
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext as _, gettext_lazy
-from django.views.generic import CreateView, FormView, ListView, UpdateView, View
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
+from django.views.generic import (
+    CreateView,
+    FormView,
+    ListView,
+    UpdateView,
+    View,
+)
 from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.detail import SingleObjectMixin
 from reversion import revisions
 
 from judge.comments import CommentedDetailView
-from judge.forms import LanguageLimitFormSet, ProblemCloneForm, ProblemEditForm, ProblemImportPolygonForm, \
-    ProblemImportPolygonStatementFormSet, ProblemSubmitForm, ProposeProblemSolutionFormSet
-from judge.models import ContestSubmission, Judge, Language, Problem, ProblemGroup, \
-    ProblemTranslation, ProblemType, RuntimeVersion, Solution, Submission, SubmissionSource
+from judge.forms import (
+    LanguageLimitFormSet,
+    ProblemCloneForm,
+    ProblemEditForm,
+    ProblemImportPolygonForm,
+    ProblemImportPolygonStatementFormSet,
+    ProblemSubmitForm,
+    ProposeProblemSolutionFormSet,
+)
+from judge.models import (
+    ContestSubmission,
+    Judge,
+    Language,
+    Problem,
+    ProblemGroup,
+    ProblemTranslation,
+    ProblemType,
+    RuntimeVersion,
+    Solution,
+    Submission,
+    SubmissionSource,
+)
 from judge.tasks import on_new_problem
 from judge.template_context import misc_config
-from judge.utils.codeforces_polygon import ImportPolygonError, PolygonImporter
+from judge.utils.codeforces_polygon import (
+    ImportPolygonError,
+    PolygonImporter,
+)
 from judge.utils.diggpaginator import DiggPaginator
 from judge.utils.opengraph import generate_opengraph
-from judge.utils.pdfoid import PDF_RENDERING_ENABLED, render_pdf
-from judge.utils.problems import hot_problems, user_attempted_ids, \
-    user_completed_ids
-from judge.utils.strings import safe_float_or_none, safe_int_or_none
+from judge.utils.pdfoid import (
+    PDF_RENDERING_ENABLED,
+    render_pdf,
+)
+from judge.utils.problems import (
+    hot_problems,
+    user_attempted_ids,
+    user_completed_ids,
+)
+from judge.utils.strings import (
+    safe_float_or_none,
+    safe_int_or_none,
+)
 from judge.utils.tickets import own_ticket_filter
-from judge.utils.views import QueryStringSortMixin, SingleObjectFormView, TitleMixin, add_file_response, generic_message
-from judge.views.widgets import pdf_statement_uploader, problem_material_uploader, submission_uploader
+from judge.utils.views import (
+    QueryStringSortMixin,
+    SingleObjectFormView,
+    TitleMixin,
+    add_file_response,
+    generic_message,
+)
+from judge.views.widgets import (
+    pdf_statement_uploader,
+    problem_material_uploader,
+    submission_uploader,
+)
 
-recjk = re.compile(r'[\u2E80-\u2E99\u2E9B-\u2EF3\u2F00-\u2FD5\u3005\u3007\u3021-\u3029\u3038-\u303A\u303B\u3400-\u4DB5'
-                   r'\u4E00-\u9FC3\uF900-\uFA2D\uFA30-\uFA6A\uFA70-\uFAD9\U00020000-\U0002A6D6\U0002F800-\U0002FA1D]')
+
+recjk = re.compile(
+    r'[\u2E80-\u2E99\u2E9B-\u2EF3\u2F00-\u2FD5\u3005\u3007\u3021-\u3029\u3038-\u303A\u303B\u3400-\u4DB5'
+    r'\u4E00-\u9FC3\uF900-\uFA2D\uFA30-\uFA6A\uFA70-\uFAD9\U00020000-\U0002A6D6\U0002F800-\U0002FA1D]',
+)
 
 
 def get_contest_problem(problem, profile):
@@ -73,8 +147,10 @@ class ProblemMixin(object):
 
     def no_such_problem(self):
         code = self.kwargs.get(self.slug_url_kwarg, None)
-        return generic_message(self.request, _('No such problem'),
-                               _('Could not find a problem with the code "%s".') % code, status=404)
+        return generic_message(
+            self.request, _('No such problem'),
+            _('Could not find a problem with the code "%s".') % code, status=404,
+        )
 
     def get(self, request, *args, **kwargs):
         try:
@@ -113,9 +189,18 @@ class ProblemSolution(SolvedProblemMixin, ProblemMixin, TitleMixin, CommentedDet
         return _('Editorial for {0}').format(self.object.name)
 
     def get_content_title(self):
-        return mark_safe(escape(_('Editorial for {0}')).format(
-            format_html('<a href="{1}">{0}</a>', self.object.name, reverse('problem_detail', args=[self.object.code])),
-        ))
+        return mark_safe(
+            escape(
+                _('Editorial for {0}')).format(
+                format_html(
+                    '<a href="{1}">{0}</a>',
+                    self.object.name,
+                    reverse(
+                        'problem_detail',
+                        args=[
+                            self.object.code])),
+            ),
+        )
 
     def get_context_data(self, **kwargs):
         context = super(ProblemSolution, self).get_context_data(**kwargs)
@@ -133,8 +218,10 @@ class ProblemSolution(SolvedProblemMixin, ProblemMixin, TitleMixin, CommentedDet
 
     def no_such_problem(self):
         code = self.kwargs.get(self.slug_url_kwarg, None)
-        return generic_message(self.request, _('No such editorial'),
-                               _('Could not find an editorial with the code "%s".') % code, status=404)
+        return generic_message(
+            self.request, _('No such editorial'),
+            _('Could not find an editorial with the code "%s".') % code, status=404,
+        )
 
 
 class ProblemRaw(ProblemMixin, TitleMixin, TemplateResponseMixin, SingleObjectMixin, View):
@@ -160,9 +247,11 @@ class ProblemRaw(ProblemMixin, TitleMixin, TemplateResponseMixin, SingleObjectMi
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         with translation.override(settings.LANGUAGE_CODE):
-            return self.render_to_response(self.get_context_data(
-                object=self.object,
-            ))
+            return self.render_to_response(
+                self.get_context_data(
+                    object=self.object,
+                ),
+            )
 
 
 class ProblemDetail(ProblemMixin, SolvedProblemMixin, CommentedDetailView):
@@ -174,8 +263,10 @@ class ProblemDetail(ProblemMixin, SolvedProblemMixin, CommentedDetailView):
 
         user = self.request.user
         authed = user.is_authenticated
-        self.contest_problem = (None if not authed or user.profile.current_contest is None else
-                                get_contest_problem(problem, user.profile))
+        self.contest_problem = (
+            None if not authed or user.profile.current_contest is None else
+            get_contest_problem(problem, user.profile)
+        )
 
         return problem
 
@@ -193,8 +284,10 @@ class ProblemDetail(ProblemMixin, SolvedProblemMixin, CommentedDetailView):
         user = self.request.user
         authed = user.is_authenticated
         contest_problem = self.contest_problem
-        context['has_submissions'] = authed and Submission.objects.filter(user=user.profile,
-                                                                          problem=self.object).exists()
+        context['has_submissions'] = authed and Submission.objects.filter(
+            user=user.profile,
+            problem=self.object,
+        ).exists()
         context['contest_problem'] = contest_problem
         if contest_problem:
             clarifications = self.object.clarifications
@@ -202,9 +295,13 @@ class ProblemDetail(ProblemMixin, SolvedProblemMixin, CommentedDetailView):
             context['clarifications'] = clarifications.order_by('-date')
             context['submission_limit'] = contest_problem.max_submissions
             if contest_problem.max_submissions:
-                context['submissions_left'] = max(contest_problem.max_submissions -
-                                                  get_contest_submission_count(self.object, user.profile,
-                                                                               user.profile.current_contest.virtual), 0)
+                context['submissions_left'] = max(
+                    contest_problem.max_submissions -
+                    get_contest_submission_count(
+                        self.object, user.profile,
+                        user.profile.current_contest.virtual,
+                    ), 0,
+                )
 
         context['available_judges'] = Judge.objects.filter(online=True, problems=self.object)
         context['show_languages'] = self.object.allowed_languages.count() != Language.objects.count()
@@ -239,8 +336,10 @@ class ProblemDetail(ProblemMixin, SolvedProblemMixin, CommentedDetailView):
             context['translated'] = True
 
         if not self.object.og_image or not self.object.summary:
-            metadata = generate_opengraph('generated-meta-problem:%s:%d' % (context['language'], self.object.id),
-                                          context['description'], 'problem')
+            metadata = generate_opengraph(
+                'generated-meta-problem:%s:%d' % (context['language'], self.object.id),
+                context['description'], 'problem',
+            )
         context['meta_description'] = self.object.summary or metadata[0]
         context['og_image'] = self.object.og_image or metadata[1]
         return context
@@ -320,11 +419,15 @@ class ProblemList(QueryStringSortMixin, TitleMixin, SolvedProblemMixin, ListView
     # Default sort by date
     default_sort = '-date'
 
-    def get_paginator(self, queryset, per_page, orphans=0,
-                      allow_empty_first_page=True, **kwargs):
-        paginator = DiggPaginator(queryset, per_page, body=6, padding=2, orphans=orphans,
-                                  count=queryset.values('pk').count(),
-                                  allow_empty_first_page=allow_empty_first_page, **kwargs)
+    def get_paginator(
+        self, queryset, per_page, orphans=0,
+        allow_empty_first_page=True, **kwargs,
+    ):
+        paginator = DiggPaginator(
+            queryset, per_page, body=6, padding=2, orphans=orphans,
+            count=queryset.values('pk').count(),
+            allow_empty_first_page=allow_empty_first_page, **kwargs,
+        )
         queryset = queryset.add_i18n_name(self.request.LANGUAGE_CODE)
         sort_key = self.order.lstrip('-')
         if sort_key in self.sql_sort:
@@ -353,8 +456,10 @@ class ProblemList(QueryStringSortMixin, TitleMixin, SolvedProblemMixin, ListView
         elif sort_key == 'type':
             if self.show_types:
                 queryset = list(queryset)
-                queryset.sort(key=lambda problem: problem.types_list[0] if problem.types_list else '',
-                              reverse=self.order.startswith('-'))
+                queryset.sort(
+                    key=lambda problem: problem.types_list[0] if problem.types_list else '',
+                    reverse=self.order.startswith('-'),
+                )
         paginator.object_list = queryset
         return paginator
 
@@ -369,8 +474,10 @@ class ProblemList(QueryStringSortMixin, TitleMixin, SolvedProblemMixin, ListView
         if recjk.search(query):
             # MariaDB can't tokenize CJK properly, fallback to LIKE '%term%' for each term.
             for term in query.split():
-                queryset = queryset.filter(Q(code__icontains=term) | Q(name__icontains=term) |
-                                           Q(description__icontains=term))
+                queryset = queryset.filter(
+                    Q(code__icontains=term) | Q(name__icontains=term) |
+                    Q(description__icontains=term),
+                )
             return queryset
         return queryset.search(query, queryset.BOOLEAN).extra(order_by=['-relevance'])
 
@@ -385,16 +492,20 @@ class ProblemList(QueryStringSortMixin, TitleMixin, SolvedProblemMixin, ListView
         queryset = Problem.objects.filter(_filter).select_related('group').defer('description', 'summary')
 
         if self.profile is not None and self.hide_solved:
-            queryset = queryset.exclude(id__in=Submission.objects
-                                        .filter(user=self.profile, result='AC', case_points__gte=F('case_total'))
-                                        .values_list('problem_id', flat=True))
+            queryset = queryset.exclude(
+                id__in=Submission.objects
+                .filter(user=self.profile, result='AC', case_points__gte=F('case_total'))
+                .values_list('problem_id', flat=True),
+            )
         if self.show_types:
             queryset = queryset.prefetch_related('types')
-        queryset = queryset.annotate(has_public_editorial=Case(
-            When(solution__is_public=True, solution__publish_on__lte=timezone.now(), then=True),
-            default=False,
-            output_field=BooleanField(),
-        ))
+        queryset = queryset.annotate(
+            has_public_editorial=Case(
+                When(solution__is_public=True, solution__publish_on__lte=timezone.now(), then=True),
+                default=False,
+                output_field=BooleanField(),
+            ),
+        )
         if self.has_public_editorial:
             queryset = queryset.filter(has_public_editorial=True)
         if self.category is not None:
@@ -409,7 +520,8 @@ class ProblemList(QueryStringSortMixin, TitleMixin, SolvedProblemMixin, ListView
                 else:
                     queryset = queryset.filter(
                         Q(code__icontains=query) | Q(name__icontains=query) | Q(source__icontains=query) |
-                        Q(translations__name__icontains=query, translations__language=self.request.LANGUAGE_CODE))
+                        Q(translations__name__icontains=query, translations__language=self.request.LANGUAGE_CODE),
+                    )
         self.prepoint_queryset = queryset
         if self.point_start is not None:
             queryset = queryset.filter(points__gte=self.point_start)
@@ -544,8 +656,12 @@ class RandomProblem(ProblemList):
         queryset = self.get_normal_queryset()
         count = queryset.count()
         if not count:
-            return HttpResponseRedirect('%s%s%s' % (reverse('problem_list'), request.META['QUERY_STRING'] and '?',
-                                                    request.META['QUERY_STRING']))
+            return HttpResponseRedirect(
+                '%s%s%s' % (
+                    reverse('problem_list'), request.META['QUERY_STRING'] and '?',
+                    request.META['QUERY_STRING'],
+                ),
+            )
         return HttpResponseRedirect(queryset[randrange(count)].get_absolute_url())
 
 
@@ -644,13 +760,19 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
         if not self.object.allowed_languages.filter(id=form.cleaned_data['language'].id).exists():
             raise PermissionDenied()
         if not self.request.user.is_superuser and self.object.banned_users.filter(id=self.request.profile.id).exists():
-            return generic_message(self.request, _('Banned from submitting'),
-                                   _('You have been declared persona non grata for this problem. '
-                                     'You are permanently barred from submitting to this problem.'))
+            return generic_message(
+                self.request, _('Banned from submitting'),
+                _(
+                    'You have been declared persona non grata for this problem. '
+                    'You are permanently barred from submitting to this problem.',
+                ),
+            )
         # Must check for zero and not None. None means infinite submissions remaining.
         if self.remaining_submission_count == 0:
-            return generic_message(self.request, _('Too many submissions'),
-                                   _('You have exceeded the submission limit for this problem.'))
+            return generic_message(
+                self.request, _('Too many submissions'),
+                _('You have exceeded the submission limit for this problem.'),
+            )
 
         with transaction.atomic():
             self.new_submission = form.save(commit=False)
@@ -958,9 +1080,14 @@ class ProblemEdit(ProblemMixin, TitleMixin, UpdateView):
         return _('Editing problem {0}').format(self.object.name)
 
     def get_content_title(self):
-        return mark_safe(escape(_('Editing problem %s')) % (
-            format_html('<a href="{1}">{0}</a>', self.object.name,
-                        reverse('problem_detail', args=[self.object.code]))))
+        return mark_safe(
+            escape(_('Editing problem %s')) % (
+                format_html(
+                    '<a href="{1}">{0}</a>', self.object.name,
+                    reverse('problem_detail', args=[self.object.code]),
+                )
+            ),
+        )
 
     def get_object(self, queryset=None):
         problem = super(ProblemEdit, self).get_object(queryset)
@@ -975,8 +1102,10 @@ class ProblemEdit(ProblemMixin, TitleMixin, UpdateView):
 
     def get_language_limit_formset(self):
         if self.request.POST:
-            return LanguageLimitFormSet(self.request.POST, instance=self.get_object(),
-                                        form_kwargs={'user': self.request.user})
+            return LanguageLimitFormSet(
+                self.request.POST, instance=self.get_object(),
+                form_kwargs={'user': self.request.user},
+            )
         return LanguageLimitFormSet(instance=self.get_object(), form_kwargs={'user': self.request.user})
 
     def get_context_data(self, **kwargs):
@@ -1031,5 +1160,7 @@ class ProblemEdit(ProblemMixin, TitleMixin, UpdateView):
         try:
             return super(ProblemEdit, self).dispatch(request, *args, **kwargs)
         except PermissionDenied:
-            return generic_message(request, _("Can't edit problem"),
-                                   _('You are not allowed to edit this problem.'), status=403)
+            return generic_message(
+                request, _("Can't edit problem"),
+                _('You are not allowed to edit this problem.'), status=403,
+            )

@@ -1,7 +1,13 @@
 from django.test import SimpleTestCase
 from lxml import html
 
-from . import fragment_tree_to_str, fragments_to_tree, get_cleaner, markdown
+from . import (
+    fragment_tree_to_str,
+    fragments_to_tree,
+    get_cleaner,
+    markdown,
+)
+
 
 MATHML_N = """\
 <math xmlns="http://www.w3.org/1998/Math/MathML">
@@ -109,10 +115,14 @@ class TestMarkdown(SimpleTestCase):
     UNBLEACHED_STYLE = 'problem-full'
 
     def test_bleach(self):
-        self.assertHTMLEqual(markdown('<script>void(0)</script>', self.BLEACHED_STYLE),
-                             '&lt;script&gt;void(0)&lt;/script&gt;')
-        self.assertHTMLEqual(markdown('<img style="display: block; margin: 0 auto">', self.BLEACHED_STYLE),
-                             '<p><img style="display: block; margin: 0 auto;"></p>')
+        self.assertHTMLEqual(
+            markdown('<script>void(0)</script>', self.BLEACHED_STYLE),
+            '&lt;script&gt;void(0)&lt;/script&gt;',
+        )
+        self.assertHTMLEqual(
+            markdown('<img style="display: block; margin: 0 auto">', self.BLEACHED_STYLE),
+            '<p><img style="display: block; margin: 0 auto;"></p>',
+        )
         # self.assertHTMLEqual(markdown('<style>a { color: red; }</style>', self.BLEACHED_STYLE),
         #                      '<style>a { color: red; }</style>')
 
@@ -122,13 +132,17 @@ class TestMarkdown(SimpleTestCase):
         self.assertHTMLEqual(cleaner.clean(MATHML_CHUDNOVSKY), MATHML_CHUDNOVSKY)
 
     def test_no_bleach(self):
-        self.assertHTMLEqual(markdown('<script>void(0)</script>', self.UNBLEACHED_STYLE),
-                             '<script>void(0)</script>')
+        self.assertHTMLEqual(
+            markdown('<script>void(0)</script>', self.UNBLEACHED_STYLE),
+            '<script>void(0)</script>',
+        )
 
     def test_post_process(self):
-        self.assertHTMLEqual(markdown('<img src="test.png">', self.UNBLEACHED_STYLE, lazy_load=True),
-                             '<p><noscript><img src="test.png"></noscript>'
-                             '<img src="/static/blank.gif" data-src="test.png" class="unveil"></p>')
+        self.assertHTMLEqual(
+            markdown('<img src="test.png">', self.UNBLEACHED_STYLE, lazy_load=True),
+            '<p><noscript><img src="test.png"></noscript>'
+            '<img src="/static/blank.gif" data-src="test.png" class="unveil"></p>',
+        )
 
 
 class TestFragmentUtils(SimpleTestCase):

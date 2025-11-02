@@ -7,13 +7,28 @@ from django.forms import ModelForm
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.html import format_html
-from django.utils.translation import gettext, gettext_lazy as _, ngettext
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
 from reversion.admin import VersionAdmin
 
-from judge.models import LanguageLimit, Problem, ProblemClarification, ProblemTranslation, Profile, Solution
+from judge.models import (
+    LanguageLimit,
+    Problem,
+    ProblemClarification,
+    ProblemTranslation,
+    Profile,
+    Solution,
+)
 from judge.utils.views import NoBatchDeleteMixin
-from judge.widgets import AdminHeavySelect2MultipleWidget, AdminHeavySelect2Widget, AdminMartorWidget, \
-    AdminSelect2MultipleWidget, AdminSelect2Widget, CheckboxSelectMultipleWithSelectAll
+from judge.widgets import (
+    AdminHeavySelect2MultipleWidget,
+    AdminHeavySelect2Widget,
+    AdminMartorWidget,
+    AdminSelect2MultipleWidget,
+    AdminSelect2Widget,
+    CheckboxSelectMultipleWithSelectAll,
+)
 
 
 class ProblemForm(ModelForm):
@@ -36,10 +51,14 @@ class ProblemForm(ModelForm):
             'curators': AdminHeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%'}),
             'suggester': AdminHeavySelect2Widget(data_view='profile_select2', attrs={'style': 'width: 100%'}),
             'testers': AdminHeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%'}),
-            'banned_users': AdminHeavySelect2MultipleWidget(data_view='profile_select2',
-                                                            attrs={'style': 'width: 100%'}),
-            'organizations': AdminHeavySelect2MultipleWidget(data_view='organization_select2',
-                                                             attrs={'style': 'width: 100%'}),
+            'banned_users': AdminHeavySelect2MultipleWidget(
+                data_view='profile_select2',
+                attrs={'style': 'width: 100%'},
+            ),
+            'organizations': AdminHeavySelect2MultipleWidget(
+                data_view='organization_select2',
+                attrs={'style': 'width: 100%'},
+            ),
             'types': AdminSelect2MultipleWidget,
             'group': AdminSelect2Widget,
             'description': AdminMartorWidget(attrs={'data-markdownfy-url': reverse_lazy('problem_preview')}),
@@ -122,14 +141,17 @@ class ProblemTranslationInline(admin.StackedInline):
 
 class ProblemAdmin(NoBatchDeleteMixin, VersionAdmin):
     fieldsets = (
-        (None, {
-            'fields': (
-                'code', 'name', 'suggester', 'is_public', 'is_manually_managed', 'date', 'authors',
-                'curators', 'testers', 'is_organization_private', 'organizations', 'submission_source_visibility_mode',
-                'testcase_visibility_mode', 'testcase_result_visibility_mode', 'allow_view_feedback',
-                'is_full_markup', 'pdf_url', 'source', 'description', 'license',
-            ),
-        }),
+        (
+            None, {
+                'fields': (
+                    'code', 'name', 'suggester', 'is_public', 'is_manually_managed', 'date', 'authors',
+                    'curators', 'testers', 'is_organization_private', 'organizations',  # noqa: E501
+                    'submission_source_visibility_mode', 'testcase_visibility_mode',
+                    'testcase_result_visibility_mode', 'allow_view_feedback',
+                    'is_full_markup', 'pdf_url', 'source', 'description', 'license',
+                ),
+            },
+        ),
         (_('Social Media'), {'classes': ('collapse',), 'fields': ('og_image', 'summary')}),
         (_('Taxonomy'), {'fields': ('types', 'group')}),
         (_('Points'), {'fields': (('points', 'partial'), 'short_circuit')}),
@@ -191,18 +213,26 @@ class ProblemAdmin(NoBatchDeleteMixin, VersionAdmin):
         for problem_id in queryset.values_list('id', flat=True):
             self._rescore(request, problem_id, True)
 
-        self.message_user(request, ngettext('%d problem successfully marked as public.',
-                                            '%d problems successfully marked as public.',
-                                            count) % count)
+        self.message_user(
+            request, ngettext(
+                '%d problem successfully marked as public.',
+                '%d problems successfully marked as public.',
+                count,
+            ) % count,
+        )
 
     @admin.display(description=_('Mark problems as private'))
     def make_private(self, request, queryset):
         count = queryset.update(is_public=False)
         for problem_id in queryset.values_list('id', flat=True):
             self._rescore(request, problem_id, True)
-        self.message_user(request, ngettext('%d problem successfully marked as private.',
-                                            '%d problems successfully marked as private.',
-                                            count) % count)
+        self.message_user(
+            request, ngettext(
+                '%d problem successfully marked as private.',
+                '%d problems successfully marked as private.',
+                count,
+            ) % count,
+        )
 
     def get_queryset(self, request):
         return Problem.get_editable_problems(request.user).prefetch_related('authors__user').distinct()

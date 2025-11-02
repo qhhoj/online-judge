@@ -6,7 +6,11 @@ from django.utils import timezone
 from django.utils.feedgenerator import Atom1Feed
 
 from judge.jinja2.markdown import markdown
-from judge.models import BlogPost, Comment, Problem
+from judge.models import (
+    BlogPost,
+    Comment,
+    Problem,
+)
 
 
 class ProblemFeed(Feed):

@@ -5,8 +5,13 @@ from django.core.cache import cache
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from judge.models import Problem, Profile, Submission
+from judge.models import (
+    Problem,
+    Profile,
+    Submission,
+)
 from judge.utils.celery import Progress
+
 
 __all__ = ('apply_submission_filter', 'rejudge_problem_filter', 'rescore_problem')
 
@@ -53,8 +58,10 @@ def rescore_problem(self, problem_id, publicy_changed=False):
     with Progress(self, submissions.count(), stage=_('Modifying submissions')) as p:
         rescored = 0
         for submission in submissions.iterator():
-            submission.points = round(submission.case_points / submission.case_total
-                                      if submission.case_total else 0, 3) * problem.points
+            submission.points = round(
+                submission.case_points / submission.case_total
+                if submission.case_total else 0, 3,
+            ) * problem.points
             if not problem.partial and submission.points < problem.points:
                 submission.points = 0
             submission.save(update_fields=['points'])

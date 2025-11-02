@@ -1,4 +1,9 @@
 #!/bin/sh
+cd "$(dirname "$0")" || exit
+
+# Add node_modules/.bin to PATH for local binaries
+export PATH="./node_modules/.bin:$PATH"
+
 if ! [ -x "$(command -v sass)" ]; then
   echo 'Error: sass is not installed.' >&2
   exit 1
@@ -13,8 +18,6 @@ if ! [ -x "$(command -v autoprefixer)" ]; then
   echo 'Error: autoprefixer is not installed.' >&2
   exit 1
 fi
-
-cd "$(dirname "$0")" || exit
 
 build_style() {
   echo "Creating $1 style..."

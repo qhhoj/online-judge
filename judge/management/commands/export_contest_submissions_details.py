@@ -1,8 +1,15 @@
 import csv
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import (
+    BaseCommand,
+    CommandError,
+)
 
-from judge.models import Contest, Submission, SubmissionTestCase
+from judge.models import (
+    Contest,
+    Submission,
+    SubmissionTestCase,
+)
 from judge.utils.raw_sql import use_straight_join
 from judge.views.submission import submission_related
 
@@ -31,8 +38,12 @@ class Command(BaseCommand):
     def export_queryset_to_output(self, queryset, output_file):
         fout = open(output_file, 'w', newline='')
 
-        writer = csv.DictWriter(fout, fieldnames=['username', 'problem', 'submission', 'testcase',
-                                                  'points', 'time', 'memory', 'feedback'])
+        writer = csv.DictWriter(
+            fout, fieldnames=[
+                'username', 'problem', 'submission', 'testcase',
+                'points', 'time', 'memory', 'feedback',
+            ],
+        )
         writer.writeheader()
 
         for submission in queryset:

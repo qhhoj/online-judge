@@ -12,6 +12,15 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='comment',
-            options={'permissions': (('view_all_user_comment', 'View all comments by a user'),), 'verbose_name': 'comment', 'verbose_name_plural': 'comments'},
+            options={
+                'permissions': (
+                    (
+                        'view_all_user_comment',
+                        'View all comments by a user',
+                    ),
+                ),
+                'verbose_name': 'comment',
+                'verbose_name_plural': 'comments',
+            },
         ),
     ]

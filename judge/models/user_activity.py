@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -10,13 +10,15 @@ class UserSession(models.Model):
     session_key = models.CharField(max_length=40, unique=True)
     ip_address = models.GenericIPAddressField(verbose_name=_('IP address'))
     user_agent = models.TextField(verbose_name=_('user agent'))
-    device_type = models.CharField(max_length=20, verbose_name=_('device type'), choices=[
-        ('desktop', _('Desktop')),
-        ('mobile', _('Mobile')),
-        ('tablet', _('Tablet')),
-        ('bot', _('Bot')),
-        ('unknown', _('Unknown')),
-    ], default='unknown')
+    device_type = models.CharField(
+        max_length=20, verbose_name=_('device type'), choices=[
+            ('desktop', _('Desktop')),
+            ('mobile', _('Mobile')),
+            ('tablet', _('Tablet')),
+            ('bot', _('Bot')),
+            ('unknown', _('Unknown')),
+        ], default='unknown',
+    )
     browser = models.CharField(max_length=50, verbose_name=_('browser'), blank=True)
     os = models.CharField(max_length=50, verbose_name=_('operating system'), blank=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('created at'))
@@ -40,7 +42,7 @@ class UserSession(models.Model):
 
     def __str__(self):
         username = self.user.username if self.user else 'Anonymous'
-        return f"{username} - {self.ip_address} - {self.device_type}"
+        return f"{username} - {self.ip_address} - {self.device_type}"  # noqa: Q000
 
 
 class UserActivity(models.Model):
@@ -54,7 +56,7 @@ class UserActivity(models.Model):
     user_agent = models.TextField(verbose_name=_('user agent'), blank=True)
     referer = models.TextField(verbose_name=_('referer'), blank=True)
     response_code = models.IntegerField(verbose_name=_('response code'), null=True, blank=True)
-    
+
     class Meta:
         verbose_name = _('user activity')
         verbose_name_plural = _('user activities')
@@ -64,7 +66,7 @@ class UserActivity(models.Model):
             models.Index(fields=['timestamp']),
             models.Index(fields=['ip_address', '-timestamp']),
         ]
-        
+
     def __str__(self):
         username = self.user.username if self.user else 'Anonymous'
-        return f"{username} - {self.path} - {self.timestamp}" 
+        return f"{username} - {self.path} - {self.timestamp}"  # noqa: Q000

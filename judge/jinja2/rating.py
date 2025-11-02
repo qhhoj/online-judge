@@ -1,5 +1,10 @@
-from judge.ratings import rating_class, rating_name, rating_progress
-from . import registry
+from judge.ratings import (
+    rating_class,
+    rating_name,
+    rating_progress,
+)
+
+from . import registry  # noqa: I202
 
 
 def _get_rating_value(func, obj):

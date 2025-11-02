@@ -2,7 +2,10 @@ import collections.abc
 import inspect
 from math import ceil
 
-from django.core.paginator import EmptyPage, InvalidPage
+from django.core.paginator import (
+    EmptyPage,
+    InvalidPage,
+)
 from django.http import Http404
 from django.utils.functional import cached_property
 from django.utils.inspect import method_has_no_args
@@ -133,7 +136,9 @@ class InfinitePaginationMixin:
             page = infinite_paginate(queryset, page_number, page_size, self.pad_pages, paginator)
             return paginator, page, page.object_list, page.has_other_pages()
         except InvalidPage as e:
-            raise Http404('Invalid page (%(page_number)s): %(message)s' % {
-                'page_number': page_number,
-                'message': str(e),
-            })
+            raise Http404(
+                'Invalid page (%(page_number)s): %(message)s' % {
+                    'page_number': page_number,
+                    'message': str(e),
+                },
+            )

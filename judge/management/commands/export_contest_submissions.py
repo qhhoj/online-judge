@@ -1,8 +1,14 @@
 import os
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import (
+    BaseCommand,
+    CommandError,
+)
 
-from judge.models import Contest, ContestParticipation
+from judge.models import (
+    Contest,
+    ContestParticipation,
+)
 
 
 class Command(BaseCommand):
@@ -42,8 +48,10 @@ class Command(BaseCommand):
             problems = set()
             submissions = user.submissions.order_by('-id') \
                 .select_related('problem__problem', 'submission__source', 'submission__language') \
-                .values_list('problem__problem__code', 'submission__source__source',
-                             'submission__language__extension', 'submission__id')
+                .values_list(
+                    'problem__problem__code', 'submission__source__source',
+                    'submission__language__extension', 'submission__id',
+            )
 
             for problem, source, ext, sub_id in submissions:
                 submission_count += 1

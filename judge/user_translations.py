@@ -1,13 +1,20 @@
 from django.conf import settings
-from django.utils.safestring import SafeData, mark_safe
+from django.utils.safestring import (
+    SafeData,
+    mark_safe,
+)
+
 
 if settings.USE_I18N:
-    from django.utils.translation.trans_real import DjangoTranslation, get_language
+    from django.utils.translation.trans_real import (
+        DjangoTranslation,
+        get_language,
+    )
 
     _translations = {}
 
     def translation(language):
-        global _translations
+        global _translations  # noqa: F824
         if language not in _translations:
             _translations[language] = DjangoTranslation(language, domain='dmoj-user')
         return _translations[language]

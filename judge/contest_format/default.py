@@ -6,7 +6,8 @@ from django.template.defaultfilters import floatformat
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext as _, gettext_lazy
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 
 from judge.contest_format.base import BaseContestFormat
 from judge.contest_format.registry import register_contest_format
@@ -80,8 +81,10 @@ class DefaultContestFormat(BaseContestFormat):
                 state=(('pretest-' if self.contest.run_pretests_only and contest_problem.is_pretested else '') +
                        ('first-solve ' if first_solves.get(str(contest_problem.id), None) == participation.id else '') +
                        self.best_solution_state(format_data['points'], contest_problem.points)),
-                url=reverse('contest_user_submissions',
-                            args=[self.contest.key, participation.user.user.username, contest_problem.problem.code]),
+                url=reverse(
+                    'contest_user_submissions',
+                    args=[self.contest.key, participation.user.user.username, contest_problem.problem.code],
+                ),
                 points=floatformat(format_data['points'], -self.contest.points_precision),
                 time=nice_repr(timedelta(seconds=format_data['time']), 'noday'),
             )
@@ -91,8 +94,10 @@ class DefaultContestFormat(BaseContestFormat):
     def display_participation_result(self, participation, frozen=False):
         return format_html(
             '<td class="user-points"><a href="{url}">{points}<div class="solving-time">{cumtime}</div></a></td>',
-            url=reverse('contest_all_user_submissions',
-                        args=[self.contest.key, participation.user.user.username]),
+            url=reverse(
+                'contest_all_user_submissions',
+                args=[self.contest.key, participation.user.user.username],
+            ),
             points=floatformat(participation.score, -self.contest.points_precision),
             cumtime=nice_repr(timedelta(seconds=participation.cumtime), 'noday'),
         )
@@ -105,5 +110,7 @@ class DefaultContestFormat(BaseContestFormat):
 
     def get_short_form_display(self):
         yield _('The maximum score submission for each problem will be used.')
-        yield _('Ties will be broken by the sum of the last submission time on problems with '
-                'a non-zero score.')
+        yield _(
+            'Ties will be broken by the sum of the last submission time on problems with '
+            'a non-zero score.',
+        )

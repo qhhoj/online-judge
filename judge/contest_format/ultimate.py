@@ -1,6 +1,10 @@
 from django.core.exceptions import ValidationError
-from django.db.models import OuterRef, Subquery
-from django.utils.translation import gettext as _, gettext_lazy
+from django.db.models import (
+    OuterRef,
+    Subquery,
+)
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 
 from judge.contest_format import DefaultContestFormat
 from judge.contest_format.registry import register_contest_format
@@ -24,12 +28,17 @@ class UltimateContestFormat(DefaultContestFormat):
         last_submission_time = 0
         score = 0
         format_data = {}
-        queryset = (participation.submissions.values('problem_id')
-                                             .filter(submission__date=Subquery(
-                                                 participation.submissions.filter(problem_id=OuterRef('problem_id'))
-                                                                          .order_by('-submission__date')
-                                                                          .values('submission__date')[:1]))
-                                             .values_list('problem_id', 'submission__date', 'points'))
+        queryset = (
+            participation.submissions.values('problem_id')
+            .filter(
+                submission__date=Subquery(
+                    participation.submissions.filter(problem_id=OuterRef('problem_id'))
+                    .order_by('-submission__date')
+                    .values('submission__date')[:1],
+                ),
+            )
+            .values_list('problem_id', 'submission__date', 'points')
+        )
 
         for problem_id, time, points in queryset:
             if points:

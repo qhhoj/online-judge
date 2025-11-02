@@ -1,6 +1,12 @@
 import random
 
-from judge.boring_avatars.utilities import getBoolean, getRandomColor, getUnit, hashCode
+from judge.boring_avatars.utilities import (
+    getBoolean,
+    getRandomColor,
+    getUnit,
+    hashCode,
+)
+
 
 ELEMENTS = 4
 SIZE = 80

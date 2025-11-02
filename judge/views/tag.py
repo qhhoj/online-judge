@@ -3,31 +3,66 @@ from random import randrange
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import IntegrityError
-from django.db.models import Prefetch, Q
-from django.http import Http404, HttpResponseRedirect
+from django.db.models import (
+    Prefetch,
+    Q,
+)
+from django.http import (
+    Http404,
+    HttpResponseRedirect,
+)
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.utils.html import escape, format_html
+from django.utils.html import (
+    escape,
+    format_html,
+)
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext as _, gettext_lazy
-from django.views.generic import FormView, ListView, View
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
+from django.views.generic import (
+    FormView,
+    ListView,
+    View,
+)
 from requests.exceptions import ReadTimeout
 from reversion import revisions
 
 from judge.comments import CommentedDetailView
-from judge.forms import TagProblemAssignForm, TagProblemCreateForm
-from judge.models import Tag, TagData, TagGroup, TagProblem
-from judge.tasks import on_new_tag, on_new_tag_problem
+from judge.forms import (
+    TagProblemAssignForm,
+    TagProblemCreateForm,
+)
+from judge.models import (
+    Tag,
+    TagData,
+    TagGroup,
+    TagProblem,
+)
+from judge.tasks import (
+    on_new_tag,
+    on_new_tag_problem,
+)
 from judge.utils.diggpaginator import DiggPaginator
-from judge.utils.judge_api import APIError, OJAPI
-from judge.utils.views import SingleObjectFormView, TitleMixin, generic_message, paginate_query_context
+from judge.utils.judge_api import (  # noqa: I101
+    OJAPI,
+    APIError,
+)
+from judge.utils.views import (
+    SingleObjectFormView,
+    TitleMixin,
+    generic_message,
+    paginate_query_context,
+)
 
 
 class TagAllowingMixin(object):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated or (not request.profile.can_tag_problems):
-            return generic_message(request, _('Cannot tag'),
-                                   _('You are not allowed to tag problem.'))
+            return generic_message(
+                request, _('Cannot tag'),
+                _('You are not allowed to tag problem.'),
+            )
         return super(TagAllowingMixin, self).dispatch(request, *args, **kwargs)
 
 
@@ -42,8 +77,10 @@ class TagProblemMixin(object):
 
     def no_such_problem(self):
         code = self.kwargs.get(self.slug_url_kwarg, None)
-        return generic_message(self.request, _('No such problem'),
-                               _('Could not find a problem with the code "%s".') % code, status=404)
+        return generic_message(
+            self.request, _('No such problem'),
+            _('Could not find a problem with the code "%s".') % code, status=404,
+        )
 
     def get(self, request, *args, **kwargs):
         try:
@@ -115,8 +152,12 @@ class TagRandomProblem(TagProblemList):
         queryset = self.get_queryset()
         count = queryset.count()
         if not count:
-            return HttpResponseRedirect('%s%s%s' % (reverse('tagproblem_list'), request.META['QUERY_STRING'] and '?',
-                                                    request.META['QUERY_STRING']))
+            return HttpResponseRedirect(
+                '%s%s%s' % (
+                    reverse('tagproblem_list'), request.META['QUERY_STRING'] and '?',
+                    request.META['QUERY_STRING'],
+                ),
+            )
         return HttpResponseRedirect(queryset[randrange(count)].get_absolute_url())
 
 
@@ -175,8 +216,10 @@ class TagProblemCreate(LoginRequiredMixin, TagAllowingMixin, TitleMixin, FormVie
 
             # Initialize model
             with revisions.create_revision(atomic=True):
-                problem = TagProblem(code=problem_data['codename'], name=api_problem_data['title'], link=url,
-                                     judge=problem_data['judge'])
+                problem = TagProblem(
+                    code=problem_data['codename'], name=api_problem_data['title'], link=url,
+                    judge=problem_data['judge'],
+                )
                 problem.save()
 
                 revisions.set_comment(_('Created on site'))
@@ -243,8 +286,10 @@ class TagProblemDetail(TagProblemMixin, TitleMixin, CommentedDetailView):
 
     def get_queryset(self):
         queryset = TagData.objects.select_related('tag', 'assigner__user') \
-            .only('id', 'problem', 'tag', 'assigner__user__username',
-                  'assigner__display_rank', 'assigner__rating')
+            .only(
+            'id', 'problem', 'tag', 'assigner__user__username',
+            'assigner__display_rank', 'assigner__rating',
+            )  # noqa: E123
 
         return super(TagProblemDetail, self).get_queryset() \
             .prefetch_related(Prefetch('tagdata_set', queryset=queryset))

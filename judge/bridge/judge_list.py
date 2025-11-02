@@ -5,6 +5,7 @@ from threading import RLock
 
 from judge.judge_priority import REJUDGE_PRIORITY
 
+
 try:
     from llist import dllist
 except ImportError:
@@ -34,7 +35,8 @@ class JudgeList(object):
                 if isinstance(node.value, PriorityMarker):
                     priority = node.value.priority + 1
                 elif priority >= REJUDGE_PRIORITY and self.count_not_disabled() > 1 and sum(
-                        not judge.working and not judge.is_disabled for judge in self.judges) <= 1:
+                        not judge.working and not judge.is_disabled for judge in self.judges
+                ) <= 1:
                     return
                 else:
                     id, problem, language, source, judge_id, banned_judges = node.value

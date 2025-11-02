@@ -3,11 +3,21 @@ from functools import partial
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.sites.shortcuts import get_current_site
-from django.utils.functional import SimpleLazyObject, new_method_proxy
+from django.utils.functional import (
+    SimpleLazyObject,
+    new_method_proxy,
+)
 
 from judge import event_poster as event
-from judge.utils.caniuse import CanIUse, SUPPORT
-from .models import NavigationBar, Profile
+from judge.utils.caniuse import (  # noqa: I101
+    SUPPORT,
+    CanIUse,
+)
+
+from .models import (  # noqa: I202
+    NavigationBar,
+    Profile,
+)
 
 
 class FixedSimpleLazyObject(SimpleLazyObject):
@@ -47,9 +57,11 @@ def comet_location(request):
     else:
         websocket = settings.EVENT_DAEMON_GET
         poll = settings.EVENT_DAEMON_POLL
-    return {'EVENT_DAEMON_LOCATION': websocket,
-            'EVENT_DAEMON_POLL_LOCATION': poll,
-            'EVENT_LAST_MSG': event.last()}
+    return {
+        'EVENT_DAEMON_LOCATION': websocket,
+        'EVENT_DAEMON_POLL_LOCATION': poll,
+        'EVENT_LAST_MSG': event.last(),
+    }
 
 
 def __nav_tab(path):
@@ -77,10 +89,12 @@ def misc_config(request):
 
 
 def site_name(request):
-    return {'SITE_NAME': settings.SITE_NAME,
-            'SITE_LONG_NAME': settings.SITE_LONG_NAME,
-            'SITE_ADMIN_EMAIL': settings.SITE_ADMIN_EMAIL,
-            'SITE_FULL_URL': settings.SITE_FULL_URL}
+    return {
+        'SITE_NAME': settings.SITE_NAME,
+        'SITE_LONG_NAME': settings.SITE_LONG_NAME,
+        'SITE_ADMIN_EMAIL': settings.SITE_ADMIN_EMAIL,
+        'SITE_FULL_URL': settings.SITE_FULL_URL,
+    }
 
 
 def site_theme(request):

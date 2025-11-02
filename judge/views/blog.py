@@ -2,31 +2,63 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError
-from django.db.models import Count, FilteredRelation, Max, Q
-from django.db.models.expressions import F, Value
+from django.db.models import (
+    Count,
+    FilteredRelation,
+    Max,
+    Q,
+)
+from django.db.models.expressions import (
+    F,
+    Value,
+)
 from django.db.models.functions import Coalesce
-from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
-                         HttpResponseForbidden, HttpResponseNotFound,
-                         HttpResponseRedirect)
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    HttpResponseNotFound,
+    HttpResponseRedirect,
+)
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from django.views.generic import CreateView, ListView, UpdateView
-from django.views.generic.detail import SingleObjectMixin, View
+from django.views.generic import (
+    CreateView,
+    ListView,
+    UpdateView,
+)
+from django.views.generic.detail import (
+    SingleObjectMixin,
+    View,
+)
 from reversion import revisions
 
 from judge.comments import CommentedDetailView
 from judge.dblock import LockModel
 from judge.forms import BlogPostForm
-from judge.models import (BlogPost, BlogVote, Comment, Contest, Language,
-                          Problem, Profile, Submission, Ticket)
+from judge.models import (
+    BlogPost,
+    BlogVote,
+    Comment,
+    Contest,
+    Language,
+    Problem,
+    Profile,
+    Submission,
+    Ticket,
+)
 from judge.tasks import on_new_blogpost
 from judge.utils.cachedict import CacheDict
 from judge.utils.diggpaginator import DiggPaginator
 from judge.utils.opengraph import generate_opengraph
 from judge.utils.tickets import filter_visible_tickets
 from judge.utils.unicode import remove_accents
-from judge.utils.views import TitleMixin, generic_message
+from judge.utils.views import (
+    TitleMixin,
+    generic_message,
+)
 
 
 @login_required
@@ -41,9 +73,11 @@ def vote_blog(request, delta):
         return HttpResponseBadRequest()
 
     if request.profile.is_new_user:
-        return HttpResponseBadRequest(_('You must solve at least %d problems before you can vote.')
-                                      % settings.VNOJ_INTERACT_MIN_PROBLEM_COUNT,
-                                      content_type='text/plain')
+        return HttpResponseBadRequest(
+            _('You must solve at least %d problems before you can vote.')
+            % settings.VNOJ_INTERACT_MIN_PROBLEM_COUNT,
+            content_type='text/plain',
+        )
 
     if request.profile.mute:
         suffix_msg = '' if request.profile.ban_reason is None else _(' Reason: ') + request.profile.ban_reason
@@ -110,14 +144,20 @@ class PostListBase(ListView):
     context_object_name = 'posts'
     title = None
 
-    def get_paginator(self, queryset, per_page, orphans=0,
-                      allow_empty_first_page=True, **kwargs):
-        return DiggPaginator(queryset, per_page, body=6, padding=2,
-                             orphans=orphans, allow_empty_first_page=allow_empty_first_page, **kwargs)
+    def get_paginator(
+        self, queryset, per_page, orphans=0,
+        allow_empty_first_page=True, **kwargs,
+    ):
+        return DiggPaginator(
+            queryset, per_page, body=6, padding=2,
+            orphans=orphans, allow_empty_first_page=allow_empty_first_page, **kwargs,
+        )
 
     def get_queryset(self):
-        queryset = (BlogPost.objects.filter(visible=True, publish_on__lte=timezone.now())
-                    .prefetch_related('authors__user', 'authors__display_badge'))
+        queryset = (
+            BlogPost.objects.filter(visible=True, publish_on__lte=timezone.now())
+            .prefetch_related('authors__user', 'authors__display_badge')
+        )
         if self.request.user.is_authenticated:
             profile = self.request.profile
             queryset = queryset.annotate(
@@ -202,8 +242,10 @@ class PostList(PostListBase):
 
         # Superusers better be staffs, not the spell-casting kind either.
         if self.request.user.is_staff:
-            tickets = (Ticket.objects.order_by('-id').filter(is_open=True).prefetch_related('linked_item')
-                             .select_related('user__user', 'user__display_badge'))
+            tickets = (
+                Ticket.objects.order_by('-id').filter(is_open=True).prefetch_related('linked_item')
+                .select_related('user__user', 'user__display_badge')
+            )
             context['open_tickets'] = filter_visible_tickets(tickets, self.request.user)[:10]
         else:
             context['open_tickets'] = []
@@ -214,20 +256,28 @@ class PostList(PostListBase):
         return context
 
     def get_top_pp_users(self):
-        return (Profile.objects.order_by('-performance_points')
-                .filter(performance_points__gt=0, is_unlisted=False)
-                .only('user', 'performance_points', 'display_rank', 'display_badge', 'rating',
-                      'username_display_override')
-                .select_related('user', 'display_badge')
-                [:settings.VNOJ_HOMEPAGE_TOP_USERS_COUNT])
+        return (
+            Profile.objects.order_by('-performance_points')
+            .filter(performance_points__gt=0, is_unlisted=False)
+            .only(
+                'user', 'performance_points', 'display_rank', 'display_badge', 'rating',
+                'username_display_override',
+            )
+            .select_related('user', 'display_badge')
+            [:settings.VNOJ_HOMEPAGE_TOP_USERS_COUNT]
+        )
 
     def get_top_contributors(self):
-        return (Profile.objects.order_by('-contribution_points')
-                .filter(contribution_points__gt=0, is_unlisted=False)
-                .only('user', 'contribution_points', 'display_rank', 'display_badge', 'rating',
-                      'username_display_override')
-                .select_related('user', 'display_badge')
-                [:settings.VNOJ_HOMEPAGE_TOP_USERS_COUNT])
+        return (
+            Profile.objects.order_by('-contribution_points')
+            .filter(contribution_points__gt=0, is_unlisted=False)
+            .only(
+                'user', 'contribution_points', 'display_rank', 'display_badge', 'rating',
+                'username_display_override',
+            )
+            .select_related('user', 'display_badge')
+            [:settings.VNOJ_HOMEPAGE_TOP_USERS_COUNT]
+        )
 
 
 class PostView(TitleMixin, CommentedDetailView):
@@ -254,8 +304,10 @@ class PostView(TitleMixin, CommentedDetailView):
     def get_context_data(self, **kwargs):
         context = super(PostView, self).get_context_data(**kwargs)
 
-        metadata = generate_opengraph('generated-meta-blog:%d' % self.object.id,
-                                      self.object.summary or self.object.content, 'blog')
+        metadata = generate_opengraph(
+            'generated-meta-blog:%d' % self.object.id,
+            self.object.summary or self.object.content, 'blog',
+        )
         context['meta_description'] = metadata[0]
         context['og_image'] = self.object.og_image or metadata[1]
 
@@ -306,10 +358,14 @@ class BlogPostCreate(TitleMixin, CreateView):
         # hasattr(self, 'organization') -> admin org
         if request.official_contest_mode or request.user.profile.problem_count < settings.VNOJ_BLOG_MIN_PROBLEM_COUNT \
                 and not request.user.is_superuser and not hasattr(self, 'organization'):
-            return generic_message(request, _('Permission denied'),
-                                   _('You cannot create blog post.\n'
-                                     'Note: You need to solve at least %d problems to create new blog post.')
-                                   % settings.VNOJ_BLOG_MIN_PROBLEM_COUNT)
+            return generic_message(
+                request, _('Permission denied'),
+                _(
+                    'You cannot create blog post.\n'
+                    'Note: You need to solve at least %d problems to create new blog post.',
+                )
+                % settings.VNOJ_BLOG_MIN_PROBLEM_COUNT,
+            )
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -344,8 +400,10 @@ class BlogPostEdit(BlogPostMixin, TitleMixin, UpdateView):
 
     def dispatch(self, request, *args, **kwargs):
         if request.official_contest_mode and not request.user.is_superuser:
-            return generic_message(request, _('Permission denied'),
-                                   _('You cannot edit blog post.'))
+            return generic_message(
+                request, _('Permission denied'),
+                _('You cannot edit blog post.'),
+            )
         return super().dispatch(request, *args, **kwargs)
 
 

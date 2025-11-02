@@ -1,7 +1,10 @@
-from django.template import (Context, Template as DjangoTemplate, TemplateSyntaxError as DjangoTemplateSyntaxError,
-                             VariableDoesNotExist)
+from django.template import Context
+from django.template import Template as DjangoTemplate
+from django.template import TemplateSyntaxError as DjangoTemplateSyntaxError
+from django.template import VariableDoesNotExist
 
 from . import registry
+
 
 MAX_CACHE = 100
 django_cache = {}

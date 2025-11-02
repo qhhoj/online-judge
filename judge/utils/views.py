@@ -6,10 +6,12 @@ from judge.utils.diggpaginator import DiggPaginator
 
 
 def generic_message(request, title, message, status=None):
-    return render(request, 'generic-message.html', {
-        'message': message,
-        'title': title,
-    }, status=status)
+    return render(
+        request, 'generic-message.html', {
+            'message': message,
+            'title': title,
+        }, status=status,
+    )
 
 
 def add_file_response(request, response, url_path, file_path, file_object=None):
@@ -29,11 +31,15 @@ def paginate_query_context(request):
     query.setlist('page', [])
     query = query.urlencode()
     if query:
-        return {'page_prefix': '%s?%s&page=' % (request.path, query),
-                'first_page_href': '%s?%s' % (request.path, query)}
+        return {
+            'page_prefix': '%s?%s&page=' % (request.path, query),
+            'first_page_href': '%s?%s' % (request.path, query),
+        }
     else:
-        return {'page_prefix': '%s?page=' % request.path,
-                'first_page_href': request.path}
+        return {
+            'page_prefix': '%s?page=' % request.path,
+            'first_page_href': request.path,
+        }
 
 
 class NoBatchDeleteMixin(object):
@@ -64,10 +70,14 @@ class TitleMixin(object):
 
 
 class DiggPaginatorMixin(object):
-    def get_paginator(self, queryset, per_page, orphans=0,
-                      allow_empty_first_page=True, **kwargs):
-        return DiggPaginator(queryset, per_page, body=6, padding=2,
-                             orphans=orphans, allow_empty_first_page=allow_empty_first_page, **kwargs)
+    def get_paginator(
+        self, queryset, per_page, orphans=0,
+        allow_empty_first_page=True, **kwargs,
+    ):
+        return DiggPaginator(
+            queryset, per_page, body=6, padding=2,
+            orphans=orphans, allow_empty_first_page=allow_empty_first_page, **kwargs,
+        )
 
 
 class QueryStringSortMixin(object):

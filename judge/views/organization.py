@@ -3,39 +3,101 @@ from functools import cached_property
 from django import forms
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+    PermissionRequiredMixin,
+)
 from django.contrib.auth.models import Group
-from django.core.exceptions import ImproperlyConfigured, PermissionDenied
-from django.db.models import Count, FilteredRelation, Q
-from django.db.models.expressions import F, Value
+from django.core.exceptions import (
+    ImproperlyConfigured,
+    PermissionDenied,
+)
+from django.db.models import (
+    Count,
+    FilteredRelation,
+    Q,
+)
+from django.db.models.expressions import (
+    F,
+    Value,
+)
 from django.db.models.functions import Coalesce
-from django.forms import Form, modelformset_factory
-from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.forms import (
+    Form,
+    modelformset_factory,
+)
+from django.http import (
+    Http404,
+    HttpResponseRedirect,
+)
+from django.shortcuts import (
+    get_object_or_404,
+    render,
+)
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
-from django.utils.translation import gettext as _, gettext_lazy, ngettext
-from django.views.generic import CreateView, DetailView, FormView, ListView, UpdateView, View
-from django.views.generic.detail import SingleObjectMixin, SingleObjectTemplateResponseMixin
+from django.utils.translation import gettext as _
+from django.utils.translation import (
+    gettext_lazy,
+    ngettext,
+)
+from django.views.generic import (
+    CreateView,
+    DetailView,
+    FormView,
+    ListView,
+    UpdateView,
+    View,
+)
+from django.views.generic.detail import (
+    SingleObjectMixin,
+    SingleObjectTemplateResponseMixin,
+)
 from reversion import revisions
 
 from judge.forms import OrganizationForm
-from judge.models import BlogPost, Comment, Contest, Language, Organization, OrganizationRequest, \
-    Problem, Profile
+from judge.models import (
+    BlogPost,
+    Comment,
+    Contest,
+    Language,
+    Organization,
+    OrganizationRequest,
+    Problem,
+    Profile,
+)
 from judge.tasks import on_new_problem
 from judge.utils.infinite_paginator import InfinitePaginationMixin
 from judge.utils.ranker import ranker
-from judge.utils.views import DiggPaginatorMixin, QueryStringSortMixin, TitleMixin, generic_message
-from judge.views.blog import BlogPostCreate, PostListBase
-from judge.views.contests import ContestList, CreateContest
-from judge.views.problem import ProblemCreate, ProblemImportPolygon, ProblemList
+from judge.utils.views import (
+    DiggPaginatorMixin,
+    QueryStringSortMixin,
+    TitleMixin,
+    generic_message,
+)
+from judge.views.blog import (
+    BlogPostCreate,
+    PostListBase,
+)
+from judge.views.contests import (
+    ContestList,
+    CreateContest,
+)
+from judge.views.problem import (
+    ProblemCreate,
+    ProblemImportPolygon,
+    ProblemList,
+)
 from judge.views.submission import SubmissionsListBase
 
-__all__ = ['OrganizationList', 'OrganizationHome', 'OrganizationUsers', 'OrganizationMembershipChange',
-           'JoinOrganization', 'LeaveOrganization', 'EditOrganization', 'RequestJoinOrganization',
-           'OrganizationRequestDetail', 'OrganizationRequestView', 'OrganizationRequestLog',
-           'KickUserWidgetView', 'ProblemImportPolygonOrganization']
+
+__all__ = [
+    'OrganizationList', 'OrganizationHome', 'OrganizationUsers', 'OrganizationMembershipChange',
+    'JoinOrganization', 'LeaveOrganization', 'EditOrganization', 'RequestJoinOrganization',
+    'OrganizationRequestDetail', 'OrganizationRequestView', 'OrganizationRequestLog',
+    'KickUserWidgetView', 'ProblemImportPolygonOrganization',
+]
 
 
 class OrganizationMixin(object):
@@ -61,18 +123,24 @@ class OrganizationMixin(object):
 
             # block the user from viewing other orgs in the subdomain
             if self.is_in_organization_subdomain() and self.organization.pk != self.request.organization.pk:
-                return generic_message(request, _('Cannot view other organizations'),
-                                       _('You cannot view other organizations'), status=403)
+                return generic_message(
+                    request, _('Cannot view other organizations'),
+                    _('You cannot view other organizations'), status=403,
+                )
 
             return super(OrganizationMixin, self).dispatch(request, *args, **kwargs)
         except Http404:
             slug = kwargs.get('slug', None)
             if slug:
-                return generic_message(request, _('No such organization'),
-                                       _('Could not find an organization with the key "%s".') % slug)
+                return generic_message(
+                    request, _('No such organization'),
+                    _('Could not find an organization with the key "%s".') % slug,
+                )
             else:
-                return generic_message(request, _('No such organization'),
-                                       _('Could not find such organization.'))
+                return generic_message(
+                    request, _('No such organization'),
+                    _('Could not find such organization.'),
+                )
 
     def can_edit_organization(self, org=None):
         if org is None:
@@ -106,9 +174,11 @@ class PrivateOrganizationMixin(OrganizationMixin):
         return False
 
     def generate_error_message(self, request):
-        return generic_message(request,
-                               _("Cannot view organization's private data"),
-                               _('You must join the organization to view its private data.'))
+        return generic_message(
+            request,
+            _("Cannot view organization's private data"),
+            _('You must join the organization to view its private data.'),
+        )
 
     def dispatch(self, request, *args, **kwargs):
         if not self.can_access_this_view():
@@ -123,8 +193,10 @@ class AdminOrganizationMixin(PrivateOrganizationMixin):
         return self.can_edit_organization()
 
     def generate_error_message(self, request):
-        return generic_message(request, _("Can't edit organization"),
-                               _('You are not allowed to edit this organization.'), status=403)
+        return generic_message(
+            request, _("Can't edit organization"),
+            _('You are not allowed to edit this organization.'), status=403,
+        )
 
 
 class BaseOrganizationListView(PublicOrganizationMixin, ListView):
@@ -199,9 +271,11 @@ class JoinOrganization(OrganizationMembershipChange):
         if profile.organizations.filter(is_open=True).count() >= max_orgs:
             return generic_message(
                 request, _('Joining organization'),
-                ngettext('You may not be part of more than {count} public organization.',
-                         'You may not be part of more than {count} public organizations.',
-                         max_orgs).format(count=max_orgs),
+                ngettext(
+                    'You may not be part of more than {count} public organization.',
+                    'You may not be part of more than {count} public organizations.',
+                    max_orgs,
+                ).format(count=max_orgs),
             )
 
         profile.organizations.add(org)
@@ -229,8 +303,10 @@ class RequestJoinOrganization(LoginRequiredMixin, SingleObjectMixin, FormView):
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
         if self.object.requests.filter(user=self.request.profile, state='P').exists():
-            return generic_message(self.request, _("Can't request to join %s") % self.object.name,
-                                   _('You already have a pending request to join %s.') % self.object.name)
+            return generic_message(
+                self.request, _("Can't request to join %s") % self.object.name,
+                _('You already have a pending request to join %s.') % self.object.name,
+            )
         return super(RequestJoinOrganization, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -247,9 +323,13 @@ class RequestJoinOrganization(LoginRequiredMixin, SingleObjectMixin, FormView):
         request.reason = form.cleaned_data['reason']
         request.state = 'P'
         request.save()
-        return HttpResponseRedirect(reverse('request_organization_detail', args=(
-            request.organization.slug, request.id,
-        )))
+        return HttpResponseRedirect(
+            reverse(
+                'request_organization_detail', args=(
+                    request.organization.slug, request.id,
+                ),
+            ),
+        )
 
 
 class OrganizationRequestDetail(LoginRequiredMixin, TitleMixin, DetailView):
@@ -288,9 +368,11 @@ class OrganizationRequestBaseView(LoginRequiredMixin, SingleObjectTemplateRespon
     def get_context_data(self, **kwargs):
         context = super(OrganizationRequestBaseView, self).get_context_data(**kwargs)
         context['title'] = _('Managing join requests for %s') % self.object.name
-        context['content_title'] = format_html(_('Managing join requests for %s') %
-                                               ' <a href="{1}">{0}</a>', self.object.name,
-                                               self.object.get_absolute_url())
+        context['content_title'] = format_html(
+            _('Managing join requests for %s') %
+            ' <a href="{1}">{0}</a>', self.object.name,
+            self.object.get_absolute_url(),
+        )
         context['tab'] = self.tab
         return context
 
@@ -322,10 +404,14 @@ class OrganizationRequestView(OrganizationRequestBaseView):
                 to_approve = sum(form.cleaned_data['state'] == 'A' for form in formset.forms if form not in deleted_set)
                 can_add = organization.slots - organization.members.count()
                 if to_approve > can_add:
-                    msg1 = ngettext('Your organization can only receive %d more member.',
-                                    'Your organization can only receive %d more members.', can_add) % can_add
-                    msg2 = ngettext('You cannot approve %d user.',
-                                    'You cannot approve %d users.', to_approve) % to_approve
+                    msg1 = ngettext(
+                        'Your organization can only receive %d more member.',
+                        'Your organization can only receive %d more members.', can_add,
+                    ) % can_add
+                    msg2 = ngettext(
+                        'You cannot approve %d user.',
+                        'You cannot approve %d users.', to_approve,
+                    ) % to_approve
                     messages.error(request, msg1 + '\n' + msg2)
                     return self.render_to_response(self.get_context_data(object=organization))
 
@@ -336,9 +422,11 @@ class OrganizationRequestView(OrganizationRequestBaseView):
                     approved += 1
                 elif obj.state == 'R':
                     rejected += 1
-            messages.success(request,
-                             ngettext('Approved %d user.', 'Approved %d users.', approved) % approved + '\n' +
-                             ngettext('Rejected %d user.', 'Rejected %d users.', rejected) % rejected)
+            messages.success(
+                request,
+                ngettext('Approved %d user.', 'Approved %d users.', approved) % approved + '\n' +
+                ngettext('Rejected %d user.', 'Rejected %d users.', rejected) % rejected,
+            )
             return HttpResponseRedirect(request.get_full_path())
         return self.render_to_response(self.get_context_data(object=organization))
 
@@ -391,15 +479,19 @@ class CreateOrganization(PermissionRequiredMixin, TitleMixin, CreateView):
         if self.has_permission():
             if self.request.user.profile.admin_of.count() >= settings.VNOJ_ORGANIZATION_ADMIN_LIMIT and \
                not self.request.user.has_perm('spam_organization'):
-                return render(request, 'organization/create-limit-error.html', {
-                    'admin_of': self.request.user.profile.admin_of.all(),
-                    'admin_limit': settings.VNOJ_ORGANIZATION_ADMIN_LIMIT,
-                    'title': _("Can't create organization"),
-                }, status=403)
+                return render(
+                    request, 'organization/create-limit-error.html', {
+                        'admin_of': self.request.user.profile.admin_of.all(),
+                        'admin_limit': settings.VNOJ_ORGANIZATION_ADMIN_LIMIT,
+                        'title': _("Can't create organization"),
+                    }, status=403,
+                )
             return super(CreateOrganization, self).dispatch(request, *args, **kwargs)
         else:
-            return generic_message(request, _("Can't create organization"),
-                                   _('You are not allowed to create new organizations.'), status=403)
+            return generic_message(
+                request, _("Can't create organization"),
+                _('You are not allowed to create new organizations.'), status=403,
+            )
 
 
 class EditOrganization(LoginRequiredMixin, TitleMixin, AdminOrganizationMixin, UpdateView):
@@ -430,18 +522,24 @@ class KickUserWidgetView(LoginRequiredMixin, AdminOrganizationMixin, SingleObjec
         try:
             user = Profile.objects.get(id=request.POST.get('user', None))
         except Profile.DoesNotExist:
-            return generic_message(request, _("Can't kick user"),
-                                   _('The user you are trying to kick does not exist!'), status=400)
+            return generic_message(
+                request, _("Can't kick user"),
+                _('The user you are trying to kick does not exist!'), status=400,
+            )
 
         if not organization.members.filter(id=user.id).exists():
-            return generic_message(request, _("Can't kick user"),
-                                   _('The user you are trying to kick is not in organization: %s') %
-                                   organization.name, status=400)
+            return generic_message(
+                request, _("Can't kick user"),
+                _('The user you are trying to kick is not in organization: %s') %
+                organization.name, status=400,
+            )
 
         if organization.admins.filter(id=user.id).exists():
-            return generic_message(request, _("Can't kick user"),
-                                   _('The user you are trying to kick is an admin of organization: %s.') %
-                                   organization.name, status=400)
+            return generic_message(
+                request, _("Can't kick user"),
+                _('The user you are trying to kick is an admin of organization: %s.') %
+                organization.name, status=400,
+            )
 
         organization.members.remove(user)
         return HttpResponseRedirect(organization.get_users_url())
@@ -496,7 +594,8 @@ class OrganizationHome(TitleMixin, PublicOrganizationMixin, PostListBase):
         if not self.object.is_open:
             context['num_requests'] = OrganizationRequest.objects.filter(
                 state='P',
-                organization=self.object).count()
+                organization=self.object,
+            ).count()
 
         user = self.request.user
         if context['is_member'] or \
@@ -504,14 +603,16 @@ class OrganizationHome(TitleMixin, PublicOrganizationMixin, PostListBase):
            user.has_perm('judge.edit_all_problem'):
             context['new_problems'] = Problem.objects.filter(
                 is_public=True, is_organization_private=True,
-                organizations=self.object) \
+                organizations=self.object,
+            ) \
                 .order_by('-date', '-id')[:settings.DMOJ_BLOG_NEW_PROBLEM_COUNT]
 
         see_private_contest = user.has_perm('judge.see_private_contest') or user.has_perm('judge.edit_all_contest')
         if context['is_member'] or see_private_contest:
             new_contests = Contest.objects.filter(
                 is_visible=True, is_organization_private=True,
-                organizations=self.object) \
+                organizations=self.object,
+            ) \
                 .order_by('-end_time', '-id')
 
             if not see_private_contest:
@@ -710,7 +811,10 @@ class ProblemImportPolygonOrganization(AdminOrganizationMixin, ProblemImportPoly
                         config['polygon_to_site_language_map'][polygon_language] = site_language
 
             try:
-                from judge.utils.codeforces_polygon import PolygonImporter, ImportPolygonError
+                from judge.utils.codeforces_polygon import (
+                    ImportPolygonError,
+                    PolygonImporter,
+                )
 
                 importer = PolygonImporter(
                     package=package,

@@ -1,7 +1,11 @@
 from django.utils.safestring import mark_safe
 
-from judge.boring_avatars import Avatar, AvatarProperties
-from . import registry
+from judge.boring_avatars import (
+    Avatar,
+    AvatarProperties,
+)
+
+from . import registry  # noqa: I202
 
 
 @registry.function

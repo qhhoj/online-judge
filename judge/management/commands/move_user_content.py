@@ -1,7 +1,16 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import (
+    BaseCommand,
+    CommandError,
+)
 from django.db import transaction
 
-from judge.models import Comment, CommentVote, ContestParticipation, Profile, Submission
+from judge.models import (
+    Comment,
+    CommentVote,
+    ContestParticipation,
+    Profile,
+    Submission,
+)
 
 
 class Command(BaseCommand):
