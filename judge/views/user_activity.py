@@ -1,5 +1,6 @@
 import json
 import csv
+import pytz
 from datetime import timedelta, datetime
 from django.contrib.auth.decorators import login_required, permission_required
 from django.http import JsonResponse, HttpResponse
@@ -232,6 +233,12 @@ def user_activity_detail(request, username):
     # Thống kê theo path được truy cập nhiều nhất - Giới hạn
     path_stats = UserActivity.objects.filter(**filter_condition).values('path').annotate(count=Count('id')).order_by('-count')[:30]
 
+    # Tách riêng các request 404
+    error_404_stats = UserActivity.objects.filter(
+        **filter_condition,
+        response_code=404
+    ).values('path').annotate(count=Count('id')).order_by('-count')[:20]
+
     # Thống kê theo device type từ sessions (đã giới hạn ở trên)
     device_stats = list(UserSession.objects.filter(
         user=user,
@@ -243,24 +250,24 @@ def user_activity_detail(request, username):
         user=user,
         last_activity__gte=session_cutoff
     ).values('browser').annotate(count=Count('id')).order_by('-count'))
-    
+
     # Thống kê theo thời gian truy cập (theo giờ trong ngày)
     try:
         from django.db import connection
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT EXTRACT(hour FROM timestamp) as hour, COUNT(*) as count
-                FROM judge_useractivity 
+                FROM judge_useractivity
                 WHERE user_id = %s {}
                 GROUP BY EXTRACT(hour FROM timestamp)
                 ORDER BY hour
-            """.format("AND timestamp >= %s" if time_ago else ""), 
+            """.format("AND timestamp >= %s" if time_ago else ""),
             [user.id] + ([time_ago] if time_ago else []))
-            
+
             hour_stats = [{'hour': int(row[0]), 'count': row[1]} for row in cursor.fetchall()]
     except Exception:
         hour_stats = []
-    
+
     context = {
         'target_user': user,
         'activities': activities_page,
@@ -274,6 +281,7 @@ def user_activity_detail(request, username):
         'daily_stats': daily_stats_json,
         'ip_stats': ip_stats,
         'path_stats': path_stats,
+        'error_404_stats': error_404_stats,
         'device_stats': device_stats,
         'browser_stats': browser_stats,
         'hour_stats': hour_stats,
