@@ -547,19 +547,19 @@
     <!-- STATISTICS -->
     <div class="stats-grid">
         <div class="stat-box">
-            <div class="stat-number">{{ active_session_count or 0 }}</div>
+            <div class="stat-number">{{ active_session_count|default:0 }}</div>
             <div class="stat-label">Active Sessions</div>
         </div>
         <div class="stat-box">
-            <div class="stat-number">{{ total_session_count or 0 }}</div>
+            <div class="stat-number">{{ total_session_count|default:0 }}</div>
             <div class="stat-label">Total Sessions</div>
         </div>
         <div class="stat-box">
-            <div class="stat-number">{{ total_activities or 0 }}</div>
+            <div class="stat-number">{{ total_activities|default:0 }}</div>
             <div class="stat-label">Total Activities</div>
         </div>
         <div class="stat-box">
-            <div class="stat-number">{{ ip_stats|length if ip_stats else 0 }}</div>
+            <div class="stat-number">{% if ip_stats %}{{ ip_stats|length }}{% else %}0{% endif %}</div>
             <div class="stat-label">Unique IPs</div>
         </div>
     </div>
@@ -609,18 +609,14 @@
             <i class="fa fa-exclamation-triangle"></i>
             <span>404 Errors</span>
             <span style="background: rgba(220, 53, 69, 0.15); color: #dc3545; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
-                {% if activities %}
-                    {{ activities|selectattr('response_code', 'equalto', 404)|list|length }}
-                {% else %}
-                    0
-                {% endif %}
+                {{ error_404_stats|default:0 }}
             </span>
         </button>
         <button class="tab-btn" onclick="switchTab('sessions')">
             <i class="fa fa-laptop"></i>
             <span>Sessions</span>
             <span style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.85rem;">
-                {{ all_sessions|length if all_sessions else 0 }}
+                {% if all_sessions %}{{ all_sessions|length }}{% else %}0{% endif %}
             </span>
         </button>
     </div>
@@ -657,23 +653,23 @@
 
                             <div class="session-detail">
                                 <i class="fa fa-globe device-icon"></i>
-                                <code style="background: #fff; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.85rem;">{{ session.ip_address or 'N/A' }}</code>
+                                <code style="background: #fff; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.85rem;">{% if session.ip_address %}{{ session.ip_address }}{% else %}N/A{% endif %}</code>
                             </div>
 
                             <div class="session-detail">
                                 <i class="fa fa-browser device-icon"></i>
-                                <span>{{ session.browser or 'Unknown Browser' }}</span>
+                                <span>{% if session.browser %}{{ session.browser }}{% else %}Unknown Browser{% endif %}</span>
                             </div>
 
                             <div class="session-detail">
                                 <i class="fa fa-cogs device-icon"></i>
-                                <span>{{ session.os or 'Unknown OS' }}</span>
+                                <span>{% if session.os %}{{ session.os }}{% else %}Unknown OS{% endif %}</span>
                             </div>
 
                             {% if session.last_activity %}
                             <div class="session-detail">
                                 <i class="fa fa-clock device-icon"></i>
-                                <span>{{ session.last_activity.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                                <span>{{ session.last_activity|date:"Y-m-d H:i:s" }}</span>
                             </div>
                             {% endif %}
                         </div>
@@ -726,7 +722,7 @@
                                     <td>
                                         {% if activity.timestamp %}
                                             <div style="font-size: 0.85rem; white-space: nowrap;">
-                                                {{ activity.timestamp.strftime('%m-%d %H:%M:%S') }}
+                                                {{ activity.timestamp|date:"m-d H:i:s" }}
                                             </div>
                                         {% else %}
                                             <span style="color: #999;">N/A</span>
@@ -734,20 +730,24 @@
                                     </td>
                                     <td>
                                         <code style="font-size: 0.8rem; background: #f5f5f5; padding: 0.3rem 0.5rem; border-radius: 4px;">
-                                            {% if activity.path and activity.path|length > 50 %}
-                                                {{ activity.path[:50] }}...
+                                            {% if activity.path %}
+                                                {% if activity.path|length > 50 %}
+                                                    {{ activity.path|slice:":50" }}...
+                                                {% else %}
+                                                    {{ activity.path }}
+                                                {% endif %}
                                             {% else %}
-                                                {{ activity.path or 'N/A' }}
+                                                N/A
                                             {% endif %}
                                         </code>
                                     </td>
                                     <td>
-                                        <span class="method-tag method-{{ activity.method|lower if activity.method else 'get' }}">
-                                            {{ activity.method or 'GET' }}
+                                        <span class="method-tag method-{% if activity.method %}{{ activity.method|lower }}{% else %}get{% endif %}">
+                                            {% if activity.method %}{{ activity.method }}{% else %}GET{% endif %}
                                         </span>
                                     </td>
                                     <td>
-                                        <code style="font-size: 0.8rem; background: #f5f5f5; padding: 0.2rem 0.4rem; border-radius: 4px;">{{ activity.ip_address or 'N/A' }}</code>
+                                        <code style="font-size: 0.8rem; background: #f5f5f5; padding: 0.2rem 0.4rem; border-radius: 4px;">{% if activity.ip_address %}{{ activity.ip_address }}{% else %}N/A{% endif %}</code>
                                     </td>
                                     <td>
                                         {% if activity.response_code %}
@@ -810,16 +810,11 @@
             <div class="section-header">
                 <h3 class="section-title">
                     <i class="fa fa-exclamation-triangle"></i> 404 Not Found Errors
-                    {% if activities %}
-                        ({{ activities|selectattr('response_code', 'equalto', 404)|list|length }})
-                    {% else %}
-                        (0)
-                    {% endif %}
+                    ({{ error_404_stats|default:0 }})
                 </h3>
             </div>
             <div class="section-content">
-                {% set error_404_list = activities|selectattr('response_code', 'equalto', 404)|list if activities else [] %}
-                {% if error_404_list %}
+                {% if activities %}
                     <div style="overflow-x: auto;">
                         <table class="activity-table">
                             <thead>
@@ -832,12 +827,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for activity in error_404_list %}
+                                {% for activity in activities %}
+                                {% if activity.response_code == 404 %}
                                 <tr>
                                     <td>
                                         {% if activity.timestamp %}
                                             <div style="font-size: 0.85rem; white-space: nowrap;">
-                                                {{ activity.timestamp.strftime('%m-%d %H:%M:%S') }}
+                                                {{ activity.timestamp|date:"m-d H:i:s" }}
                                             </div>
                                         {% else %}
                                             <span style="color: #999;">N/A</span>
@@ -845,25 +841,30 @@
                                     </td>
                                     <td>
                                         <code style="font-size: 0.8rem; background: #fff5f5; padding: 0.3rem 0.5rem; border-radius: 4px; color: #dc3545;">
-                                            {% if activity.path and activity.path|length > 50 %}
-                                                {{ activity.path[:50] }}...
+                                            {% if activity.path %}
+                                                {% if activity.path|length > 50 %}
+                                                    {{ activity.path|slice:":50" }}...
+                                                {% else %}
+                                                    {{ activity.path }}
+                                                {% endif %}
                                             {% else %}
-                                                {{ activity.path or 'N/A' }}
+                                                N/A
                                             {% endif %}
                                         </code>
                                     </td>
                                     <td>
-                                        <span class="method-tag method-{{ activity.method|lower if activity.method else 'get' }}">
-                                            {{ activity.method or 'GET' }}
+                                        <span class="method-tag method-{% if activity.method %}{{ activity.method|lower }}{% else %}get{% endif %}">
+                                            {% if activity.method %}{{ activity.method }}{% else %}GET{% endif %}
                                         </span>
                                     </td>
                                     <td>
-                                        <code style="font-size: 0.8rem; background: #f5f5f5; padding: 0.2rem 0.4rem; border-radius: 4px;">{{ activity.ip_address or 'N/A' }}</code>
+                                        <code style="font-size: 0.8rem; background: #f5f5f5; padding: 0.2rem 0.4rem; border-radius: 4px;">{% if activity.ip_address %}{{ activity.ip_address }}{% else %}N/A{% endif %}</code>
                                     </td>
                                     <td>
                                         <span class="response-tag response-error">404</span>
                                     </td>
                                 </tr>
+                                {% endif %}
                                 {% endfor %}
                             </tbody>
                         </table>
