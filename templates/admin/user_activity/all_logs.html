@@ -110,7 +110,7 @@
                     <tbody>
                         {% for activity in activities %}
                         <tr>
-                            <td>{{ activity.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{{ date(activity.timestamp, "Y-m-d H:i:s") }}</td>
                             <td>
                                 {% if activity.user %}
                                     <a href="/admin/user-activity/user/{{ activity.user.username }}/">
