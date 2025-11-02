@@ -561,12 +561,12 @@
                                 <div class="status-badge status-active">
                                     <i class="fa fa-circle"></i>
                                     <script>
-                                        document.write(new Date('{{ date(session.last_activity, "c") }}').toLocaleTimeString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit'}));
+                                        document.write(new Date('{{ session.last_activity|date("c") }}').toLocaleTimeString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit'}));
                                     </script>
                                 </div>
                                 <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
                                     <script>
-                                        document.write(new Date('{{ date(session.last_activity, "c") }}').toLocaleDateString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit'}));
+                                        document.write(new Date('{{ session.last_activity|date("c") }}').toLocaleDateString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit'}));
                                     </script>
                                 </div>
                             {% else %}
@@ -634,12 +634,12 @@
                                 <div class="status-badge status-active">
                                     <i class="fa fa-circle"></i>
                                     <script>
-                                        document.write(new Date('{{ date(session.last_activity, "c") }}').toLocaleTimeString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit'}));
+                                        document.write(new Date('{{ session.last_activity|date("c") }}').toLocaleTimeString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit'}));
                                     </script>
                                 </div>
                                 <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
                                     <script>
-                                        document.write(new Date('{{ date(session.last_activity, "c") }}').toLocaleDateString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit'}));
+                                        document.write(new Date('{{ session.last_activity|date("c") }}').toLocaleDateString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit'}));
                                     </script>
                                 </div>
                             {% else %}
@@ -698,12 +698,12 @@
                                 <div class="status-badge status-active">
                                     <i class="fa fa-circle"></i>
                                     <script>
-                                        document.write(new Date('{{ date(session.last_activity, "c") }}').toLocaleTimeString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit'}));
+                                        document.write(new Date('{{ session.last_activity|date("c") }}').toLocaleTimeString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit'}));
                                     </script>
                                 </div>
                                 <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
                                     <script>
-                                        document.write(new Date('{{ date(session.last_activity, "c") }}').toLocaleDateString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit'}));
+                                        document.write(new Date('{{ session.last_activity|date("c") }}').toLocaleDateString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit'}));
                                     </script>
                                 </div>
                             {% else %}
