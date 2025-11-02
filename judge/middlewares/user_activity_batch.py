@@ -158,7 +158,8 @@ class BatchUserActivityMiddleware:
 
         try:
             with transaction.atomic():
-                # 1. Update sessions
+                # 1. Update sessions - Build sessions_map đồng thời
+                sessions_map = {}
                 if sessions_to_update:
                     session_objects = []
                     for session_key, data in sessions_to_update.items():
@@ -166,6 +167,9 @@ class BatchUserActivityMiddleware:
                             session_key=session_key,
                             defaults=data,
                         )
+                        # Lưu vào map ngay (quan trọng!)
+                        sessions_map[session_key] = session
+
                         if not created:
                             for key, value in data.items():
                                 setattr(session, key, value)
@@ -183,27 +187,23 @@ class BatchUserActivityMiddleware:
 
                     logger.info('✅ Flushed %s sessions', len(sessions_to_update))
 
-                # 2. Create activities
+                # 2. Create activities - Dùng sessions_map đã build ở trên
                 if activities_to_save:
-                    session_keys = [a['session_key'] for a in activities_to_save]
-                    sessions_map = {
-                        s.session_key: s
-                        for s in UserSession.objects.filter(session_key__in=session_keys)
-                    }
-
                     activity_objects = []
                     for activity_data in activities_to_save:
                         session_key = activity_data.pop('session_key')
                         session = sessions_map.get(session_key)
-                        activity_objects.append(UserActivity(session=session, **activity_data))
+                        if session:  # Chỉ tạo activity nếu có session
+                            activity_objects.append(UserActivity(session=session, **activity_data))
 
-                    UserActivity.objects.bulk_create(
-                        activity_objects,
-                        ignore_conflicts=True,
-                        batch_size=200,
-                    )
+                    if activity_objects:
+                        UserActivity.objects.bulk_create(
+                            activity_objects,
+                            ignore_conflicts=True,
+                            batch_size=200,
+                        )
 
-                    logger.info('✅ Flushed %s activities', len(activity_objects))
+                        logger.info('✅ Flushed %s activities', len(activity_objects))
 
         except Exception:
             logger.exception('❌ Error flushing buffers')
