@@ -305,7 +305,7 @@
                                     {% for activity in activities %}
                                     <tr>
                                         <td>
-                                            <small>{{ activity.timestamp|date("m-d H:i:s") }}</small>
+                                            <small>{{ activity.timestamp|date:"m-d H:i:s" }}</small>
                                         </td>
                                         <td>
                                             <code style="font-size: 0.8em;">
@@ -416,7 +416,7 @@
                                         <td>{{ session.os|truncatechars:20 }}</td>
                                         <td>
                                             <script>
-                                                document.write(new Date('{{ session.last_activity|date("c") }}').toLocaleString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'}));
+                                                document.write(new Date('{{ session.last_activity|date:"c" }}').toLocaleString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'}));
                                             </script>
                                         </td>
                                         <td>
