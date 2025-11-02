@@ -10,7 +10,7 @@ from reversion.admin import VersionAdmin
 from judge.models import Organization
 from judge.widgets import (
     AdminHeavySelect2MultipleWidget,
-    AdminMartorWidget
+    AdminMartorWidget,
 )
 
 
@@ -24,8 +24,10 @@ class OrganizationForm(ModelForm):
 
 class OrganizationAdmin(VersionAdmin):
     readonly_fields = ('creation_date',)
-    fields = ('name', 'slug', 'short_name', 'is_open', 'is_unlisted', 'about', 'logo_override_image', 'slots',
-              'creation_date', 'admins')
+    fields = (
+        'name', 'slug', 'short_name', 'is_open', 'is_unlisted', 'about', 'logo_override_image', 'slots',
+        'creation_date', 'admins',
+    )
     list_display = ('name', 'short_name', 'is_open', 'is_unlisted', 'slots', 'show_public')
     prepopulated_fields = {'slug': ('name',)}
     actions = ('recalculate_points',)
@@ -35,8 +37,10 @@ class OrganizationAdmin(VersionAdmin):
 
     @admin.display(description='')
     def show_public(self, obj):
-        return format_html('<a href="{0}" style="white-space:nowrap;">{1}</a>',
-                           obj.get_absolute_url(), gettext('View on site'))
+        return format_html(
+            '<a href="{0}" style="white-space:nowrap;">{1}</a>',
+            obj.get_absolute_url(), gettext('View on site'),
+        )
 
     def get_readonly_fields(self, request, obj=None):
         fields = self.readonly_fields
@@ -64,9 +68,13 @@ class OrganizationAdmin(VersionAdmin):
         for org in queryset:
             org.calculate_points()
             count += 1
-        self.message_user(request, ngettext('%d organization has scores recalculated.',
-                                            '%d organizations have scores recalculated.',
-                                            count) % count)
+        self.message_user(
+            request, ngettext(
+                '%d organization has scores recalculated.',
+                '%d organizations have scores recalculated.',
+                count,
+            ) % count,
+        )
 
 
 class OrganizationRequestAdmin(admin.ModelAdmin):

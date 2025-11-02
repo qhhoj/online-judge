@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -19,6 +19,7 @@ class Migration(migrations.Migration):
             field=models.PositiveIntegerField(
                 default=0,
                 help_text='How long should the scoreboard be cached. Set to 0 to disable caching.',
-                verbose_name='scoreboard cache timeout'),
+                verbose_name='scoreboard cache timeout',
+            ),
         ),
     ]

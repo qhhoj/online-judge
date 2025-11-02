@@ -2,7 +2,7 @@ import unicodedata
 from typing import (
     AnyStr,
     Optional,
-    overload
+    overload,
 )
 
 

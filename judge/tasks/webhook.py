@@ -2,7 +2,7 @@ import pytz
 from celery import shared_task
 from discord_webhook import (
     DiscordEmbed,
-    DiscordWebhook
+    DiscordWebhook,
 )
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -16,12 +16,14 @@ from judge.models import (
     Tag,
     TagProblem,
     Ticket,
-    TicketMessage
+    TicketMessage,
 )
 
 
-__all__ = ('on_new_ticket', 'on_new_comment', 'on_new_problem', 'on_new_tag_problem', 'on_new_tag', 'on_new_contest',
-           'on_new_blogpost', 'on_new_ticket_message')
+__all__ = (
+    'on_new_ticket', 'on_new_comment', 'on_new_problem', 'on_new_tag_problem', 'on_new_tag', 'on_new_contest',
+    'on_new_blogpost', 'on_new_ticket_message',
+)
 
 
 def get_webhook_url(event_name):

@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.test import (
     SimpleTestCase,
     TestCase,
-    override_settings
+    override_settings,
 )
 from django.utils import timezone
 
@@ -10,11 +10,11 @@ from judge.models import (
     ContestParticipation,
     Language,
     LanguageLimit,
-    Problem
+    Problem,
 )
 from judge.models.problem import (
     ProblemTestcaseAccess,
-    disallowed_characters_validator
+    disallowed_characters_validator,
 )
 from judge.models.tests.util import (
     CommonDataMixin,
@@ -25,7 +25,7 @@ from judge.models.tests.util import (
     create_problem,
     create_problem_type,
     create_solution,
-    create_user
+    create_user,
 )
 
 
@@ -85,7 +85,7 @@ class ProblemTestCase(CommonDataMixin, TestCase):
             key='basic',
             start_time=_now - timezone.timedelta(days=1),
             end_time=_now + timezone.timedelta(days=100),
-            authors=('superuser', ),
+            authors=('superuser',),
         )
 
         create_contest_problem(
@@ -95,7 +95,8 @@ class ProblemTestCase(CommonDataMixin, TestCase):
 
         for user in (
             'normal_in_contest', 'superuser', 'staff_problem_edit_own',
-                'staff_problem_see_all', 'staff_problem_edit_all'):
+                'staff_problem_see_all', 'staff_problem_edit_all',
+        ):
             self.users[user].profile.current_contest = create_contest_participation(
                 contest='basic',
                 user=user,

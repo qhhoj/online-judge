@@ -14,13 +14,21 @@ class Migration(migrations.Migration):
             name='profile',
             options={
                 'permissions': (
-                    ('test_site',
-                     'Shows in-progress development stuff'),
-                    ('totp',
-                     'Edit TOTP settings'),
-                    ('can_upload_image',
-                     'Can upload image directly to server via martor')),
+                    (
+                        'test_site',
+                        'Shows in-progress development stuff',
+                    ),
+                    (
+                        'totp',
+                        'Edit TOTP settings',
+                    ),
+                    (
+                        'can_upload_image',
+                        'Can upload image directly to server via martor',
+                    ),
+                ),
                 'verbose_name': 'user profile',
-                'verbose_name_plural': 'user profiles'},
+                'verbose_name_plural': 'user profiles',
+            },
         ),
     ]

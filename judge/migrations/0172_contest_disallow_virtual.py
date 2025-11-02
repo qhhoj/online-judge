@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -19,6 +19,7 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 default=False,
                 help_text='Disallow virtual joining after contest has ended.',
-                verbose_name='Disallow virtual joining'),
+                verbose_name='Disallow virtual joining',
+            ),
         ),
     ]

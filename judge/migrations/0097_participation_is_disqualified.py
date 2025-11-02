@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -19,7 +19,8 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 default=False,
                 help_text='Whether this participation is disqualified.',
-                verbose_name='is disqualified'),
+                verbose_name='is disqualified',
+            ),
         ),
         migrations.AlterField(
             model_name='contestparticipation',
@@ -27,6 +28,7 @@ class Migration(migrations.Migration):
             field=models.IntegerField(
                 default=0,
                 help_text='0 means non-virtual, otherwise the n-th virtual participation.',
-                verbose_name='virtual participation id'),
+                verbose_name='virtual participation id',
+            ),
         ),
     ]

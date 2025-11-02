@@ -2,7 +2,7 @@ from django import VERSION as DJANGO_VERSION
 from django.apps import apps as django_apps
 from django.contrib.auth.management import (
     _get_all_permissions,
-    create_permissions
+    create_permissions,
 )
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -48,7 +48,7 @@ class Command(BaseCommand):
                 # 'django.contrib.auth' is in INSTALLED_APPS before
                 # 'django.contrib.contenttypes'.
                 from django.contrib.contenttypes.management import (
-                    create_contenttypes
+                    create_contenttypes,
                 )
                 create_contenttypes(app, verbosity=options['verbosity'])
 

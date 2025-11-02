@@ -44,7 +44,9 @@ class IOIContestFormat(LegacyIOIContestFormat):
         yield _('The maximum score for each problem batch will be used.')
 
         if self.config['cumtime']:
-            yield _('Ties will be broken by the sum of the last score altering submission time on problems with a '
-                    'non-zero score.')
+            yield _(
+                'Ties will be broken by the sum of the last score altering submission time on problems with a '
+                'non-zero score.',
+            )
         else:
             yield _('Ties by score will **not** be broken.')

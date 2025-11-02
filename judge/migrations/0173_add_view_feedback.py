@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -18,13 +18,15 @@ class Migration(migrations.Migration):
             name='allow_view_feedback',
             field=models.BooleanField(
                 default=False,
-                help_text='Allow user to view checker feedback.'),
+                help_text='Allow user to view checker feedback.',
+            ),
         ),
         migrations.AddField(
             model_name='problem',
             name='allow_view_testcase_status',
             field=models.BooleanField(
                 default=True,
-                help_text='Allow user to view result of testcase. Should be allow for most of problems except for ICPC'),
+                help_text='Allow user to view result of testcase. Should be allow for most of problems except for ICPC',
+            ),
         ),
     ]

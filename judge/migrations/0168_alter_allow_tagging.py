@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -25,10 +25,12 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 default=True,
                 help_text='User will be allowed to tag problems.',
-                verbose_name='Allow tagging'),
+                verbose_name='Allow tagging',
+            ),
         ),
         migrations.RunPython(
             code=all_allow_tagging_to_True,
             reverse_code=migrations.RunPython.noop,
-            atomic=True),
+            atomic=True,
+        ),
     ]

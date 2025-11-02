@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -16,7 +16,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='profile',
             name='site_theme',
-            field=models.CharField(choices=[('auto', 'Follow system default'), ('light', 'Light'), ('dark', 'Dark')],
-                                   default='light', max_length=10, verbose_name='site theme'),
+            field=models.CharField(
+                choices=[('auto', 'Follow system default'), ('light', 'Light'), ('dark', 'Dark')],
+                default='light', max_length=10, verbose_name='site theme',
+            ),
         ),
     ]

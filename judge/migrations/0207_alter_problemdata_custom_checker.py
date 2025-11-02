@@ -3,7 +3,7 @@
 import django.core.validators
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 import judge.models.problem_data
@@ -31,7 +31,11 @@ class Migration(migrations.Migration):
                             'cpp',
                             'pas',
                             'java',
-                            'py'])],
-                verbose_name='custom checker file'),
+                            'py',
+                        ],
+                    ),
+                ],
+                verbose_name='custom checker file',
+            ),
         ),
     ]

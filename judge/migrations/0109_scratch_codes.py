@@ -25,7 +25,10 @@ class Migration(migrations.Migration):
                 validators=[
                     django.core.validators.RegexValidator(
                         r'^(\[\])?$|^\[("[A-Z0-9]{16}", *)*"[A-Z0-9]{16}"\]$',
-                        'Scratch codes must be empty or a JSON array of 16-character base32 codes')],
-                verbose_name='scratch codes'),
+                        'Scratch codes must be empty or a JSON array of 16-character base32 codes',
+                    ),
+                ],
+                verbose_name='scratch codes',
+            ),
         ),
     ]

@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -20,6 +20,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 related_name='assigned_tickets',
                 to='judge.Profile',
-                verbose_name='assignees'),
+                verbose_name='assignees',
+            ),
         ),
     ]

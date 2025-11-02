@@ -12,15 +12,16 @@ from lxml.etree import (
 )
 from markupsafe import Markup
 
-from .bleach_whitelist import (
+from judge.jinja2.markdown.lazy_load import \
+    lazy_load as lazy_load_processor  # noqa: I100,I202
+from judge.utils.camo import client as camo_client
+
+from .. import registry  # noqa: I202
+from .bleach_whitelist import (  # noqa: I100
     all_styles,
     mathml_attrs,
     mathml_tags,
 )
-from .. import registry
-
-from judge.jinja2.markdown.lazy_load import lazy_load as lazy_load_processor  # noqa: I100,I202
-from judge.utils.camo import client as camo_client
 
 
 logger = logging.getLogger('judge.html')

@@ -11,7 +11,7 @@ from django.utils.translation import gettext as _
 from judge.models import (
     Comment,
     Problem,
-    Submission
+    Submission,
 )
 from judge.utils.celery import Progress
 from judge.utils.raw_sql import use_straight_join

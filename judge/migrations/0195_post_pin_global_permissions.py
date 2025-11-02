@@ -14,15 +14,25 @@ class Migration(migrations.Migration):
             name='blogpost',
             options={
                 'permissions': (
-                    ('edit_all_post',
-                     'Edit all posts'),
-                    ('edit_organization_post',
-                     'Edit organization posts'),
-                    ('mark_global_post',
-                     'Mark post as global'),
-                    ('pin_post',
-                     'Pin post')),
+                    (
+                        'edit_all_post',
+                        'Edit all posts',
+                    ),
+                    (
+                        'edit_organization_post',
+                        'Edit organization posts',
+                    ),
+                    (
+                        'mark_global_post',
+                        'Mark post as global',
+                    ),
+                    (
+                        'pin_post',
+                        'Pin post',
+                    ),
+                ),
                 'verbose_name': 'blog post',
-                'verbose_name_plural': 'blog posts'},
+                'verbose_name_plural': 'blog posts',
+            },
         ),
     ]

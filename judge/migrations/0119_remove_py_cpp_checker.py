@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -28,22 +28,38 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 choices=[
-                    ('standard',
-                     'Standard'),
-                    ('floats',
-                     'Floats'),
-                    ('floatsabs',
-                     'Floats (absolute)'),
-                    ('floatsrel',
-                     'Floats (relative)'),
-                    ('identical',
-                     'Byte identical'),
-                    ('linecount',
-                     'Line-by-line'),
-                    ('bridged',
-                     'Custom checker')],
+                    (
+                        'standard',
+                        'Standard',
+                    ),
+                    (
+                        'floats',
+                        'Floats',
+                    ),
+                    (
+                        'floatsabs',
+                        'Floats (absolute)',
+                    ),
+                    (
+                        'floatsrel',
+                        'Floats (relative)',
+                    ),
+                    (
+                        'identical',
+                        'Byte identical',
+                    ),
+                    (
+                        'linecount',
+                        'Line-by-line',
+                    ),
+                    (
+                        'bridged',
+                        'Custom checker',
+                    ),
+                ],
                 max_length=10,
-                verbose_name='checker'),
+                verbose_name='checker',
+            ),
         ),
         migrations.AlterField(
             model_name='problemtestcase',
@@ -51,21 +67,37 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 choices=[
-                    ('standard',
-                     'Standard'),
-                    ('floats',
-                     'Floats'),
-                    ('floatsabs',
-                     'Floats (absolute)'),
-                    ('floatsrel',
-                     'Floats (relative)'),
-                    ('identical',
-                     'Byte identical'),
-                    ('linecount',
-                     'Line-by-line'),
-                    ('bridged',
-                     'Custom checker')],
+                    (
+                        'standard',
+                        'Standard',
+                    ),
+                    (
+                        'floats',
+                        'Floats',
+                    ),
+                    (
+                        'floatsabs',
+                        'Floats (absolute)',
+                    ),
+                    (
+                        'floatsrel',
+                        'Floats (relative)',
+                    ),
+                    (
+                        'identical',
+                        'Byte identical',
+                    ),
+                    (
+                        'linecount',
+                        'Line-by-line',
+                    ),
+                    (
+                        'bridged',
+                        'Custom checker',
+                    ),
+                ],
                 max_length=10,
-                verbose_name='checker'),
+                verbose_name='checker',
+            ),
         ),
     ]

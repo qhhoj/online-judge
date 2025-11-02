@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -19,6 +19,7 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 default=False,
                 help_text='Whether to show a section containing contest settings on the contest page or not.',
-                verbose_name='show short form settings display'),
+                verbose_name='show short form settings display',
+            ),
         ),
     ]

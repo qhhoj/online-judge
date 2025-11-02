@@ -9,7 +9,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import default_storage
 from django.utils.translation import gettext as _
-from moss import MOSS
+from mosspy import Moss as MOSS
 
 from judge.models import (
     Contest,
@@ -17,7 +17,7 @@ from judge.models import (
     ContestParticipation,
     ContestSubmission,
     Problem,
-    Submission
+    Submission,
 )
 from judge.utils.celery import Progress
 
@@ -83,8 +83,10 @@ def run_moss(self, contest_key):
                 )
 
                 if subs.exists():
-                    moss_call = MOSS(moss_api_key, language=moss_lang, matching_file_limit=100,
-                                     comment='%s - %s' % (contest.key, problem.code))
+                    moss_call = MOSS(
+                        moss_api_key, language=moss_lang, matching_file_limit=100,
+                        comment='%s - %s' % (contest.key, problem.code),
+                    )
 
                     users = set()
 
@@ -94,9 +96,11 @@ def run_moss(self, contest_key):
                         users.add(username)
                         moss_call.add_file_from_memory(
                             username,
-                            ('// ' + settings.SITE_FULL_URL +
-                             '/submission/' + str(sub_id) +
-                             '\n' + source).encode('utf-8'),
+                            (
+                                '// ' + settings.SITE_FULL_URL +
+                                '/submission/' + str(sub_id) +
+                                '\n' + source
+                            ).encode('utf-8'),
                         )
 
                     result.url = moss_call.process()
@@ -120,12 +124,16 @@ def prepare_contest_data(self, contest_id, options):
         contest = Contest.objects.get(id=contest_id)
         queryset = ContestSubmission.objects.filter(participation__contest=contest, participation__virtual=0) \
                                     .order_by('-points', 'id') \
-                                    .select_related('problem__problem', 'submission__user__user',
-                                                    'submission__source', 'submission__language') \
-                                    .values_list('submission__user__user__id', 'submission__user__user__username',
-                                                 'problem__problem__code', 'submission__source__source',
-                                                 'submission__language__extension', 'submission__id',
-                                                 'submission__language__file_only')
+                                    .select_related(
+                                        'problem__problem', 'submission__user__user',
+                                        'submission__source', 'submission__language',
+        ) \
+            .values_list(
+                                        'submission__user__user__id', 'submission__user__user__username',
+                                        'problem__problem__code', 'submission__source__source',
+                                        'submission__language__extension', 'submission__id',
+                                        'submission__language__file_only',
+        )
 
         if options['submission_results']:
             queryset = queryset.filter(result__in=options['submission_results'])
@@ -156,8 +164,12 @@ def prepare_contest_data(self, contest_id, options):
                 # Get the basename of the source as it is an URL
                 filename = os.path.basename(source)
                 data_file.write(
-                    default_storage.path(os.path.join(settings.SUBMISSION_FILE_UPLOAD_MEDIA_DIR,
-                                         problem, str(user_id), filename)),
+                    default_storage.path(
+                        os.path.join(
+                            settings.SUBMISSION_FILE_UPLOAD_MEDIA_DIR,
+                            problem, str(user_id), filename,
+                        ),
+                    ),
                     path,
                 )
                 pass

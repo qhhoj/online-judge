@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -18,41 +18,69 @@ class Migration(migrations.Migration):
             name='checker',
             field=models.CharField(
                 choices=[
-                    ('standard',
-                     'Standard'),
-                    ('bridged',
-                     'Custom checker'),
-                    ('floats',
-                     'Floats'),
-                    ('floatsabs',
-                     'Floats (absolute)'),
-                    ('floatsrel',
-                     'Floats (relative)'),
-                    ('identical',
-                     'Byte identical'),
-                    ('linecount',
-                     'Line-by-line')],
+                    (
+                        'standard',
+                        'Standard',
+                    ),
+                    (
+                        'bridged',
+                        'Custom checker',
+                    ),
+                    (
+                        'floats',
+                        'Floats',
+                    ),
+                    (
+                        'floatsabs',
+                        'Floats (absolute)',
+                    ),
+                    (
+                        'floatsrel',
+                        'Floats (relative)',
+                    ),
+                    (
+                        'identical',
+                        'Byte identical',
+                    ),
+                    (
+                        'linecount',
+                        'Line-by-line',
+                    ),
+                ],
                 default='standard',
                 max_length=10,
-                verbose_name='checker'),
+                verbose_name='checker',
+            ),
         ),
         migrations.AlterField(
             model_name='problemdata',
             name='grader',
             field=models.CharField(
                 choices=[
-                    ('standard',
-                     'Standard'),
-                    ('interactive',
-                     'Interactive'),
-                    ('signature',
-                     'Function Signature Grading (IOI-style)'),
-                    ('output_only',
-                     'Output Only'),
-                    ('custom_judge',
-                     'Custom Grader')],
+                    (
+                        'standard',
+                        'Standard',
+                    ),
+                    (
+                        'interactive',
+                        'Interactive',
+                    ),
+                    (
+                        'signature',
+                        'Function Signature Grading (IOI-style)',
+                    ),
+                    (
+                        'output_only',
+                        'Output Only',
+                    ),
+                    (
+                        'custom_judge',
+                        'Custom Grader',
+                    ),
+                ],
                 default='standard',
                 max_length=30,
-                verbose_name='Grader'),
+                verbose_name='Grader',
+            ),
         ),
     ]

@@ -8,5 +8,5 @@ from .api_v2 import (
     APISubmissionDetail,
     APISubmissionList,
     APIUserDetail,
-    APIUserList
+    APIUserList,
 )

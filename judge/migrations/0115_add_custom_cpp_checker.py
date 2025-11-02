@@ -4,7 +4,7 @@
 import django.core.validators
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 import judge.models.problem_data
@@ -28,8 +28,11 @@ class Migration(migrations.Migration):
                 upload_to=judge.models.problem_data.problem_directory_file,
                 validators=[
                     django.core.validators.FileExtensionValidator(
-                        allowed_extensions=['cpp'])],
-                verbose_name='custom cpp checker file'),
+                        allowed_extensions=['cpp'],
+                    ),
+                ],
+                verbose_name='custom cpp checker file',
+            ),
         ),
         migrations.AlterField(
             model_name='problemdata',
@@ -37,28 +40,50 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 choices=[
-                    ('standard',
-                     'Standard'),
-                    ('floats',
-                     'Floats'),
-                    ('floatsabs',
-                     'Floats (absolute)'),
-                    ('floatsrel',
-                     'Floats (relative)'),
-                    ('rstripped',
-                     'Non-trailing spaces'),
-                    ('sorted',
-                     'Unordered'),
-                    ('identical',
-                     'Byte identical'),
-                    ('linecount',
-                     'Line-by-line'),
-                    ('custom_py',
-                     'Custom checker (PY)'),
-                    ('custom_cpp',
-                     'Custom checker (CPP17)')],
+                    (
+                        'standard',
+                        'Standard',
+                    ),
+                    (
+                        'floats',
+                        'Floats',
+                    ),
+                    (
+                        'floatsabs',
+                        'Floats (absolute)',
+                    ),
+                    (
+                        'floatsrel',
+                        'Floats (relative)',
+                    ),
+                    (
+                        'rstripped',
+                        'Non-trailing spaces',
+                    ),
+                    (
+                        'sorted',
+                        'Unordered',
+                    ),
+                    (
+                        'identical',
+                        'Byte identical',
+                    ),
+                    (
+                        'linecount',
+                        'Line-by-line',
+                    ),
+                    (
+                        'custom_py',
+                        'Custom checker (PY)',
+                    ),
+                    (
+                        'custom_cpp',
+                        'Custom checker (CPP17)',
+                    ),
+                ],
                 max_length=10,
-                verbose_name='checker'),
+                verbose_name='checker',
+            ),
         ),
         migrations.AlterField(
             model_name='problemtestcase',
@@ -66,27 +91,49 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 choices=[
-                    ('standard',
-                     'Standard'),
-                    ('floats',
-                     'Floats'),
-                    ('floatsabs',
-                     'Floats (absolute)'),
-                    ('floatsrel',
-                     'Floats (relative)'),
-                    ('rstripped',
-                     'Non-trailing spaces'),
-                    ('sorted',
-                     'Unordered'),
-                    ('identical',
-                     'Byte identical'),
-                    ('linecount',
-                     'Line-by-line'),
-                    ('custom_py',
-                     'Custom checker (PY)'),
-                    ('custom_cpp',
-                     'Custom checker (CPP17)')],
+                    (
+                        'standard',
+                        'Standard',
+                    ),
+                    (
+                        'floats',
+                        'Floats',
+                    ),
+                    (
+                        'floatsabs',
+                        'Floats (absolute)',
+                    ),
+                    (
+                        'floatsrel',
+                        'Floats (relative)',
+                    ),
+                    (
+                        'rstripped',
+                        'Non-trailing spaces',
+                    ),
+                    (
+                        'sorted',
+                        'Unordered',
+                    ),
+                    (
+                        'identical',
+                        'Byte identical',
+                    ),
+                    (
+                        'linecount',
+                        'Line-by-line',
+                    ),
+                    (
+                        'custom_py',
+                        'Custom checker (PY)',
+                    ),
+                    (
+                        'custom_cpp',
+                        'Custom checker (CPP17)',
+                    ),
+                ],
                 max_length=10,
-                verbose_name='checker'),
+                verbose_name='checker',
+            ),
         ),
     ]

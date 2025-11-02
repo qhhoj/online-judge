@@ -3,7 +3,7 @@ import datetime
 from django.utils.translation import (
     ngettext,
     npgettext,
-    pgettext
+    pgettext,
 )
 
 

@@ -3,7 +3,7 @@
 import django.core.validators
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 import judge.models.problem
@@ -22,8 +22,10 @@ class Migration(migrations.Migration):
             field=models.FloatField(
                 validators=[
                     django.core.validators.MinValueValidator(0.01),
-                    django.core.validators.MaxValueValidator(60)],
-                verbose_name='time limit'),
+                    django.core.validators.MaxValueValidator(60),
+                ],
+                verbose_name='time limit',
+            ),
         ),
         migrations.AlterField(
             model_name='problem',
@@ -33,8 +35,10 @@ class Migration(migrations.Migration):
                 help_text='The full name of the problem, as shown in the problem list.',
                 max_length=100,
                 validators=[
-                    judge.models.problem.disallowed_characters_validator],
-                verbose_name='problem name'),
+                    judge.models.problem.disallowed_characters_validator,
+                ],
+                verbose_name='problem name',
+            ),
         ),
         migrations.AlterField(
             model_name='problem',
@@ -43,7 +47,9 @@ class Migration(migrations.Migration):
                 help_text='The time limit for this problem, in seconds. Fractional seconds (e.g. 1.5) are supported.',
                 validators=[
                     django.core.validators.MinValueValidator(0.01),
-                    django.core.validators.MaxValueValidator(60)],
-                verbose_name='time limit'),
+                    django.core.validators.MaxValueValidator(60),
+                ],
+                verbose_name='time limit',
+            ),
         ),
     ]

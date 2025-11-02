@@ -3,7 +3,7 @@ from django.db.models import (
     F,
     OuterRef,
     Subquery,
-    Sum
+    Sum,
 )
 from django.db.models.functions import Coalesce
 

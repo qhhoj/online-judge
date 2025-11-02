@@ -4,9 +4,9 @@ import threading
 
 from django.conf import settings
 
-from websocket import (
+from websocket import (  # noqa: I202
     WebSocketException,
-    create_connection
+    create_connection,
 )
 
 

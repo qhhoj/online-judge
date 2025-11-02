@@ -4,7 +4,7 @@ from django.db import connection
 from django.utils import timezone
 from django.utils.timezone import (
     make_aware,
-    make_naive
+    make_naive,
 )
 
 

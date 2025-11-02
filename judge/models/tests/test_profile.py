@@ -11,7 +11,7 @@ from judge.models import Profile
 from judge.models.tests.util import (
     CommonDataMixin,
     create_contest,
-    create_contest_participation
+    create_contest_participation,
 )
 
 

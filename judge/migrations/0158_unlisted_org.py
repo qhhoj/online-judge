@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -24,9 +24,11 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 default=True,
                 help_text='Organization will not be listed',
-                verbose_name='is unlisted organization?'),
+                verbose_name='is unlisted organization?',
+            ),
         ),
         migrations.RunPython(
             set_existing_org_unlisted,
-            migrations.RunPython.noop),
+            migrations.RunPython.noop,
+        ),
     ]

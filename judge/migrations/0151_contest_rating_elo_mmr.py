@@ -1,17 +1,17 @@
 import math
 from operator import (
     attrgetter,
-    itemgetter
+    itemgetter,
 )
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 from django.db.models import (
     Count,
     OuterRef,
-    Subquery
+    Subquery,
 )
 from django.db.models.functions import Coalesce
 from django.utils import timezone
@@ -131,14 +131,22 @@ def tc_rate_contest(contest, Rating, Profile):
     rating_subquery = Rating.objects.filter(user=OuterRef('user'))
     rating_sorted = rating_subquery.order_by('-contest__end_time')
     users = contest.users.order_by('is_disqualified', '-score', 'cumtime', 'tiebreaker') \
-        .annotate(submissions=Count('submission'),
-                  last_rating=Coalesce(Subquery(rating_sorted.values('rating')[:1]), 1200),
-                  volatility=Coalesce(Subquery(rating_sorted.values('volatility')[:1]), 535),
-                  times=Coalesce(Subquery(rating_subquery.order_by().values('user_id')
-                                          .annotate(count=Count('id')).values('count')), 0)) \
+        .annotate(
+            submissions=Count('submission'),
+            last_rating=Coalesce(Subquery(rating_sorted.values('rating')[:1]), 1200),
+            volatility=Coalesce(Subquery(rating_sorted.values('volatility')[:1]), 535),
+            times=Coalesce(
+                Subquery(
+                    rating_subquery.order_by().values('user_id')
+                    .annotate(count=Count('id')).values('count'),
+                ), 0,
+            ),
+        ) \
         .exclude(user_id__in=contest.rate_exclude.all()) \
-        .filter(virtual=0).values('id', 'user_id', 'score', 'cumtime', 'tiebreaker', 'is_disqualified',
-                                  'last_rating', 'volatility', 'times')
+        .filter(virtual=0).values(
+            'id', 'user_id', 'score', 'cumtime', 'tiebreaker', 'is_disqualified',
+            'last_rating', 'volatility', 'times',
+        )
     if not contest.rate_all:
         users = users.filter(submissions__gt=0)
     if contest.rating_floor is not None:
@@ -157,14 +165,19 @@ def tc_rate_contest(contest, Rating, Profile):
     rating, volatility = recalculate_ratings(old_rating, old_volatility, ranking, times_ranked, is_disqualified)
 
     now = timezone.now()
-    ratings = [Rating(user_id=i, contest=contest, rating=r, volatility=v, last_rated=now, participation_id=p, rank=z)
-               for i, p, r, v, z in zip(user_ids, participation_ids, rating, volatility, ranking)]
+    ratings = [
+        Rating(user_id=i, contest=contest, rating=r, volatility=v, last_rated=now, participation_id=p, rank=z)
+        for i, p, r, v, z in zip(user_ids, participation_ids, rating, volatility, ranking)
+    ]
 
     Rating.objects.bulk_create(ratings)
 
     Profile.objects.filter(contest_history__contest=contest, contest_history__virtual=0).update(
-        rating=Subquery(Rating.objects.filter(user=OuterRef('id'))
-                        .order_by('-contest__end_time').values('rating')[:1]))
+        rating=Subquery(
+            Rating.objects.filter(user=OuterRef('id'))
+            .order_by('-contest__end_time').values('rating')[:1],
+        ),
+    )
 
 
 # inspired by rate_all_view

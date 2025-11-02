@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from judge.models import (
     Problem,
     ProblemGroup,
-    ProblemType
+    ProblemType,
 )
 
 

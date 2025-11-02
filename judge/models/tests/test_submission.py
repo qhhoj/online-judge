@@ -6,7 +6,7 @@ from judge.models import (
     ContestSubmission,
     Language,
     Submission,
-    SubmissionSource
+    SubmissionSource,
 )
 from judge.models.tests.util import (
     CommonDataMixin,
@@ -14,7 +14,7 @@ from judge.models.tests.util import (
     create_contest_participation,
     create_contest_problem,
     create_problem,
-    create_user
+    create_user,
 )
 
 

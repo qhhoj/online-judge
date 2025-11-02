@@ -7,44 +7,44 @@ from judge.admin.comments import CommentAdmin
 from judge.admin.contest import (
     ContestAdmin,
     ContestParticipationAdmin,
-    ContestTagAdmin
+    ContestTagAdmin,
 )
 from judge.admin.interface import (
     BlogPostAdmin,
     FlatPageAdmin,
     LicenseAdmin,
     LogEntryAdmin,
-    NavigationBarAdmin
+    NavigationBarAdmin,
 )
 from judge.admin.organization import (
     OrganizationAdmin,
-    OrganizationRequestAdmin
+    OrganizationRequestAdmin,
 )
 from judge.admin.problem import ProblemAdmin
 from judge.admin.profile import (
     ProfileAdmin,
-    UserAdmin
+    UserAdmin,
 )
 from judge.admin.runtime import (
     JudgeAdmin,
-    LanguageAdmin
+    LanguageAdmin,
 )
 from judge.admin.submission import SubmissionAdmin
 from judge.admin.tag import (
     TagAdmin,
     TagGroupAdmin,
-    TagProblemAdmin
+    TagProblemAdmin,
 )
 from judge.admin.taxon import (
     ProblemGroupAdmin,
-    ProblemTypeAdmin
+    ProblemTypeAdmin,
 )
 from judge.admin.ticket import TicketAdmin
 from judge.admin.user_activity import (
     UserActivityAdmin,
-    UserSessionAdmin
+    UserSessionAdmin,
 )
-from judge.models import (
+from judge.models import (  # noqa: I101
     URL,
     Badge,
     BlogPost,
@@ -70,7 +70,7 @@ from judge.models import (
     TagProblem,
     Ticket,
     UserActivity,
-    UserSession
+    UserSession,
 )
 
 

@@ -3,7 +3,7 @@
 import django.db.models.deletion
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -24,7 +24,8 @@ class Migration(migrations.Migration):
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name='+',
                 to='judge.contest',
-                verbose_name='contest'),
+                verbose_name='contest',
+            ),
         ),
         migrations.AlterField(
             model_name='submission',
@@ -33,7 +34,8 @@ class Migration(migrations.Migration):
                 db_index=False,
                 on_delete=django.db.models.deletion.CASCADE,
                 to='judge.language',
-                verbose_name='submission language'),
+                verbose_name='submission language',
+            ),
         ),
         migrations.AlterField(
             model_name='submission',
@@ -41,7 +43,8 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 db_index=False,
                 on_delete=django.db.models.deletion.CASCADE,
-                to='judge.problem'),
+                to='judge.problem',
+            ),
         ),
         migrations.AlterField(
             model_name='submission',
@@ -49,7 +52,8 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 db_index=False,
                 on_delete=django.db.models.deletion.CASCADE,
-                to='judge.profile'),
+                to='judge.profile',
+            ),
         ),
         migrations.AlterField(
             model_name='submissiontestcase',
@@ -59,6 +63,7 @@ class Migration(migrations.Migration):
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name='test_cases',
                 to='judge.submission',
-                verbose_name='associated submission'),
+                verbose_name='associated submission',
+            ),
         ),
     ]

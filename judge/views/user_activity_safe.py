@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.contrib.auth.decorators import (
     login_required,
-    permission_required
+    permission_required,
 )
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from judge.models import (
     UserActivity,
-    UserSession
+    UserSession,
 )
 
 

@@ -14,10 +14,13 @@ class Migration(migrations.Migration):
             name='comment',
             options={
                 'permissions': (
-                    ('view_all_user_comment',
-                     'View all comments by a user'),
+                    (
+                        'view_all_user_comment',
+                        'View all comments by a user',
+                    ),
                 ),
                 'verbose_name': 'comment',
-                'verbose_name_plural': 'comments'},
+                'verbose_name_plural': 'comments',
+            },
         ),
     ]

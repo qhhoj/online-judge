@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -19,6 +19,7 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 default=False,
                 help_text='Whether problem authors should be hidden by default.',
-                verbose_name='hide problem authors'),
+                verbose_name='hide problem authors',
+            ),
         ),
     ]

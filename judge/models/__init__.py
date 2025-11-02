@@ -4,12 +4,12 @@ from judge.models.choices import (
     ACE_THEMES,
     EFFECTIVE_MATH_ENGINES,
     MATH_ENGINES_CHOICES,
-    TIMEZONE
+    TIMEZONE,
 )
 from judge.models.comment import (
     Comment,
     CommentLock,
-    CommentVote
+    CommentVote,
 )
 from judge.models.contest import (
     Contest,
@@ -19,14 +19,14 @@ from judge.models.contest import (
     ContestProblem,
     ContestSubmission,
     ContestTag,
-    Rating
+    Rating,
 )
 from judge.models.interface import (
     BlogPost,
     BlogVote,
     MiscConfig,
     NavigationBar,
-    validate_regex
+    validate_regex,
 )
 from judge.models.problem import (
     LanguageLimit,
@@ -38,48 +38,48 @@ from judge.models.problem import (
     ProblemType,
     Solution,
     SubmissionSourceAccess,
-    TranslatedProblemQuerySet
+    TranslatedProblemQuerySet,
 )
 from judge.models.problem_data import (
     CHECKERS,
     ProblemData,
     ProblemTestCase,
     problem_data_storage,
-    problem_directory_file
+    problem_directory_file,
 )
 from judge.models.profile import (
     Badge,
     Organization,
     OrganizationRequest,
     Profile,
-    WebAuthnCredential
+    WebAuthnCredential,
 )
 from judge.models.runtime import (
     Judge,
     Language,
-    RuntimeVersion
+    RuntimeVersion,
 )
 from judge.models.submission import (
     SUBMISSION_RESULT,
     Submission,
     SubmissionSource,
-    SubmissionTestCase
+    SubmissionTestCase,
 )
 from judge.models.tag import (
     Tag,
     TagData,
     TagGroup,
-    TagProblem
+    TagProblem,
 )
 from judge.models.ticket import (
     GeneralIssue,
     Ticket,
-    TicketMessage
+    TicketMessage,
 )
 from judge.models.urlshortener import URL
 from judge.models.user_activity import (
     UserActivity,
-    UserSession
+    UserSession,
 )
 
 

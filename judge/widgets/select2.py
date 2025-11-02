@@ -47,10 +47,12 @@ from django.forms.models import ModelChoiceIterator
 from django.urls import reverse_lazy
 
 
-__all__ = ['Select2Widget', 'Select2MultipleWidget', 'Select2TagWidget',
-           'HeavySelect2Widget', 'HeavySelect2MultipleWidget', 'HeavySelect2TagWidget',
-           'AdminSelect2Widget', 'AdminSelect2MultipleWidget', 'AdminHeavySelect2Widget',
-           'AdminHeavySelect2MultipleWidget']
+__all__ = [
+    'Select2Widget', 'Select2MultipleWidget', 'Select2TagWidget',
+    'HeavySelect2Widget', 'HeavySelect2MultipleWidget', 'HeavySelect2TagWidget',
+    'AdminSelect2Widget', 'AdminSelect2MultipleWidget', 'AdminHeavySelect2Widget',
+    'AdminHeavySelect2MultipleWidget',
+]
 
 
 class Select2Mixin(object):
@@ -214,9 +216,11 @@ class HeavySelect2Mixin(Select2Mixin):
         result = super(HeavySelect2Mixin, self).format_value(value)
         if isinstance(self.choices, ModelChoiceIterator):
             chosen = copy(self.choices)
-            chosen.queryset = chosen.queryset.filter(pk__in=[
-                int(i) for i in result if isinstance(i, int) or i.isdigit()
-            ])
+            chosen.queryset = chosen.queryset.filter(
+                pk__in=[
+                    int(i) for i in result if isinstance(i, int) or i.isdigit()
+                ],
+            )
             # https://code.djangoproject.com/ticket/33155
             self.choices = {(value if isinstance(value, str) else value.value, label) for value, label in chosen}
         return result

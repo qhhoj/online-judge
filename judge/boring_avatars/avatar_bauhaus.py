@@ -4,7 +4,7 @@ from judge.boring_avatars.utilities import (
     getBoolean,
     getRandomColor,
     getUnit,
-    hashCode
+    hashCode,
 )
 
 

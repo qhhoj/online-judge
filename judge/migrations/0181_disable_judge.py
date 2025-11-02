@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -19,6 +19,7 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 default=False,
                 help_text='Whether this judge should be removed from judging queue.',
-                verbose_name='disable judge'),
+                verbose_name='disable judge',
+            ),
         ),
     ]

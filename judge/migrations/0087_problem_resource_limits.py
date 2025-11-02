@@ -3,7 +3,7 @@
 import django.core.validators
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -19,7 +19,8 @@ class Migration(migrations.Migration):
             name='memory_limit',
             field=models.PositiveIntegerField(
                 help_text='The memory limit for this problem, in kilobytes (e.g. 64mb = 65536 kilobytes).',
-                verbose_name='memory limit'),
+                verbose_name='memory limit',
+            ),
         ),
         migrations.AlterField(
             model_name='problem',
@@ -28,7 +29,9 @@ class Migration(migrations.Migration):
                 help_text='The time limit for this problem, in seconds. Fractional seconds (e.g. 1.5) are supported.',
                 validators=[
                     django.core.validators.MinValueValidator(0),
-                    django.core.validators.MaxValueValidator(2000)],
-                verbose_name='time limit'),
+                    django.core.validators.MaxValueValidator(2000),
+                ],
+                verbose_name='time limit',
+            ),
         ),
     ]

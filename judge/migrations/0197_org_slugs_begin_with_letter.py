@@ -3,7 +3,7 @@
 import django.core.validators
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -24,7 +24,10 @@ class Migration(migrations.Migration):
                 validators=[
                     django.core.validators.RegexValidator(
                         '^[a-zA-Z]',
-                        'Organization slugs must begin with a letter.')],
-                verbose_name='organization slug'),
+                        'Organization slugs must begin with a letter.',
+                    ),
+                ],
+                verbose_name='organization slug',
+            ),
         ),
     ]

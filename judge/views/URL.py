@@ -1,6 +1,6 @@
 from django.http import (
     HttpResponseBadRequest,
-    HttpResponseForbidden
+    HttpResponseForbidden,
 )
 from django.shortcuts import render
 

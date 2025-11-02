@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -24,6 +24,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 help_text='Bans the selected judges from judging this contest.',
                 to='judge.Judge',
-                verbose_name='Banned judges'),
+                verbose_name='Banned judges',
+            ),
         ),
     ]

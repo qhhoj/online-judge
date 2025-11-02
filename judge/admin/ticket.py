@@ -7,7 +7,7 @@ from judge.models import TicketMessage
 from judge.widgets import (
     AdminHeavySelect2MultipleWidget,
     AdminHeavySelect2Widget,
-    AdminMartorWidget
+    AdminMartorWidget,
 )
 
 

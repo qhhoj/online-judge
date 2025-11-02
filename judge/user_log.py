@@ -10,8 +10,10 @@ class LogUserAccessMiddleware(object):
     def __call__(self, request):
         response = self.get_response(request)
 
-        if (hasattr(request, 'user') and request.user.is_authenticated and
-                not getattr(request, 'no_profile_update', False)):
+        if (
+            hasattr(request, 'user') and request.user.is_authenticated and
+            not getattr(request, 'no_profile_update', False)
+        ):
             updates = {'last_access': now()}
 
             # if using cloudflare, update the ip address

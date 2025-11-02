@@ -1,7 +1,7 @@
 from django.db import connections
 from django.db.models.sql.constants import (
     INNER,
-    LOUTER
+    LOUTER,
 )
 from django.db.models.sql.datastructures import Join
 
@@ -9,8 +9,10 @@ from judge.utils.cachedict import CacheDict
 
 
 class RawSQLJoin(Join):
-    def __init__(self, subquery, subquery_params, parent_alias, table_alias, join_type, join_field, nullable,
-                 filtered_relation=None):
+    def __init__(
+        self, subquery, subquery_params, parent_alias, table_alias, join_type, join_field, nullable,
+        filtered_relation=None,
+    ):
         self.subquery_params = subquery_params
         super().__init__(subquery, parent_alias, table_alias, join_type, join_field, nullable, filtered_relation)
 
@@ -38,7 +40,8 @@ class FakeJoinField:
 
 
 def join_sql_subquery(
-        queryset, subquery, params, join_fields, alias, related_model, join_type=INNER, parent_model=None):
+        queryset, subquery, params, join_fields, alias, related_model, join_type=INNER, parent_model=None,
+):
     if parent_model is not None:
         parent_alias = parent_model._meta.db_table
     else:
@@ -47,8 +50,10 @@ def join_sql_subquery(
         queryset.query.external_aliases[alias] = True
     else:
         queryset.query.external_aliases.add(alias)
-    join = RawSQLJoin(subquery, params, parent_alias, alias, join_type, FakeJoinField(join_fields, related_model),
-                      join_type == LOUTER)
+    join = RawSQLJoin(
+        subquery, params, parent_alias, alias, join_type, FakeJoinField(join_fields, related_model),
+        join_type == LOUTER,
+    )
     queryset.query.join(join)
     join.table_alias = alias
 

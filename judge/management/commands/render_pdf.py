@@ -5,7 +5,7 @@ from django.utils import translation
 
 from judge.models import (
     Problem,
-    ProblemTranslation
+    ProblemTranslation,
 )
 from judge.utils.pdfoid import render_pdf
 
@@ -15,8 +15,10 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('code', help='code of problem to render')
-        parser.add_argument('-l', '--language', default=settings.LANGUAGE_CODE,
-                            help='language to render PDF in')
+        parser.add_argument(
+            '-l', '--language', default=settings.LANGUAGE_CODE,
+            help='language to render PDF in',
+        )
 
     def handle(self, *args, **options):
         try:
@@ -32,12 +34,14 @@ class Command(BaseCommand):
 
         with open(problem.code + '.pdf', 'wb') as f, translation.override(options['language']):
             problem_name = problem.name if trans is None else trans.name
-            f.write(render_pdf(
-                html=get_template('problem/raw.html').render({
-                    'problem': problem,
-                    'problem_name': problem_name,
-                    'description': problem.description if trans is None else trans.description,
-                    'url': '',
-                }).replace('"//', '"https://').replace("'//", "'https://"),
-                title=problem_name,
-            ))
+            f.write(
+                render_pdf(
+                    html=get_template('problem/raw.html').render({
+                        'problem': problem,
+                        'problem_name': problem_name,
+                        'description': problem.description if trans is None else trans.description,
+                        'url': '',
+                    }).replace('"//', '"https://').replace("'//", "'https://"),
+                    title=problem_name,
+                ),
+            )

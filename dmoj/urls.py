@@ -68,10 +68,6 @@ from judge.views.register import (
     ActivationView,
     RegistrationView,
 )
-from judge.views.URL import (  # noqa: I100
-    redirect_url,
-    shorten_url,
-)
 from judge.views.select2 import (
     AssigneeSelect2View,
     CommentSelect2View,
@@ -85,6 +81,10 @@ from judge.views.select2 import (
     TicketUserSelect2View,
     UserSearchSelect2View,
     UserSelect2View,
+)
+from judge.views.URL import (  # noqa: I100
+    redirect_url,
+    shorten_url,
 )
 from judge.views.widgets import martor_image_uploader
 

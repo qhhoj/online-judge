@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -16,7 +16,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='contest',
             name='show_submission_list',
-            field=models.BooleanField(default=False, help_text='Allow contestants to view submission list of others in '
-                                                               'contest time'),
+            field=models.BooleanField(
+                default=False, help_text='Allow contestants to view submission list of others in '
+                'contest time',
+            ),
         ),
     ]

@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -21,6 +21,7 @@ class Migration(migrations.Migration):
                 help_text='These users will be able to view the scoreboard.',
                 related_name='view_contest_scoreboard',
                 to='judge.Profile',
-                verbose_name='view contest scoreboard'),
+                verbose_name='view contest scoreboard',
+            ),
         ),
     ]

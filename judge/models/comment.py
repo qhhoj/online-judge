@@ -16,7 +16,7 @@ from judge.models.contest import Contest
 from judge.models.interface import BlogPost
 from judge.models.problem import (
     Problem,
-    Solution
+    Solution,
 )
 from judge.models.profile import Profile
 from judge.models.tag import TagProblem
@@ -25,20 +25,26 @@ from judge.utils.cachedict import CacheDict
 
 __all__ = ['Comment', 'CommentLock', 'CommentVote']
 
-comment_validator = RegexValidator(r'^\w+:[a-z0-9A-Z_]+$',
-                                   _(r'Page code must be ^\w+:[a-z0-9A-Z_]+$'))
+comment_validator = RegexValidator(
+    r'^\w+:[a-z0-9A-Z_]+$',
+    _(r'Page code must be ^\w+:[a-z0-9A-Z_]+$'),
+)
 
 
 class Comment(MPTTModel):
     author = models.ForeignKey(Profile, verbose_name=_('commenter'), on_delete=CASCADE)
     time = models.DateTimeField(verbose_name=_('posted time'), auto_now_add=True)
-    page = models.CharField(max_length=34, verbose_name=_('associated page'), db_index=True,
-                            validators=[comment_validator])
+    page = models.CharField(
+        max_length=34, verbose_name=_('associated page'), db_index=True,
+        validators=[comment_validator],
+    )
     score = models.IntegerField(verbose_name=_('votes'), default=0)
     body = models.TextField(verbose_name=_('body of comment'), max_length=8192)
     hidden = models.BooleanField(verbose_name=_('hidden'), default=0)
-    parent = TreeForeignKey('self', verbose_name=_('parent'), null=True, blank=True, related_name='replies',
-                            on_delete=CASCADE)
+    parent = TreeForeignKey(
+        'self', verbose_name=_('parent'), null=True, blank=True, related_name='replies',
+        on_delete=CASCADE,
+    )
     revisions = models.IntegerField(verbose_name=_('revisions'), default=0)
 
     class Meta:
@@ -63,8 +69,10 @@ class Comment(MPTTModel):
         else:
             queryset = cls.objects.filter(hidden=False)
 
-        queryset = (queryset.prefetch_related('author__user', 'author__display_badge')
-                    .defer('author__about', 'body').order_by('-id'))
+        queryset = (
+            queryset.prefetch_related('author__user', 'author__display_badge')
+            .defer('author__about', 'body').order_by('-id')
+        )
 
         problem_cache = CacheDict(lambda code: Problem.objects.defer('description', 'summary').get(code=code))
         solution_cache = CacheDict(lambda code: Solution.objects.defer('content').get(problem__code=code))
@@ -209,8 +217,10 @@ class CommentVote(models.Model):
 
 
 class CommentLock(models.Model):
-    page = models.CharField(max_length=34, verbose_name=_('associated page'), db_index=True,
-                            validators=[comment_validator])
+    page = models.CharField(
+        max_length=34, verbose_name=_('associated page'), db_index=True,
+        validators=[comment_validator],
+    )
 
     class Meta:
         permissions = (

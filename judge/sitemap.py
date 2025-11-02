@@ -8,7 +8,7 @@ from judge.models import (
     Contest,
     Organization,
     Problem,
-    Solution
+    Solution,
 )
 
 
@@ -39,8 +39,10 @@ class ContestSitemap(Sitemap):
     priority = 0.7
 
     def items(self):
-        return Contest.objects.filter(is_visible=True, is_private=False,
-                                      is_organization_private=False).values_list('key')
+        return Contest.objects.filter(
+            is_visible=True, is_private=False,
+            is_organization_private=False,
+        ).values_list('key')
 
     def location(self, obj):
         return reverse('contest_view', args=obj)
@@ -73,8 +75,12 @@ class SolutionSitemap(Sitemap):
     priority = 0.8
 
     def items(self):
-        return (Solution.objects.filter(is_public=True, publish_on__lte=timezone.now(),
-                                        problem__in=Problem.get_public_problems()).values_list('problem__code'))
+        return (
+            Solution.objects.filter(
+                is_public=True, publish_on__lte=timezone.now(),
+                problem__in=Problem.get_public_problems(),
+            ).values_list('problem__code')
+        )
 
     def location(self, obj):
         return reverse('problem_editorial', args=obj)

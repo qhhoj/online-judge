@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from judge.boring_avatars.utilities import (
     getRandomColor,
     getUnit,
-    hashCode
+    hashCode,
 )
 
 

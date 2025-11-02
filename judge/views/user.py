@@ -3,12 +3,12 @@ import json
 import os
 from datetime import (
     datetime,
-    timedelta
+    timedelta,
 )
 from datetime import timezone as dt_timezone
 from operator import (
     attrgetter,
-    itemgetter
+    itemgetter,
 )
 
 import pytz
@@ -18,20 +18,20 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import (
     Permission,
-    User
+    User,
 )
 from django.contrib.auth.views import (
     LoginView,
     PasswordChangeView,
     PasswordResetView,
-    redirect_to_login
+    redirect_to_login,
 )
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.core.exceptions import (
     ImproperlyConfigured,
     PermissionDenied,
-    ValidationError
+    ValidationError,
 )
 from django.db.models import (
     Count,
@@ -40,25 +40,25 @@ from django.db.models import (
     Max,
     Min,
     Prefetch,
-    Q
+    Q,
 )
 from django.db.models.expressions import Value
 from django.db.models.fields import DateField
 from django.db.models.functions import (
     Cast,
     Coalesce,
-    ExtractYear
+    ExtractYear,
 )
 from django.forms import Form
 from django.http import (
     Http404,
     HttpResponse,
     HttpResponseRedirect,
-    JsonResponse
+    JsonResponse,
 )
 from django.shortcuts import (
     get_object_or_404,
-    render
+    render,
 )
 from django.urls import reverse
 from django.utils import timezone
@@ -74,7 +74,7 @@ from django.views.generic import (
     FormView,
     ListView,
     TemplateView,
-    View
+    View,
 )
 from reversion import revisions
 
@@ -84,29 +84,29 @@ from judge.forms import (
     UserBanForm,
     UserDownloadDataForm,
     UserForm,
-    newsletter_id
+    newsletter_id,
 )
 from judge.models import (
     BlogPost,
     Comment,
     Organization,
     Profile,
-    Submission
+    Submission,
 )
 from judge.performance_points import get_pp_breakdown
 from judge.ratings import (
     rating_class,
-    rating_progress
+    rating_progress,
 )
 from judge.tasks import prepare_user_data
 from judge.utils.celery import (
     task_status_by_id,
-    task_status_url_by_id
+    task_status_url_by_id,
 )
 from judge.utils.infinite_paginator import InfinitePaginationMixin
 from judge.utils.problems import (
     contest_completed_ids,
-    user_completed_ids
+    user_completed_ids,
 )
 from judge.utils.pwned import PwnedPasswordsValidator
 from judge.utils.ranker import ranker
@@ -118,15 +118,17 @@ from judge.utils.views import (
     SingleObjectFormView,
     TitleMixin,
     add_file_response,
-    generic_message
+    generic_message,
 )
 from judge.views.blog import PostListBase
 
-from .contests import ContestRanking
+from .contests import ContestRanking  # noqa: I202
 
 
-__all__ = ['UserPage', 'UserAboutPage', 'UserProblemsPage', 'UserCommentPage', 'UserDownloadData', 'UserPrepareData',
-           'users', 'edit_profile']
+__all__ = [
+    'UserPage', 'UserAboutPage', 'UserProblemsPage', 'UserCommentPage', 'UserDownloadData', 'UserPrepareData',
+    'users', 'edit_profile',
+]
 
 
 def remap_keys(iterable, mapping):
@@ -175,12 +177,16 @@ class UserPage(TitleMixin, UserMixin, DetailView):
         try:
             return super(UserPage, self).dispatch(request, *args, **kwargs)
         except Http404:
-            return generic_message(request, _('No such user'), _('No user handle "%s".') %
-                                   self.kwargs.get(self.slug_url_kwarg, None))
+            return generic_message(
+                request, _('No such user'), _('No user handle "%s".') %
+                self.kwargs.get(self.slug_url_kwarg, None),
+            )
 
     def get_title(self):
-        return (_('My account') if self.request.user == self.object.user else
-                _('User %s') % self.object.display_name)
+        return (
+            _('My account') if self.request.user == self.object.user else
+            _('User %s') % self.object.display_name
+        )
 
     # TODO: the same code exists in problem.py, maybe move to problems.py?
     @cached_property
@@ -216,8 +222,12 @@ class UserPage(TitleMixin, UserMixin, DetailView):
             context['rating_rank'] = Profile.objects.filter(
                 is_unlisted=False, rating__gt=self.object.rating,
             ).count() + 1
-        context.update(self.object.ratings.aggregate(min_rating=Min('rating'), max_rating=Max('rating'),
-                                                     contests=Count('contest')))
+        context.update(
+            self.object.ratings.aggregate(
+                min_rating=Min('rating'), max_rating=Max('rating'),
+                contests=Count('contest'),
+            ),
+        )
         return context
 
     def get(self, request, *args, **kwargs):
@@ -267,16 +277,21 @@ class UserAboutPage(UserPage):
         ratings = context['ratings'] = self.object.ratings.order_by('-contest__end_time').select_related('contest') \
             .defer('contest__description')
 
-        context['rating_data'] = mark_safe(json.dumps([{
-            'label': rating.contest.name,
-            'rating': rating.rating,
-            'ranking': rating.rank,
-            'link': '%s#!%s' % (reverse('contest_ranking', args=(rating.contest.key,)), self.object.user.username),
-            'timestamp': (rating.contest.end_time - EPOCH).total_seconds() * 1000,
-            'date': date_format(timezone.localtime(rating.contest.end_time), _('M j, Y, G:i')),
-            'class': rating_class(rating.rating),
-            'height': '%.3fem' % rating_progress(rating.rating),
-        } for rating in ratings]))
+        context['rating_data'] = mark_safe(
+            json.dumps([
+                {
+                    'label': rating.contest.name,
+                    'rating': rating.rating,
+                    'ranking': rating.rank,  # noqa: E501
+                    'link': '%s#!%s' % (reverse('contest_ranking', args=(rating.contest.key,)),
+                                        self.object.user.username),
+                    'timestamp': (rating.contest.end_time - EPOCH).total_seconds() * 1000,
+                    'date': date_format(timezone.localtime(rating.contest.end_time), _('M j, Y, G:i')),
+                    'class': rating_class(rating.rating),
+                    'height': '%.3fem' % rating_progress(rating.rating),
+                } for rating in ratings
+            ]),
+        )
 
         user_timezone = settings.DEFAULT_USER_TIME_ZONE
         if self.request is not None and self.request.profile is not None:
@@ -289,16 +304,20 @@ class UserAboutPage(UserPage):
             .values('date_only').annotate(cnt=Count('id'))
         )
 
-        context['submission_data'] = mark_safe(json.dumps({
-            date_counts['date_only'].isoformat(): date_counts['cnt'] for date_counts in submissions
-        }))
-        context['submission_metadata'] = mark_safe(json.dumps({
-            'min_year': (
-                self.object.submission_set
-                .annotate(year_only=ExtractYear('date'))
-                .aggregate(min_year=Min('year_only'))['min_year']
-            ),
-        }))
+        context['submission_data'] = mark_safe(
+            json.dumps({
+                date_counts['date_only'].isoformat(): date_counts['cnt'] for date_counts in submissions
+            }),
+        )
+        context['submission_metadata'] = mark_safe(
+            json.dumps({
+                'min_year': (
+                    self.object.submission_set
+                    .annotate(year_only=ExtractYear('date'))
+                    .aggregate(min_year=Min('year_only'))['min_year']
+                ),
+            }),
+        )
         return context
 
 
@@ -367,9 +386,11 @@ class UserCommentPage(CustomUserMixin, DiggPaginatorMixin, ListView):
     title = None
 
     def get_queryset(self):
-        return Comment.get_newest_visible_comments(viewer=self.request.user,
-                                                   author=self.user,
-                                                   batch=2 * self.paginate_by)
+        return Comment.get_newest_visible_comments(
+            viewer=self.request.user,
+            author=self.user,
+            batch=2 * self.paginate_by,
+        )
 
     def get_context_data(self, **kwargs):
         context = super(UserCommentPage, self).get_context_data(**kwargs)
@@ -392,8 +413,10 @@ class UserCommentPage(CustomUserMixin, DiggPaginatorMixin, ListView):
 
         user_id = User.objects.get(username=kwargs['user']).id
         user = Profile.objects.get(user=user_id)
-        for comment in Comment.get_newest_visible_comments(viewer=request.user, author=user,
-                                                           batch=2 * self.paginate_by):
+        for comment in Comment.get_newest_visible_comments(
+            viewer=request.user, author=user,
+            batch=2 * self.paginate_by,
+        ):
             comment.get_descendants(include_self=True).update(hidden=True)
         return HttpResponseRedirect(reverse('user_comment', args=(user.user.username,)))
 
@@ -411,8 +434,10 @@ class UserProblemsPage(UserPage):
     def get_context_data(self, **kwargs):
         context = super(UserProblemsPage, self).get_context_data(**kwargs)
 
-        result = Submission.objects.filter(user=self.object, points__gt=0, problem__is_public=True,
-                                           problem__is_organization_private=False) \
+        result = Submission.objects.filter(
+            user=self.object, points__gt=0, problem__is_public=True,
+            problem__is_organization_private=False,
+        ) \
             .exclude(problem__in=self.get_completed_problems() if self.hide_solved else []) \
             .values('problem__id', 'problem__code', 'problem__name', 'problem__points', 'problem__group__full_name') \
             .distinct().annotate(points=Max('points')).order_by('problem__group__full_name', 'problem__code')
@@ -424,10 +449,13 @@ class UserProblemsPage(UserPage):
 
         context['best_submissions'] = [
             process_group(group, problems) for group, problems in itertools.groupby(
-                remap_keys(result, {
-                    'problem__code': 'code', 'problem__name': 'name', 'problem__points': 'total',
-                    'problem__group__full_name': 'group',
-                }), itemgetter('group'))
+                remap_keys(
+                    result, {
+                        'problem__code': 'code', 'problem__name': 'name', 'problem__points': 'total',
+                        'problem__group__full_name': 'group',
+                    },
+                ), itemgetter('group'),
+            )
         ]
         breakdown, has_more = get_pp_breakdown(self.object, start=0, end=10)
         context['pp_breakdown'] = breakdown
@@ -598,14 +626,16 @@ def edit_profile(request):
                 form.fields['newsletter'].initial = subscription.subscribed
         form.fields['test_site'].initial = request.user.has_perm('judge.test_site')
 
-    return render(request, 'user/edit-profile.html', {
-        'require_staff_2fa': settings.DMOJ_REQUIRE_STAFF_2FA, 'form_user': form_user,
-        'form': form, 'title': _('Edit profile'), 'profile': request.profile,
-        'can_download_data': bool(settings.DMOJ_USER_DATA_DOWNLOAD),
-        'has_math_config': bool(settings.MATHOID_URL),
-        'ignore_user_script': True,
-        'TIMEZONE_MAP': settings.TIMEZONE_MAP,
-    })
+    return render(
+        request, 'user/edit-profile.html', {
+            'require_staff_2fa': settings.DMOJ_REQUIRE_STAFF_2FA, 'form_user': form_user,
+            'form': form, 'title': _('Edit profile'), 'profile': request.profile,
+            'can_download_data': bool(settings.DMOJ_USER_DATA_DOWNLOAD),
+            'has_math_config': bool(settings.MATHOID_URL),
+            'ignore_user_script': True,
+            'TIMEZONE_MAP': settings.TIMEZONE_MAP,
+        },
+    )
 
 
 @require_POST
@@ -651,13 +681,21 @@ class UserList(QueryStringSortMixin, InfinitePaginationMixin, DiggPaginatorMixin
     default_sort = '-rating'
 
     def get_queryset(self):
-        return (Profile.objects.filter(is_unlisted=False).order_by(self.order, 'id')
-                .prefetch_related(Prefetch('user', queryset=User.objects.only('username', 'first_name')))
-                .prefetch_related(Prefetch('organizations',
-                                  queryset=Organization.objects.filter(is_unlisted=False).only('name', 'id', 'slug')))
-                .select_related('display_badge')
-                .only('display_rank', 'display_badge', 'user', 'points', 'rating', 'performance_points',
-                      'problem_count', 'organizations', 'username_display_override'))
+        return (
+            Profile.objects.filter(is_unlisted=False).order_by(self.order, 'id')
+            .prefetch_related(Prefetch('user', queryset=User.objects.only('username', 'first_name')))
+            .prefetch_related(
+                Prefetch(
+                    'organizations',
+                    queryset=Organization.objects.filter(is_unlisted=False).only('name', 'id', 'slug'),
+                ),
+            )
+            .select_related('display_badge')
+            .only(
+                'display_rank', 'display_badge', 'user', 'points', 'rating', 'performance_points',
+                'problem_count', 'organizations', 'username_display_override',
+            )
+        )
 
     def get_context_data(self, **kwargs):
         context = super(UserList, self).get_context_data(**kwargs)
@@ -681,18 +719,26 @@ class ContribList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ListView
     context_object_name = 'users'
     template_name = 'user/contrib-list.html'
     paginate_by = 100
-    all_sorts = frozenset(('contribution_points', ))
+    all_sorts = frozenset(('contribution_points',))
     default_desc = all_sorts
     default_sort = '-contribution_points'
 
     def get_queryset(self):
-        return (Profile.objects.filter(is_unlisted=False).order_by(self.order, 'id')
-                .prefetch_related(Prefetch('user', queryset=User.objects.only('username', 'first_name')))
-                .prefetch_related(Prefetch('organizations',
-                                  queryset=Organization.objects.filter(is_unlisted=False).only('name', 'id', 'slug')))
-                .select_related('display_badge')
-                .only('display_rank', 'display_badge', 'user', 'organizations', 'rating', 'contribution_points',
-                      'username_display_override'))
+        return (
+            Profile.objects.filter(is_unlisted=False).order_by(self.order, 'id')
+            .prefetch_related(Prefetch('user', queryset=User.objects.only('username', 'first_name')))
+            .prefetch_related(
+                Prefetch(
+                    'organizations',
+                    queryset=Organization.objects.filter(is_unlisted=False).only('name', 'id', 'slug'),
+                ),
+            )
+            .select_related('display_badge')
+            .only(
+                'display_rank', 'display_badge', 'user', 'organizations', 'rating', 'contribution_points',
+                'username_display_override',
+            )
+        )
 
     def get_context_data(self, **kwargs):
         context = super(ContribList, self).get_context_data(**kwargs)
@@ -750,8 +796,12 @@ def user_contributor_redirect(request):
         is_unlisted=False, contribution_points__exact=user.contribution_points, id__lt=user.id,
     ).count()
     page = rank // ContribList.paginate_by
-    return HttpResponseRedirect('%s%s#!%s' % (reverse('contributors_list'), '?page=%d' % (page + 1) if page else '',
-                                              username))
+    return HttpResponseRedirect(
+        '%s%s#!%s' % (
+            reverse('contributors_list'), '?page=%d' % (page + 1) if page else '',
+            username,
+        ),
+    )
 
 
 class UserLogoutView(TitleMixin, TemplateView):
@@ -774,8 +824,10 @@ class CustomPasswordResetView(PasswordResetView):
         key = f'pwreset!{request.META["REMOTE_ADDR"]}'
         cache.add(key, 0, timeout=settings.DMOJ_PASSWORD_RESET_LIMIT_WINDOW)
         if cache.incr(key) > settings.DMOJ_PASSWORD_RESET_LIMIT_COUNT:
-            return HttpResponse(_('You have sent too many password reset requests. Please try again later.'),
-                                content_type='text/plain', status=429)
+            return HttpResponse(
+                _('You have sent too many password reset requests. Please try again later.'),
+                content_type='text/plain', status=429,
+            )
 
         self.extra_email_context = {
             'misc_config': request.misc_config,

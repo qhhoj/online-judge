@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 from django.db.models import F
 from django.utils import timezone
@@ -42,7 +42,8 @@ class Migration(migrations.Migration):
                 blank=True,
                 help_text='Prevent submissions from this contest from being rejudged after this date.',
                 null=True,
-                verbose_name='contest lock'),
+                verbose_name='contest lock',
+            ),
         ),
         migrations.AddField(
             model_name='submission',
@@ -50,7 +51,8 @@ class Migration(migrations.Migration):
             field=models.DateTimeField(
                 blank=True,
                 null=True,
-                verbose_name='submission lock'),
+                verbose_name='submission lock',
+            ),
         ),
         migrations.AddField(
             model_name='submission',
@@ -58,12 +60,14 @@ class Migration(migrations.Migration):
             field=models.DateTimeField(
                 blank=True,
                 null=True,
-                verbose_name='last rejudge date by admin'),
+                verbose_name='last rejudge date by admin',
+            ),
         ),
         migrations.RunPython(
             convert_to_datetime,
             convert_to_boolean,
-            atomic=True),
+            atomic=True,
+        ),
         migrations.RemoveField(
             model_name='contest',
             name='is_locked',

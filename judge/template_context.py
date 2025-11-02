@@ -9,12 +9,12 @@ from django.utils.functional import (
 )
 
 from judge import event_poster as event
-from judge.utils.caniuse import (
+from judge.utils.caniuse import (  # noqa: I101
     SUPPORT,
     CanIUse,
 )
 
-from .models import (
+from .models import (  # noqa: I202
     NavigationBar,
     Profile,
 )

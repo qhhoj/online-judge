@@ -3,7 +3,7 @@
 import django.core.validators
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -21,14 +21,17 @@ class Migration(migrations.Migration):
                 help_text='Points awarded for problem completion. Points are displayed with a "p" suffix if partial.',
                 validators=[
                     django.core.validators.MinValueValidator(800),
-                    django.core.validators.MaxValueValidator(3500)],
-                verbose_name='points'),
+                    django.core.validators.MaxValueValidator(3500),
+                ],
+                verbose_name='points',
+            ),
         ),
         migrations.AlterField(
             model_name='submission',
             name='points',
             field=models.IntegerField(
                 null=True,
-                verbose_name='points granted'),
+                verbose_name='points granted',
+            ),
         ),
     ]

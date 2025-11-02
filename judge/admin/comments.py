@@ -10,7 +10,7 @@ from reversion.admin import VersionAdmin
 from judge.models import Comment
 from judge.widgets import (
     AdminHeavySelect2Widget,
-    AdminMartorWidget
+    AdminMartorWidget,
 )
 
 
@@ -45,17 +45,25 @@ class CommentAdmin(VersionAdmin):
     def hide_comment(self, request, queryset):
         count = queryset.update(hidden=True)
         queryset.author.calculate_contribution_points()
-        self.message_user(request, ngettext('%d comment successfully hidden.',
-                                            '%d comments successfully hidden.',
-                                            count) % count)
+        self.message_user(
+            request, ngettext(
+                '%d comment successfully hidden.',
+                '%d comments successfully hidden.',
+                count,
+            ) % count,
+        )
 
     @admin.display(description=_('Unhide comments'))
     def unhide_comment(self, request, queryset):
         count = queryset.update(hidden=False)
         queryset.author.calculate_contribution_points()
-        self.message_user(request, ngettext('%d comment successfully unhidden.',
-                                            '%d comments successfully unhidden.',
-                                            count) % count)
+        self.message_user(
+            request, ngettext(
+                '%d comment successfully unhidden.',
+                '%d comments successfully unhidden.',
+                count,
+            ) % count,
+        )
 
     @admin.display(description=_('associated page'), ordering='page')
     def linked_page(self, obj):

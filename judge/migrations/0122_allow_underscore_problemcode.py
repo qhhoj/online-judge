@@ -3,7 +3,7 @@
 import django.core.validators
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -24,7 +24,10 @@ class Migration(migrations.Migration):
                 validators=[
                     django.core.validators.RegexValidator(
                         '^[a-z0-9_]+$',
-                        'Problem code must be ^[a-z0-9_]+$')],
-                verbose_name='problem code'),
+                        'Problem code must be ^[a-z0-9_]+$',
+                    ),
+                ],
+                verbose_name='problem code',
+            ),
         ),
     ]

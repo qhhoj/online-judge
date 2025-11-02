@@ -3,7 +3,7 @@
 import django.core.validators
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 import judge.models.problem_data
@@ -30,8 +30,12 @@ class Migration(migrations.Migration):
                         allowed_extensions=[
                             'cpp',
                             'pas',
-                            'java'])],
-                verbose_name='custom checker file'),
+                            'java',
+                        ],
+                    ),
+                ],
+                verbose_name='custom checker file',
+            ),
         ),
         migrations.AlterField(
             model_name='problemdata',
@@ -43,24 +47,37 @@ class Migration(migrations.Migration):
                 upload_to=judge.models.problem_data.problem_directory_file,
                 validators=[
                     django.core.validators.FileExtensionValidator(
-                        allowed_extensions=['cpp'])],
-                verbose_name='custom grader file'),
+                        allowed_extensions=['cpp'],
+                    ),
+                ],
+                verbose_name='custom grader file',
+            ),
         ),
         migrations.AlterField(
             model_name='problemdata',
             name='grader',
             field=models.CharField(
                 choices=[
-                    ('standard',
-                     'Standard'),
-                    ('interactive',
-                     'Interactive'),
-                    ('signature',
-                     'Function Signature Grading (IOI-style)'),
-                    ('output_only',
-                     'Output Only')],
+                    (
+                        'standard',
+                        'Standard',
+                    ),
+                    (
+                        'interactive',
+                        'Interactive',
+                    ),
+                    (
+                        'signature',
+                        'Function Signature Grading (IOI-style)',
+                    ),
+                    (
+                        'output_only',
+                        'Output Only',
+                    ),
+                ],
                 default='standard',
                 max_length=30,
-                verbose_name='Grader'),
+                verbose_name='Grader',
+            ),
         ),
     ]

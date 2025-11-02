@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -18,16 +18,26 @@ class Migration(migrations.Migration):
             name='submission_source_visibility_mode',
             field=models.CharField(
                 choices=[
-                    ('F',
-                     'Follow global setting'),
-                    ('A',
-                     'Always visible'),
-                    ('S',
-                     'Visible if problem solved'),
-                    ('O',
-                     'Only own submissions')],
+                    (
+                        'F',
+                        'Follow global setting',
+                    ),
+                    (
+                        'A',
+                        'Always visible',
+                    ),
+                    (
+                        'S',
+                        'Visible if problem solved',
+                    ),
+                    (
+                        'O',
+                        'Only own submissions',
+                    ),
+                ],
                 default='F',
                 max_length=1,
-                verbose_name='submission source visibility'),
+                verbose_name='submission source visibility',
+            ),
         ),
     ]

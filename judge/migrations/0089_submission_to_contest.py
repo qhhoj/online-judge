@@ -3,7 +3,7 @@
 import django.db.models.deletion
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -23,7 +23,8 @@ class Migration(migrations.Migration):
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name='+',
                 to='judge.Contest',
-                verbose_name='contest'),
+                verbose_name='contest',
+            ),
         ),
         migrations.RunSQL(
             """
@@ -34,5 +35,6 @@ class Migration(migrations.Migration):
                     ON (`judge_contestsubmission`.`participation_id` = `judge_contestparticipation`.`id`)
             SET `judge_submission`.`contest_object_id` = `judge_contestparticipation`.`contest_id`
         """,
-            migrations.RunSQL.noop),
+            migrations.RunSQL.noop,
+        ),
     ]

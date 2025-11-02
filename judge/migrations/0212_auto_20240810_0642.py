@@ -3,7 +3,7 @@
 import django.core.validators
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -21,13 +21,15 @@ class Migration(migrations.Migration):
                 blank=True,
                 null=True,
                 unique=True,
-                verbose_name='IP-based authentication'),
+                verbose_name='IP-based authentication',
+            ),
         ),
         migrations.AddField(
             model_name='profile',
             name='vnoj_points',
             field=models.IntegerField(
-                default=0),
+                default=0,
+            ),
         ),
         migrations.AlterField(
             model_name='comment',
@@ -38,8 +40,11 @@ class Migration(migrations.Migration):
                 validators=[
                     django.core.validators.RegexValidator(
                         '^\\w+:[a-z0-9A-Z_]+$',
-                        'Page code must be ^\\w+:[a-z0-9A-Z_]+$')],
-                verbose_name='associated page'),
+                        'Page code must be ^\\w+:[a-z0-9A-Z_]+$',
+                    ),
+                ],
+                verbose_name='associated page',
+            ),
         ),
         migrations.AlterField(
             model_name='commentlock',
@@ -50,14 +55,18 @@ class Migration(migrations.Migration):
                 validators=[
                     django.core.validators.RegexValidator(
                         '^\\w+:[a-z0-9A-Z_]+$',
-                        'Page code must be ^\\w+:[a-z0-9A-Z_]+$')],
-                verbose_name='associated page'),
+                        'Page code must be ^\\w+:[a-z0-9A-Z_]+$',
+                    ),
+                ],
+                verbose_name='associated page',
+            ),
         ),
         migrations.AlterField(
             model_name='submission',
             name='points',
             field=models.FloatField(
                 null=True,
-                verbose_name='points granted'),
+                verbose_name='points granted',
+            ),
         ),
     ]

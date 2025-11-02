@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -19,7 +19,8 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 help_text='Common name for the language. For example, the common name for C++03, C++11, and C++14 would be "C++".',
                 max_length=20,
-                verbose_name='common name'),
+                verbose_name='common name',
+            ),
         ),
         migrations.AlterField(
             model_name='problemdata',
@@ -27,17 +28,29 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 choices=[
-                    ('standard',
-                     'Standard'),
-                    ('interactive',
-                     'Interactive'),
-                    ('signature',
-                     'Function Signature Grading (IOI-style)'),
-                    ('output_only',
-                     'Output Only'),
-                    ('custom_judge',
-                     'Custom Grader')],
+                    (
+                        'standard',
+                        'Standard',
+                    ),
+                    (
+                        'interactive',
+                        'Interactive',
+                    ),
+                    (
+                        'signature',
+                        'Function Signature Grading (IOI-style)',
+                    ),
+                    (
+                        'output_only',
+                        'Output Only',
+                    ),
+                    (
+                        'custom_judge',
+                        'Custom Grader',
+                    ),
+                ],
                 max_length=30,
-                verbose_name='Grader'),
+                verbose_name='Grader',
+            ),
         ),
     ]

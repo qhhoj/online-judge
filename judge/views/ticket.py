@@ -6,27 +6,27 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import (
     ImproperlyConfigured,
     PermissionDenied,
-    ValidationError
+    ValidationError,
 )
 from django.http import (
     Http404,
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseRedirect,
-    JsonResponse
+    JsonResponse,
 )
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import truncatechars
 from django.template.loader import get_template
 from django.urls import (
     reverse,
-    reverse_lazy
+    reverse_lazy,
 )
 from django.utils.functional import cached_property
 from django.utils.html import (
     escape,
     format_html,
-    linebreaks
+    linebreaks,
 )
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
@@ -42,21 +42,21 @@ from judge.models import (
     Problem,
     Profile,
     Ticket,
-    TicketMessage
+    TicketMessage,
 )
 from judge.tasks import (
     on_new_ticket,
-    on_new_ticket_message
+    on_new_ticket_message,
 )
 from judge.utils.diggpaginator import DiggPaginator
 from judge.utils.tickets import (
     filter_visible_tickets,
-    own_ticket_filter
+    own_ticket_filter,
 )
 from judge.utils.views import (
     SingleObjectFormView,
     TitleMixin,
-    paginate_query_context
+    paginate_query_context,
 )
 from judge.views.problem import ProblemMixin
 from judge.widgets import MartorWidget
@@ -111,11 +111,13 @@ class NewTicketView(LoginRequiredMixin, SingleObjectFormView):
         message.save()
         ticket.assignees.set(self.get_assignees())
         if event.real:
-            event.post('tickets', {
-                'type': 'new-ticket', 'id': ticket.id,
-                'message': message.id, 'user': ticket.user_id,
-                'assignees': list(ticket.assignees.values_list('id', flat=True)),
-            })
+            event.post(
+                'tickets', {
+                    'type': 'new-ticket', 'id': ticket.id,
+                    'message': message.id, 'user': ticket.user_id,
+                    'assignees': list(ticket.assignees.values_list('id', flat=True)),
+                },
+            )
         on_new_ticket.delay(ticket.pk, ticket.content_type.pk, ticket.object_id, form.cleaned_data['body'])
         return HttpResponseRedirect(reverse('ticket', args=[ticket.id]))
 
@@ -145,11 +147,13 @@ class NewIssueTicketView(LoginRequiredMixin, TitleMixin, FormView):
         message = TicketMessage(ticket=ticket, user=ticket.user, body=form.cleaned_data['body'])
         message.save()
         if event.real:
-            event.post('tickets', {
-                'type': 'new-ticket', 'id': ticket.id,
-                'message': message.id, 'user': ticket.user_id,
-                'assignees': [],
-            })
+            event.post(
+                'tickets', {
+                    'type': 'new-ticket', 'id': ticket.id,
+                    'message': message.id, 'user': ticket.user_id,
+                    'assignees': [],
+                },
+            )
         on_new_ticket.delay(ticket.pk, ticket.content_type.pk, ticket.object_id, form.cleaned_data['body'])
         return HttpResponseRedirect(reverse('ticket', args=[ticket.id]))
 
@@ -168,9 +172,13 @@ class NewProblemTicketView(ProblemMixin, TitleMixin, NewTicketView):
         return _('New ticket for %s') % self.object.name
 
     def get_content_title(self):
-        return mark_safe(escape(_('New ticket for %s')) %
-                         format_html('<a href="{0}">{1}</a>', reverse('problem_detail', args=[self.object.code]),
-                                     self.object.translated_name(self.request.LANGUAGE_CODE)))
+        return mark_safe(
+            escape(_('New ticket for %s')) %
+            format_html(
+                '<a href="{0}">{1}</a>', reverse('problem_detail', args=[self.object.code]),
+                self.object.translated_name(self.request.LANGUAGE_CODE),
+            ),
+        )
 
     def form_valid(self, form):
         if not self.object.is_accessible_by(self.request.user):
@@ -206,19 +214,25 @@ class TicketView(TitleMixin, TicketMixin, SingleObjectFormView):
     context_object_name = 'ticket'
 
     def form_valid(self, form):
-        message = TicketMessage(user=self.request.profile,
-                                body=form.cleaned_data['body'],
-                                ticket=self.object)
+        message = TicketMessage(
+            user=self.request.profile,
+            body=form.cleaned_data['body'],
+            ticket=self.object,
+        )
         message.save()
         if event.real:
-            event.post('tickets', {
-                'type': 'ticket-message', 'id': self.object.id,
-                'message': message.id, 'user': self.object.user_id,
-                'assignees': list(self.object.assignees.values_list('id', flat=True)),
-            })
-            event.post('ticket-%d' % self.object.id, {
-                'type': 'ticket-message', 'message': message.id,
-            })
+            event.post(
+                'tickets', {
+                    'type': 'ticket-message', 'id': self.object.id,
+                    'message': message.id, 'user': self.object.user_id,
+                    'assignees': list(self.object.assignees.values_list('id', flat=True)),
+                },
+            )
+            event.post(
+                'ticket-%d' % self.object.id, {
+                    'type': 'ticket-message', 'message': message.id,
+                },
+            )
         on_new_ticket_message.delay(message.pk, message.ticket.pk, message.body)
         return HttpResponseRedirect('%s#message-%d' % (reverse('ticket', args=[self.object.id]), message.id))
 
@@ -244,21 +258,27 @@ class TicketStatusChangeView(TicketMixin, SingleObjectMixin, View):
             ticket.is_open = self.open
             ticket.save()
             if event.real:
-                event.post('tickets', {
-                    'type': 'ticket-status', 'id': ticket.id,
-                    'open': self.open, 'user': ticket.user_id,
-                    'assignees': list(ticket.assignees.values_list('id', flat=True)),
-                    'title': ticket.title,
-                })
-                event.post('ticket-%d' % ticket.id, {
-                    'type': 'ticket-status', 'open': self.open,
-                })
+                event.post(
+                    'tickets', {
+                        'type': 'ticket-status', 'id': ticket.id,
+                        'open': self.open, 'user': ticket.user_id,
+                        'assignees': list(ticket.assignees.values_list('id', flat=True)),
+                        'title': ticket.title,
+                    },
+                )
+                event.post(
+                    'ticket-%d' % ticket.id, {
+                        'type': 'ticket-status', 'open': self.open,
+                    },
+                )
 
         if self.contributive is not None and ticket.is_contributive != self.contributive:
             if not request.user.has_perm('change_ticket') and self.request.profile == ticket.user:
                 return HttpResponseBadRequest(_('You cannot vote your own ticket.'), content_type='text/plain')
-            ticket.user.update_contribution_points(settings.VNOJ_CP_TICKET *
-                                                   (self.contributive - ticket.is_contributive))
+            ticket.user.update_contribution_points(
+                settings.VNOJ_CP_TICKET *
+                (self.contributive - ticket.is_contributive),
+            )
             ticket.is_contributive = self.contributive
             ticket.save()
         return HttpResponse(status=204)
@@ -348,10 +368,18 @@ class TicketList(LoginRequiredMixin, ListView):
             'own': self.GET_with_session('own'),
             'user': self.filter_users,
             'assignee': self.filter_assignees,
-            'user_id': json.dumps(list(Profile.objects.filter(user__username__in=self.filter_users)
-                                       .values_list('id', flat=True))),
-            'assignee_id': json.dumps(list(Profile.objects.filter(user__username__in=self.filter_assignees)
-                                           .values_list('id', flat=True))),
+            'user_id': json.dumps(
+                list(
+                    Profile.objects.filter(user__username__in=self.filter_users)
+                    .values_list('id', flat=True),
+                ),
+            ),
+            'assignee_id': json.dumps(
+                list(
+                    Profile.objects.filter(user__username__in=self.filter_assignees)
+                    .values_list('id', flat=True),
+                ),
+            ),
             'own_id': self.profile.id if self.GET_with_session('own') else 'null',
         }
         context.update(paginate_query_context(self.request))
@@ -390,10 +418,13 @@ class TicketListDataAjax(TicketMixin, SingleObjectMixin, View):
             'row': get_template('ticket/row.html').render({'ticket': ticket}, request),
             'notification': {
                 'title': _('New Ticket: %s') % ticket.title,
-                'body': '%s\n%s' % (_('#%(id)d, assigned to: %(users)s') % {
-                    'id': ticket.id,
-                    'users': (_(', ').join(ticket.assignees.values_list('user__username', flat=True)) or _('no one')),
-                }, truncatechars(message.body, 200)),
+                'body': '%s\n%s' % (
+                    _('#%(id)d, assigned to: %(users)s') % {
+                        'id': ticket.id,  # noqa: E501
+                        'users': (_(', ').join(ticket.assignees.values_list('user__username', flat=True)) or
+                                  _('no one')),
+                    }, truncatechars(message.body, 200),
+                ),
             },
         })
 

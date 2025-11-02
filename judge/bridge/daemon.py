@@ -11,7 +11,7 @@ from judge.bridge.judge_list import JudgeList
 from judge.bridge.server import Server
 from judge.models import (
     Judge,
-    Submission
+    Submission,
 )
 
 

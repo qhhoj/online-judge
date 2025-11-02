@@ -1,11 +1,11 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import (
     F,
-    Q
+    Q,
 )
 from django.http import (
     Http404,
-    JsonResponse
+    JsonResponse,
 )
 from django.shortcuts import get_object_or_404
 from django.utils.encoding import smart_str
@@ -19,7 +19,7 @@ from judge.models import (
     Problem,
     Profile,
     Tag,
-    TagGroup
+    TagGroup,
 )
 
 
@@ -52,7 +52,8 @@ class Select2View(BaseListView):
                 {
                     'text': smart_str(self.get_name(obj)),
                     'id': obj.pk,
-                } for obj in context['object_list']],
+                } for obj in context['object_list']
+            ],
             'more': context['page_obj'].has_next(),
         })
 
@@ -73,7 +74,8 @@ class UserSelect2View(Select2View):
                 {
                     'text': smart_str(self.get_name(obj)),
                     'id': obj.pk,
-                } for obj in qs],
+                } for obj in qs
+            ],
         })
 
     def get_queryset(self):
@@ -99,7 +101,8 @@ class OrganizationUserSelect2View(Select2View):
                 {
                     'text': smart_str(self.get_name(obj)),
                     'id': obj.pk,
-                } for obj in qs],
+                } for obj in qs
+            ],
         })
 
     def dispatch(self, request, *args, **kwargs):
@@ -125,8 +128,10 @@ class TagGroupSelect2View(Select2View):
 
 class TagSelect2View(Select2View):
     def get_queryset(self):
-        return Tag.objects.filter(code__icontains=self.term, name__icontains=self.term,
-                                  group__code__icontains=self.term, group__name__icontains=self.term)
+        return Tag.objects.filter(
+            code__icontains=self.term, name__icontains=self.term,
+            group__code__icontains=self.term, group__name__icontains=self.term,
+        )
 
 
 class OrganizationSelect2View(Select2View):
@@ -164,8 +169,10 @@ class UserSearchSelect2View(BaseListView):
         self.gravatar_size = request.GET.get('gravatar_size', 128)
         self.gravatar_default = request.GET.get('gravatar_default', None)
 
-        self.object_list = self.get_queryset().values_list('pk', 'user__username', 'user__email', 'display_rank',
-                                                           'username_display_override')
+        self.object_list = self.get_queryset().values_list(
+            'pk', 'user__username', 'user__email', 'display_rank',
+            'username_display_override',
+        )
 
         context = self.get_context_data()
 
@@ -176,7 +183,8 @@ class UserSearchSelect2View(BaseListView):
                     'id': username,
                     'gravatar_url': gravatar(email, self.gravatar_size, self.gravatar_default),
                     'display_rank': display_rank,
-                } for pk, username, email, display_rank, username_override in context['object_list']],
+                } for pk, username, email, display_rank, username_override in context['object_list']
+            ],
             'more': context['page_obj'].has_next(),
         })
 
@@ -190,17 +198,23 @@ class ContestUserSearchSelect2View(UserSearchSelect2View):
         if not contest.is_accessible_by(self.request.user) or not contest.can_see_full_scoreboard(self.request.user):
             raise Http404()
 
-        return Profile.objects.filter(contest_history__contest=contest,
-                                      user__username__icontains=self.term).distinct()
+        return Profile.objects.filter(
+            contest_history__contest=contest,
+            user__username__icontains=self.term,
+        ).distinct()
 
 
 class TicketUserSelect2View(UserSearchSelect2View):
     def get_queryset(self):
-        return Profile.objects.filter(tickets__isnull=False,
-                                      user__username__icontains=self.term).distinct()
+        return Profile.objects.filter(
+            tickets__isnull=False,
+            user__username__icontains=self.term,
+        ).distinct()
 
 
 class AssigneeSelect2View(UserSearchSelect2View):
     def get_queryset(self):
-        return Profile.objects.filter(assigned_tickets__isnull=False,
-                                      user__username__icontains=self.term).distinct()
+        return Profile.objects.filter(
+            assigned_tickets__isnull=False,
+            user__username__icontains=self.term,
+        ).distinct()

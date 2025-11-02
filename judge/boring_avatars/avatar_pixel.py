@@ -2,7 +2,7 @@ import random
 
 from judge.boring_avatars.utilities import (
     getRandomColor,
-    hashCode
+    hashCode,
 )
 
 

@@ -3,7 +3,7 @@
 import django.core.validators
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -23,8 +23,11 @@ class Migration(migrations.Migration):
                 validators=[
                     django.core.validators.RegexValidator(
                         '^\\w+:[a-z0-9A-Z_]+$',
-                        'Page code must be ^\\w+:[a-z0-9A-Z_]+$')],
-                verbose_name='associated page'),
+                        'Page code must be ^\\w+:[a-z0-9A-Z_]+$',
+                    ),
+                ],
+                verbose_name='associated page',
+            ),
         ),
         migrations.AlterField(
             model_name='commentlock',
@@ -35,8 +38,11 @@ class Migration(migrations.Migration):
                 validators=[
                     django.core.validators.RegexValidator(
                         '^\\w+:[a-z0-9A-Z_]+$',
-                        'Page code must be ^\\w+:[a-z0-9A-Z_]+$')],
-                verbose_name='associated page'),
+                        'Page code must be ^\\w+:[a-z0-9A-Z_]+$',
+                    ),
+                ],
+                verbose_name='associated page',
+            ),
         ),
         migrations.AlterField(
             model_name='problemdata',
@@ -44,22 +50,38 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 choices=[
-                    ('standard',
-                     'Standard'),
-                    ('bridged',
-                     'Custom checker'),
-                    ('floats',
-                     'Floats'),
-                    ('floatsabs',
-                     'Floats (absolute)'),
-                    ('floatsrel',
-                     'Floats (relative)'),
-                    ('identical',
-                     'Byte identical'),
-                    ('linecount',
-                     'Line-by-line')],
+                    (
+                        'standard',
+                        'Standard',
+                    ),
+                    (
+                        'bridged',
+                        'Custom checker',
+                    ),
+                    (
+                        'floats',
+                        'Floats',
+                    ),
+                    (
+                        'floatsabs',
+                        'Floats (absolute)',
+                    ),
+                    (
+                        'floatsrel',
+                        'Floats (relative)',
+                    ),
+                    (
+                        'identical',
+                        'Byte identical',
+                    ),
+                    (
+                        'linecount',
+                        'Line-by-line',
+                    ),
+                ],
                 max_length=10,
-                verbose_name='checker'),
+                verbose_name='checker',
+            ),
         ),
         migrations.AlterField(
             model_name='problemtestcase',
@@ -67,22 +89,38 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 choices=[
-                    ('standard',
-                     'Standard'),
-                    ('bridged',
-                     'Custom checker'),
-                    ('floats',
-                     'Floats'),
-                    ('floatsabs',
-                     'Floats (absolute)'),
-                    ('floatsrel',
-                     'Floats (relative)'),
-                    ('identical',
-                     'Byte identical'),
-                    ('linecount',
-                     'Line-by-line')],
+                    (
+                        'standard',
+                        'Standard',
+                    ),
+                    (
+                        'bridged',
+                        'Custom checker',
+                    ),
+                    (
+                        'floats',
+                        'Floats',
+                    ),
+                    (
+                        'floatsabs',
+                        'Floats (absolute)',
+                    ),
+                    (
+                        'floatsrel',
+                        'Floats (relative)',
+                    ),
+                    (
+                        'identical',
+                        'Byte identical',
+                    ),
+                    (
+                        'linecount',
+                        'Line-by-line',
+                    ),
+                ],
                 max_length=10,
-                verbose_name='checker'),
+                verbose_name='checker',
+            ),
         ),
         migrations.AlterField(
             model_name='tag',
@@ -91,7 +129,8 @@ class Migration(migrations.Migration):
                 db_index=True,
                 max_length=30,
                 unique=True,
-                verbose_name='Tag ID'),
+                verbose_name='Tag ID',
+            ),
         ),
         migrations.AlterField(
             model_name='tag',
@@ -99,7 +138,8 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 db_index=True,
                 max_length=100,
-                verbose_name='Tag name'),
+                verbose_name='Tag name',
+            ),
         ),
         migrations.AlterField(
             model_name='tagproblem',
@@ -112,8 +152,11 @@ class Migration(migrations.Migration):
                 validators=[
                     django.core.validators.RegexValidator(
                         '^[a-zA-Z0-9_]+$',
-                        'Problem code must be ^[a-zA-Z0-9_]+$')],
-                verbose_name='problem code'),
+                        'Problem code must be ^[a-zA-Z0-9_]+$',
+                    ),
+                ],
+                verbose_name='problem code',
+            ),
         ),
         migrations.AlterField(
             model_name='tagproblem',
@@ -124,7 +167,8 @@ class Migration(migrations.Migration):
                 help_text='Original OJ of the problem',
                 max_length=30,
                 null=True,
-                verbose_name='Online Judge'),
+                verbose_name='Online Judge',
+            ),
         ),
         migrations.AlterField(
             model_name='tagproblem',
@@ -133,6 +177,7 @@ class Migration(migrations.Migration):
                 db_index=True,
                 help_text='The full name of the problem, as shown in the problem list.',
                 max_length=100,
-                verbose_name='problem name'),
+                verbose_name='problem name',
+            ),
         ),
     ]

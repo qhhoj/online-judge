@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import (
     Min,
     OuterRef,
-    Subquery
+    Subquery,
 )
 from django.template.defaultfilters import floatformat
 from django.urls import reverse
@@ -53,12 +53,17 @@ class LegacyIOIContestFormat(DefaultContestFormat):
         score = 0
         format_data = {}
 
-        queryset = (participation.submissions.values('problem_id')
-                                             .filter(points=Subquery(
-                                                 participation.submissions.filter(problem_id=OuterRef('problem_id'))
-                                                                          .order_by('-points').values('points')[:1]))
-                                             .annotate(time=Min('submission__date'))
-                                             .values_list('problem_id', 'time', 'points'))
+        queryset = (
+            participation.submissions.values('problem_id')
+            .filter(
+                points=Subquery(
+                    participation.submissions.filter(problem_id=OuterRef('problem_id'))  # noqa: E131
+                    .order_by('-points').values('points')[:1],
+                ),
+            )
+            .annotate(time=Min('submission__date'))
+            .values_list('problem_id', 'time', 'points')
+        )
 
         for problem_id, time, points in queryset:
             if points:
@@ -115,8 +120,10 @@ class LegacyIOIContestFormat(DefaultContestFormat):
                 state=(('pretest-' if self.contest.run_pretests_only and contest_problem.is_pretested else '') +
                        ('first-solve ' if first_solves.get(str(contest_problem.id), None) == participation.id else '') +
                        self.best_solution_state(format_data['points'], contest_problem.points)),
-                url=reverse('contest_user_submissions',
-                            args=[self.contest.key, participation.user.user.username, contest_problem.problem.code]),
+                url=reverse(
+                    'contest_user_submissions',
+                    args=[self.contest.key, participation.user.user.username, contest_problem.problem.code],
+                ),
                 points=floatformat(format_data['points'], -self.contest.points_precision),
                 time=nice_repr(timedelta(seconds=format_data['time']), 'noday') if show_time else '',
             )
@@ -127,8 +134,10 @@ class LegacyIOIContestFormat(DefaultContestFormat):
         show_time = self.config['cumtime'] or self.config.get('last_score_altering', False)
         return format_html(
             '<td class="user-points"><a href="{url}">{points}<div class="solving-time">{cumtime}</div></a></td>',
-            url=reverse('contest_all_user_submissions',
-                        args=[self.contest.key, participation.user.user.username]),
+            url=reverse(
+                'contest_all_user_submissions',
+                args=[self.contest.key, participation.user.user.username],
+            ),
             points=floatformat(participation.score, -self.contest.points_precision),
             cumtime=nice_repr(timedelta(seconds=participation.cumtime), 'noday') if show_time else '',
         )
@@ -138,12 +147,16 @@ class LegacyIOIContestFormat(DefaultContestFormat):
 
         if self.config['last_score_altering']:
             if self.config['cumtime']:
-                yield _('Ties will be broken by the sum of the last score altering submission time on problems with '
-                        'a non-zero score, followed by the time of the last score altering submission.')
+                yield _(
+                    'Ties will be broken by the sum of the last score altering submission time on problems with '
+                    'a non-zero score, followed by the time of the last score altering submission.',
+                )
             else:
                 yield _('Ties will be broken by the time of the last score altering submission.')
         elif self.config['cumtime']:
-            yield _('Ties will be broken by the sum of the last score altering submission time on problems with a '
-                    'non-zero score.')
+            yield _(
+                'Ties will be broken by the sum of the last score altering submission time on problems with a '
+                'non-zero score.',
+            )
         else:
             yield _('Ties by score will **not** be broken.')

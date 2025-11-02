@@ -1,7 +1,7 @@
 from django.contrib.auth.models import (
     AnonymousUser,
     Permission,
-    User
+    User,
 )
 from django.utils import timezone
 
@@ -17,7 +17,7 @@ from judge.models import (
     ProblemGroup,
     ProblemType,
     Profile,
-    Solution
+    Solution,
 )
 
 

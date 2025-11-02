@@ -2,7 +2,7 @@ from django.http import HttpResponseBadRequest
 from django.views.generic.base import (
     ContextMixin,
     TemplateResponseMixin,
-    View
+    View,
 )
 
 
@@ -13,9 +13,11 @@ class MarkdownPreviewView(TemplateResponseMixin, ContextMixin, View):
         except KeyError:
             return HttpResponseBadRequest('No preview data specified.')
 
-        return self.render_to_response(self.get_context_data(
-            preview_data=data,
-        ))
+        return self.render_to_response(
+            self.get_context_data(
+                preview_data=data,
+            ),
+        )
 
 
 class ProblemMarkdownPreviewView(MarkdownPreviewView):

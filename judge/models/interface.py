@@ -12,7 +12,7 @@ from mptt.models import MPTTModel
 
 from judge.models.profile import (
     Organization,
-    Profile
+    Profile,
 )
 
 
@@ -52,8 +52,10 @@ class NavigationBar(MPTTModel):
     path = models.CharField(max_length=255, verbose_name=_('link path'))
     regex = models.TextField(verbose_name=_('highlight regex'), validators=[validate_regex])
     hidden = models.BooleanField(verbose_name=_('hidden'), default=False)
-    parent = TreeForeignKey('self', verbose_name=_('parent item'), null=True, blank=True,
-                            related_name='children', on_delete=models.CASCADE)
+    parent = TreeForeignKey(
+        'self', verbose_name=_('parent item'), null=True, blank=True,
+        related_name='children', on_delete=models.CASCADE,
+    )
 
     def __str__(self):
         return self.label
@@ -80,10 +82,14 @@ class BlogPost(models.Model):
     summary = models.TextField(verbose_name=_('post summary'), blank=True)
     og_image = models.CharField(verbose_name=_('OpenGraph image'), default='', max_length=150, blank=True)
     score = models.IntegerField(verbose_name=_('votes'), default=0)
-    global_post = models.BooleanField(verbose_name=_('global post'), default=False,
-                                      help_text=_('Display this blog post at the homepage.'))
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, verbose_name=_('organization'),
-                                     related_name='post_author_org', blank=True, null=True, db_index=True)
+    global_post = models.BooleanField(
+        verbose_name=_('global post'), default=False,
+        help_text=_('Display this blog post at the homepage.'),
+    )
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, verbose_name=_('organization'),
+        related_name='post_author_org', blank=True, null=True, db_index=True,
+    )
 
     def __str__(self):
         return self.title

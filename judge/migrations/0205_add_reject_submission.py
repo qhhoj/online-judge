@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -17,59 +17,107 @@ class Migration(migrations.Migration):
             name='problem',
             options={
                 'permissions': (
-                    ('see_private_problem',
-                     'See hidden problems'),
-                    ('edit_own_problem',
-                     'Edit own problems'),
-                    ('create_organization_problem',
-                     'Create organization problem'),
-                    ('edit_all_problem',
-                     'Edit all problems'),
-                    ('edit_public_problem',
-                     'Edit all public problems'),
-                    ('suggest_new_problem',
-                     'Suggest new problem'),
-                    ('problem_full_markup',
-                     'Edit problems with full markup'),
-                    ('clone_problem',
-                     'Clone problem'),
-                    ('upload_file_statement',
-                     'Upload file-type statement'),
-                    ('upload_problem_material',
-                     'Upload problem materials'),
-                    ('change_public_visibility',
-                     'Change is_public field'),
-                    ('change_manually_managed',
-                     'Change is_manually_managed field'),
-                    ('see_organization_problem',
-                     'See organization-private problems'),
-                    ('import_polygon_package',
-                     'Import Codeforces Polygon package')),
+                    (
+                        'see_private_problem',
+                        'See hidden problems',
+                    ),
+                    (
+                        'edit_own_problem',
+                        'Edit own problems',
+                    ),
+                    (
+                        'create_organization_problem',
+                        'Create organization problem',
+                    ),
+                    (
+                        'edit_all_problem',
+                        'Edit all problems',
+                    ),
+                    (
+                        'edit_public_problem',
+                        'Edit all public problems',
+                    ),
+                    (
+                        'suggest_new_problem',
+                        'Suggest new problem',
+                    ),
+                    (
+                        'problem_full_markup',
+                        'Edit problems with full markup',
+                    ),
+                    (
+                        'clone_problem',
+                        'Clone problem',
+                    ),
+                    (
+                        'upload_file_statement',
+                        'Upload file-type statement',
+                    ),
+                    (
+                        'upload_problem_material',
+                        'Upload problem materials',
+                    ),
+                    (
+                        'change_public_visibility',
+                        'Change is_public field',
+                    ),
+                    (
+                        'change_manually_managed',
+                        'Change is_manually_managed field',
+                    ),
+                    (
+                        'see_organization_problem',
+                        'See organization-private problems',
+                    ),
+                    (
+                        'import_polygon_package',
+                        'Import Codeforces Polygon package',
+                    ),
+                ),
                 'verbose_name': 'problem',
-                'verbose_name_plural': 'problems'},
+                'verbose_name_plural': 'problems',
+            },
         ),
         migrations.AlterModelOptions(
             name='submission',
             options={
                 'permissions': (
-                    ('abort_any_submission',
-                     'Abort any submission'),
-                    ('rejudge_submission',
-                     'Rejudge the submission'),
-                    ('reject_submission',
-                     'Reject the submisison'),
-                    ('rejudge_submission_lot',
-                     'Rejudge a lot of submissions'),
-                    ('spam_submission',
-                     'Submit without limit'),
-                    ('view_all_submission',
-                     'View all submission'),
-                    ('resubmit_other',
-                     "Resubmit others' submission"),
-                    ('lock_submission',
-                     'Change lock status of submission')),
+                    (
+                        'abort_any_submission',
+                        'Abort any submission',
+                    ),
+                    (
+                        'rejudge_submission',
+                        'Rejudge the submission',
+                    ),
+                    (
+                        'reject_submission',
+                        'Reject the submisison',
+                    ),
+                    (
+                        'rejudge_submission_lot',
+                        'Rejudge a lot of submissions',
+                    ),
+                    (
+                        'spam_submission',
+                        'Submit without limit',
+                    ),
+                    (
+                        'view_all_submission',
+                        'View all submission',
+                    ),
+                    (
+                        'resubmit_other',
+                        "Resubmit others' submission",
+                    ),
+                    (
+                        'lock_submission',
+                        'Change lock status of submission',
+                    ),
+                ),
                 'verbose_name': 'submission',
-                'verbose_name_plural': 'submissions'},
+                'verbose_name_plural': 'submissions',
+            },
         ),
         migrations.AlterField(
             model_name='submission',
@@ -77,65 +125,117 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 choices=[
-                    ('AC',
-                     'Accepted'),
-                    ('WA',
-                     'Wrong Answer'),
-                    ('TLE',
-                     'Time Limit Exceeded'),
-                    ('MLE',
-                     'Memory Limit Exceeded'),
-                    ('OLE',
-                     'Output Limit Exceeded'),
-                    ('IR',
-                     'Invalid Return'),
-                    ('RTE',
-                     'Runtime Error'),
-                    ('CE',
-                     'Compile Error'),
-                    ('IE',
-                     'Internal Error'),
-                    ('SC',
-                     'Short Circuited'),
-                    ('AB',
-                     'Aborted'),
-                    ('RJ',
-                     'Rejected')],
+                    (
+                        'AC',
+                        'Accepted',
+                    ),
+                    (
+                        'WA',
+                        'Wrong Answer',
+                    ),
+                    (
+                        'TLE',
+                        'Time Limit Exceeded',
+                    ),
+                    (
+                        'MLE',
+                        'Memory Limit Exceeded',
+                    ),
+                    (
+                        'OLE',
+                        'Output Limit Exceeded',
+                    ),
+                    (
+                        'IR',
+                        'Invalid Return',
+                    ),
+                    (
+                        'RTE',
+                        'Runtime Error',
+                    ),
+                    (
+                        'CE',
+                        'Compile Error',
+                    ),
+                    (
+                        'IE',
+                        'Internal Error',
+                    ),
+                    (
+                        'SC',
+                        'Short Circuited',
+                    ),
+                    (
+                        'AB',
+                        'Aborted',
+                    ),
+                    (
+                        'RJ',
+                        'Rejected',
+                    ),
+                ],
                 default=None,
                 max_length=3,
                 null=True,
-                verbose_name='result'),
+                verbose_name='result',
+            ),
         ),
         migrations.AlterField(
             model_name='submissiontestcase',
             name='status',
             field=models.CharField(
                 choices=[
-                    ('AC',
-                     'Accepted'),
-                    ('WA',
-                     'Wrong Answer'),
-                    ('TLE',
-                     'Time Limit Exceeded'),
-                    ('MLE',
-                     'Memory Limit Exceeded'),
-                    ('OLE',
-                     'Output Limit Exceeded'),
-                    ('IR',
-                     'Invalid Return'),
-                    ('RTE',
-                     'Runtime Error'),
-                    ('CE',
-                     'Compile Error'),
-                    ('IE',
-                     'Internal Error'),
-                    ('SC',
-                     'Short Circuited'),
-                    ('AB',
-                     'Aborted'),
-                    ('RJ',
-                     'Rejected')],
+                    (
+                        'AC',
+                        'Accepted',
+                    ),
+                    (
+                        'WA',
+                        'Wrong Answer',
+                    ),
+                    (
+                        'TLE',
+                        'Time Limit Exceeded',
+                    ),
+                    (
+                        'MLE',
+                        'Memory Limit Exceeded',
+                    ),
+                    (
+                        'OLE',
+                        'Output Limit Exceeded',
+                    ),
+                    (
+                        'IR',
+                        'Invalid Return',
+                    ),
+                    (
+                        'RTE',
+                        'Runtime Error',
+                    ),
+                    (
+                        'CE',
+                        'Compile Error',
+                    ),
+                    (
+                        'IE',
+                        'Internal Error',
+                    ),
+                    (
+                        'SC',
+                        'Short Circuited',
+                    ),
+                    (
+                        'AB',
+                        'Aborted',
+                    ),
+                    (
+                        'RJ',
+                        'Rejected',
+                    ),
+                ],
                 max_length=3,
-                verbose_name='status flag'),
+                verbose_name='status flag',
+            ),
         ),
     ]

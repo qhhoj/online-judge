@@ -5,7 +5,7 @@ from django.db import connection
 from django.db.models import Max
 from django.template.defaultfilters import (
     floatformat,
-    pluralize
+    pluralize,
 )
 from django.urls import reverse
 from django.utils.html import format_html
@@ -13,7 +13,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import (
     gettext_lazy,
-    ngettext
+    ngettext,
 )
 
 from judge.contest_format.default import DefaultContestFormat
@@ -67,7 +67,8 @@ class ICPCContestFormat(DefaultContestFormat):
         format_data = {}
 
         with connection.cursor() as cursor:
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT MAX(cs.points) as `points`, (
                     SELECT MIN(csub.date)
                         FROM judge_contestsubmission ccs LEFT OUTER JOIN
@@ -78,7 +79,8 @@ class ICPCContestFormat(DefaultContestFormat):
                      judge_contestsubmission cs ON (cs.problem_id = cp.id AND cs.participation_id = %s) LEFT OUTER JOIN
                      judge_submission sub ON (sub.id = cs.submission_id)
                 GROUP BY cp.id
-            """, (participation.id, participation.id))
+            """, (participation.id, participation.id),
+            )
 
             for points, time, prob in cursor.fetchall():
                 time = from_database_time(time)
@@ -199,8 +201,10 @@ class ICPCContestFormat(DefaultContestFormat):
                      ('pretest-' if self.contest.run_pretests_only and contest_problem.is_pretested else '') +
                      ('first-solve ' if first_solves.get(str(contest_problem.id), None) == participation.id else '') +
                      self.best_solution_state(format_data[prefix + 'points'], contest_problem.points))
-            url = reverse('contest_user_submissions',
-                          args=[self.contest.key, participation.user.user.username, contest_problem.problem.code])
+            url = reverse(
+                'contest_user_submissions',
+                args=[self.contest.key, participation.user.user.username, contest_problem.problem.code],
+            )
 
             if not format_data[prefix + 'points']:
                 return format_html(
@@ -211,9 +215,11 @@ class ICPCContestFormat(DefaultContestFormat):
                 )
 
             return format_html(
-                ('<td class="{state}">'
-                 '<a href="{url}"><div class="solving-time-minute">{minute}</div>'
-                 '<div class="solving-time">{time}</div>{tries}</a></td>'),
+                (
+                    '<td class="{state}">'
+                    '<a href="{url}"><div class="solving-time-minute">{minute}</div>'
+                    '<div class="solving-time">{time}</div>{tries}</a></td>'
+                ),
                 state=state,
                 url=url,
                 tries=tries,
@@ -231,10 +237,14 @@ class ICPCContestFormat(DefaultContestFormat):
             points = participation.score
             cumtime = participation.cumtime
         return format_html(
-            ('<td class="user-points"><a href="{url}">{points}</a></td>'
-             '<td class="user-penalty">{cumtime}</td>'),
-            url=reverse('contest_all_user_submissions',
-                        args=[self.contest.key, participation.user.user.username]),
+            (
+                '<td class="user-points"><a href="{url}">{points}</a></td>'
+                '<td class="user-penalty">{cumtime}</td>'
+            ),
+            url=reverse(
+                'contest_all_user_submissions',
+                args=[self.contest.key, participation.user.user.username],
+            ),
             points=floatformat(points, -self.contest.points_precision),
             cumtime=floatformat(cumtime, 0),
         )
@@ -257,11 +267,15 @@ class ICPCContestFormat(DefaultContestFormat):
                 'Each submission before the first maximum score submission will incur a **penalty of %d minutes**.',
                 penalty,
             ) % penalty
-            yield _('Ties will be broken by the sum of the last score altering submission time on problems with '
-                    'a non-zero score (including penalty), followed by the time of the last score altering submission.')
+            yield _(
+                'Ties will be broken by the sum of the last score altering submission time on problems with '
+                'a non-zero score (including penalty), followed by the time of the last score altering submission.',
+            )
         else:
-            yield _('Ties will be broken by the sum of the last score altering submission time on problems with '
-                    'a non-zero score, followed by the time of the last score altering submission.')
+            yield _(
+                'Ties will be broken by the sum of the last score altering submission time on problems with '
+                'a non-zero score, followed by the time of the last score altering submission.',
+            )
 
         if self.contest.frozen_last_minutes:
             yield ngettext(

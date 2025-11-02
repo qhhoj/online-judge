@@ -25,12 +25,12 @@ class JudgeAppConfig(AppConfig):
 
         from judge.models import (
             Language,
-            Profile
+            Profile,
         )
 
         from . import (  # noqa: F401, imported for side effects
             jinja2,
-            signals
+            signals,
         )
 
         try:

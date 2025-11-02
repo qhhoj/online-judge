@@ -11,13 +11,13 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.http import (
     HttpResponse,
-    HttpResponseRedirect
+    HttpResponseRedirect,
 )
 from django.shortcuts import get_object_or_404
 from django.urls import (
     Resolver404,
     resolve,
-    reverse
+    reverse,
 )
 from django.utils.encoding import force_bytes
 from requests.exceptions import HTTPError
@@ -25,7 +25,7 @@ from requests.exceptions import HTTPError
 from judge.ip_auth import IPBasedAuthBackend
 from judge.models import (
     MiscConfig,
-    Organization
+    Organization,
 )
 
 
@@ -69,15 +69,21 @@ class DMOJLoginMiddleware(object):
             change_password_path = reverse('password_change')
             change_password_done_path = reverse('password_change_done')
             has_2fa = profile.is_totp_enabled or profile.is_webauthn_enabled
-            if (has_2fa and not request.session.get('2fa_passed', False) and
-                    request.path not in (login_2fa_path, logout_path, webauthn_path) and
-                    not request.path.startswith(settings.STATIC_URL)):
+            if (
+                has_2fa and not request.session.get('2fa_passed', False) and
+                request.path not in (login_2fa_path, logout_path, webauthn_path) and
+                not request.path.startswith(settings.STATIC_URL)
+            ):
                 return HttpResponseRedirect(login_2fa_path + '?next=' + quote(request.get_full_path()))
-            elif (request.session.get('password_pwned', False) and
-                    request.path not in (change_password_path, change_password_done_path,
-                                         login_2fa_path, logout_path) and
-                    not request.path.startswith(settings.STATIC_URL) and
-                    not request.official_contest_mode):
+            elif (
+                request.session.get('password_pwned', False) and
+                request.path not in (
+                    change_password_path, change_password_done_path,
+                    login_2fa_path, logout_path,
+                ) and
+                not request.path.startswith(settings.STATIC_URL) and
+                not request.official_contest_mode
+            ):
                 return HttpResponseRedirect(change_password_path + '?next=' + quote(request.get_full_path()))
         else:
             request.profile = None

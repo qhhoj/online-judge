@@ -3,7 +3,7 @@
 import django.db.models.deletion
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -20,7 +20,8 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 blank=True,
                 null=True,
-                verbose_name='disable bigInteger / bigDecimal'),
+                verbose_name='disable bigInteger / bigDecimal',
+            ),
         ),
         migrations.AddField(
             model_name='problemdata',
@@ -28,7 +29,8 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 blank=True,
                 null=True,
-                verbose_name='enable unicode'),
+                verbose_name='enable unicode',
+            ),
         ),
         migrations.AlterField(
             model_name='blogpost',
@@ -37,14 +39,16 @@ class Migration(migrations.Migration):
                 blank=True,
                 default='',
                 max_length=150,
-                verbose_name='OpenGraph image'),
+                verbose_name='OpenGraph image',
+            ),
         ),
         migrations.AlterField(
             model_name='comment',
             name='hidden',
             field=models.BooleanField(
                 default=0,
-                verbose_name='hidden'),
+                verbose_name='hidden',
+            ),
         ),
         migrations.AlterField(
             model_name='submission',
@@ -52,63 +56,111 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 choices=[
-                    ('AC',
-                     'Accepted'),
-                    ('WA',
-                     'Wrong Answer'),
-                    ('TLE',
-                     'Time Limit Exceeded'),
-                    ('MLE',
-                     'Memory Limit Exceeded'),
-                    ('OLE',
-                     'Output Limit Exceeded'),
-                    ('IR',
-                     'Invalid Return'),
-                    ('RTE',
-                     'Runtime Error'),
-                    ('CE',
-                     'Compile Error'),
-                    ('IE',
-                     'Internal Error'),
-                    ('SC',
-                     'Short Circuited'),
-                    ('AB',
-                     'Aborted')],
+                    (
+                        'AC',
+                        'Accepted',
+                    ),
+                    (
+                        'WA',
+                        'Wrong Answer',
+                    ),
+                    (
+                        'TLE',
+                        'Time Limit Exceeded',
+                    ),
+                    (
+                        'MLE',
+                        'Memory Limit Exceeded',
+                    ),
+                    (
+                        'OLE',
+                        'Output Limit Exceeded',
+                    ),
+                    (
+                        'IR',
+                        'Invalid Return',
+                    ),
+                    (
+                        'RTE',
+                        'Runtime Error',
+                    ),
+                    (
+                        'CE',
+                        'Compile Error',
+                    ),
+                    (
+                        'IE',
+                        'Internal Error',
+                    ),
+                    (
+                        'SC',
+                        'Short Circuited',
+                    ),
+                    (
+                        'AB',
+                        'Aborted',
+                    ),
+                ],
                 db_index=True,
                 default=None,
                 max_length=3,
                 null=True,
-                verbose_name='result'),
+                verbose_name='result',
+            ),
         ),
         migrations.AlterField(
             model_name='submissiontestcase',
             name='status',
             field=models.CharField(
                 choices=[
-                    ('AC',
-                     'Accepted'),
-                    ('WA',
-                     'Wrong Answer'),
-                    ('TLE',
-                     'Time Limit Exceeded'),
-                    ('MLE',
-                     'Memory Limit Exceeded'),
-                    ('OLE',
-                     'Output Limit Exceeded'),
-                    ('IR',
-                     'Invalid Return'),
-                    ('RTE',
-                     'Runtime Error'),
-                    ('CE',
-                     'Compile Error'),
-                    ('IE',
-                     'Internal Error'),
-                    ('SC',
-                     'Short Circuited'),
-                    ('AB',
-                     'Aborted')],
+                    (
+                        'AC',
+                        'Accepted',
+                    ),
+                    (
+                        'WA',
+                        'Wrong Answer',
+                    ),
+                    (
+                        'TLE',
+                        'Time Limit Exceeded',
+                    ),
+                    (
+                        'MLE',
+                        'Memory Limit Exceeded',
+                    ),
+                    (
+                        'OLE',
+                        'Output Limit Exceeded',
+                    ),
+                    (
+                        'IR',
+                        'Invalid Return',
+                    ),
+                    (
+                        'RTE',
+                        'Runtime Error',
+                    ),
+                    (
+                        'CE',
+                        'Compile Error',
+                    ),
+                    (
+                        'IE',
+                        'Internal Error',
+                    ),
+                    (
+                        'SC',
+                        'Short Circuited',
+                    ),
+                    (
+                        'AB',
+                        'Aborted',
+                    ),
+                ],
                 max_length=3,
-                verbose_name='status flag'),
+                verbose_name='status flag',
+            ),
         ),
         migrations.AlterField(
             model_name='ticketmessage',
@@ -117,6 +169,7 @@ class Migration(migrations.Migration):
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name='ticket_messages',
                 to='judge.profile',
-                verbose_name='user'),
+                verbose_name='user',
+            ),
         ),
     ]

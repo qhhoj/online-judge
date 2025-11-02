@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -20,6 +20,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 help_text='Name displayed in place of username.',
                 max_length=100,
-                verbose_name='display name override'),
+                verbose_name='display name override',
+            ),
         ),
     ]

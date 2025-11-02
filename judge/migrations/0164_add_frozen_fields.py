@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -19,7 +19,8 @@ class Migration(migrations.Migration):
             field=models.IntegerField(
                 default=0,
                 help_text='If set, the scoreboard will be frozen for the last X minutes. Only available for ICPC and VNOJ format.',
-                verbose_name='frozen last minutes'),
+                verbose_name='frozen last minutes',
+            ),
         ),
         migrations.AddField(
             model_name='contestparticipation',
@@ -27,7 +28,8 @@ class Migration(migrations.Migration):
             field=models.PositiveIntegerField(
                 default=0,
                 help_text='Frozen cumulative time in the scoreboard.',
-                verbose_name='frozen cumulative time'),
+                verbose_name='frozen cumulative time',
+            ),
         ),
         migrations.AddField(
             model_name='contestparticipation',
@@ -36,13 +38,15 @@ class Migration(migrations.Migration):
                 db_index=True,
                 default=0,
                 help_text='Frozen score in the scoreboard.',
-                verbose_name='frozen score'),
+                verbose_name='frozen score',
+            ),
         ),
         migrations.AddField(
             model_name='contestparticipation',
             name='frozen_tiebreaker',
             field=models.FloatField(
                 default=0.0,
-                verbose_name='frozen tie-breaking field'),
+                verbose_name='frozen tie-breaking field',
+            ),
         ),
     ]

@@ -1,6 +1,6 @@
 from django.core.management.base import (
     BaseCommand,
-    CommandError
+    CommandError,
 )
 from django.db import transaction
 
@@ -9,7 +9,7 @@ from judge.models import (
     CommentVote,
     ContestParticipation,
     Profile,
-    Submission
+    Submission,
 )
 
 

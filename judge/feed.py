@@ -9,7 +9,7 @@ from judge.jinja2.markdown import markdown
 from judge.models import (
     BlogPost,
     Comment,
-    Problem
+    Problem,
 )
 
 

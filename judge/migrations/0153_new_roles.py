@@ -3,7 +3,7 @@
 from django.conf import settings
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -21,6 +21,7 @@ class Migration(migrations.Migration):
                 choices=settings.VNOJ_DISPLAY_RANKS,
                 default='user',
                 max_length=10,
-                verbose_name='display rank'),
+                verbose_name='display rank',
+            ),
         ),
     ]

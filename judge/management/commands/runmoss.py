@@ -5,7 +5,7 @@ from moss import *
 from judge.models import (
     Contest,
     ContestParticipation,
-    Submission
+    Submission,
 )
 
 
@@ -44,8 +44,10 @@ class Command(BaseCommand):
                     print('<no submissions>')
                     continue
 
-                moss_call = MOSS(moss_api_key, language=moss_lang, matching_file_limit=100,
-                                 comment='%s - %s' % (contest, problem.code))
+                moss_call = MOSS(
+                    moss_api_key, language=moss_lang, matching_file_limit=100,
+                    comment='%s - %s' % (contest, problem.code),
+                )
 
                 users = set()
 

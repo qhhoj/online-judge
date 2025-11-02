@@ -3,7 +3,7 @@
 import django.db.models.deletion
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 import judge.models.runtime
@@ -22,7 +22,8 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 default=False,
                 help_text='If this language is submitted using file or not',
-                verbose_name='File-only language'),
+                verbose_name='File-only language',
+            ),
         ),
         migrations.AddField(
             model_name='language',
@@ -31,7 +32,8 @@ class Migration(migrations.Migration):
                 blank=True,
                 default=0,
                 help_text='Limit of file size (in MB) if allow submit via file',
-                verbose_name='Limit of file size'),
+                verbose_name='Limit of file size',
+            ),
         ),
         migrations.AddField(
             model_name='language',
@@ -39,7 +41,8 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 default=False,
                 help_text='If true, this language will be added to all problems',
-                verbose_name='Include in problems'),
+                verbose_name='Include in problems',
+            ),
         ),
         migrations.AlterField(
             model_name='language',
@@ -48,7 +51,8 @@ class Migration(migrations.Migration):
                 help_text='The identifier for this language; the same as its executor id for judges.',
                 max_length=10,
                 unique=True,
-                verbose_name='short identifier'),
+                verbose_name='short identifier',
+            ),
         ),
         migrations.AlterField(
             model_name='profile',
@@ -57,6 +61,7 @@ class Migration(migrations.Migration):
                 default=judge.models.runtime.Language.get_default_language_pk,
                 on_delete=django.db.models.deletion.SET_DEFAULT,
                 to='judge.Language',
-                verbose_name='preferred language'),
+                verbose_name='preferred language',
+            ),
         ),
     ]

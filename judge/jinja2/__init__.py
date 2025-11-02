@@ -9,7 +9,7 @@ from statici18n.templatetags.statici18n import inlinei18n
 from judge.highlight_code import highlight_code
 from judge.user_translations import gettext
 
-from . import (
+from . import (  # noqa: I202
     boring_avatars,
     camo,
     datetime,
@@ -25,7 +25,7 @@ from . import (
     social,
     spaceless,
     submission,
-    timedelta
+    timedelta,
 )
 
 

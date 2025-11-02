@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -21,6 +21,7 @@ class Migration(migrations.Migration):
                 default='',
                 help_text='This image will replace the default site logo for users viewing the organization.',
                 max_length=150,
-                verbose_name='logo override image'),
+                verbose_name='logo override image',
+            ),
         ),
     ]

@@ -4,7 +4,7 @@ from django import forms
 from django.conf import settings
 from django.template import (
     Context,
-    Template
+    Template,
 )
 from lxml import html
 

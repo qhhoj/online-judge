@@ -11,7 +11,7 @@ from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseForbidden,
-    HttpResponseRedirect
+    HttpResponseRedirect,
 )
 from django.views.decorators.http import require_POST
 from martor.api import imgur_uploader
@@ -70,8 +70,10 @@ def django_uploader(image):
         ext = '.png'
     name = str(uuid.uuid4()) + ext
     default_storage.save(os.path.join(settings.MARTOR_UPLOAD_MEDIA_DIR, name), image)
-    url_base = getattr(settings, 'MARTOR_UPLOAD_URL_PREFIX',
-                       urljoin(settings.MEDIA_URL, settings.MARTOR_UPLOAD_MEDIA_DIR))
+    url_base = getattr(
+        settings, 'MARTOR_UPLOAD_URL_PREFIX',
+        urljoin(settings.MEDIA_URL, settings.MARTOR_UPLOAD_MEDIA_DIR),
+    )
     if not url_base.endswith('/'):
         url_base += '/'
     return json.dumps({'status': 200, 'name': '', 'link': urljoin(url_base, name)})
@@ -81,8 +83,10 @@ def pdf_statement_uploader(statement):
     ext = os.path.splitext(statement.name)[1]
     name = str(uuid.uuid4()) + ext
     default_storage.save(os.path.join(settings.PDF_STATEMENT_UPLOAD_MEDIA_DIR, name), statement)
-    url_base = getattr(settings, 'PDF_STATEMENT_UPLOAD_URL_PREFIX',
-                       urljoin(settings.MEDIA_URL, settings.PDF_STATEMENT_UPLOAD_MEDIA_DIR))
+    url_base = getattr(
+        settings, 'PDF_STATEMENT_UPLOAD_URL_PREFIX',
+        urljoin(settings.MEDIA_URL, settings.PDF_STATEMENT_UPLOAD_MEDIA_DIR),
+    )
     if not url_base.endswith('/'):
         url_base += '/'
     return urljoin(url_base, name)
@@ -91,8 +95,10 @@ def pdf_statement_uploader(statement):
 def problem_material_uploader(material, problem):
     name = os.path.basename(material.name.replace(' ', '_'))
     default_storage.save(os.path.join(settings.PROBLEM_MATERIAL_UPLOAD_MEDIA_DIR, problem.code, name), material)
-    url_base = getattr(settings, 'PROBLEM_MATERIAL_UPLOAD_URL_PREFIX',
-                       urljoin(settings.MEDIA_URL, settings.PROBLEM_MATERIAL_UPLOAD_MEDIA_DIR))
+    url_base = getattr(
+        settings, 'PROBLEM_MATERIAL_UPLOAD_URL_PREFIX',
+        urljoin(settings.MEDIA_URL, settings.PROBLEM_MATERIAL_UPLOAD_MEDIA_DIR),
+    )
     if not url_base.endswith('/'):
         url_base += '/'
     return urljoin(url_base, os.path.join(problem.code, name))
@@ -105,8 +111,10 @@ def submission_uploader(submission_file, problem_code, user_id):
         os.path.join(settings.SUBMISSION_FILE_UPLOAD_MEDIA_DIR, problem_code, str(user_id), name),
         submission_file,
     )
-    url_base = getattr(settings, 'SUBMISSION_FILE_UPLOAD_URL_PREFIX',
-                       urljoin(settings.MEDIA_URL, settings.SUBMISSION_FILE_UPLOAD_MEDIA_DIR))
+    url_base = getattr(
+        settings, 'SUBMISSION_FILE_UPLOAD_URL_PREFIX',
+        urljoin(settings.MEDIA_URL, settings.SUBMISSION_FILE_UPLOAD_MEDIA_DIR),
+    )
     if not url_base.endswith('/'):
         url_base += '/'
     return urljoin(url_base, os.path.join(problem_code, str(user_id), name))

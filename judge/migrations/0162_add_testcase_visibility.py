@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -18,14 +18,22 @@ class Migration(migrations.Migration):
             name='testcase_visibility_mode',
             field=models.CharField(
                 choices=[
-                    ('O',
-                     'Visible for authors'),
-                    ('C',
-                     'Visible if user is not in a contest'),
-                    ('A',
-                     'Always visible')],
+                    (
+                        'O',
+                        'Visible for authors',
+                    ),
+                    (
+                        'C',
+                        'Visible if user is not in a contest',
+                    ),
+                    (
+                        'A',
+                        'Always visible',
+                    ),
+                ],
                 default='O',
                 max_length=1,
-                verbose_name='Testcase visibility'),
+                verbose_name='Testcase visibility',
+            ),
         ),
     ]

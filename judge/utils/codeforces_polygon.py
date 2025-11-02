@@ -11,7 +11,7 @@ from operator import itemgetter
 from typing import (
     BinaryIO,
     List,
-    Union
+    Union,
 )
 
 from django.conf import settings
@@ -30,7 +30,7 @@ from judge.models import (
     ProblemTranslation,
     ProblemType,
     Profile,
-    Solution
+    Solution,
 )
 from judge.utils.problem_data import ProblemDataCompiler
 from judge.views.widgets import django_uploader
@@ -534,8 +534,10 @@ class PolygonImporter:
                 case_data = self.meta['cases_data'][i]
                 case_data['points'] = int(case_data['points'] * 1000) // gcd
 
-        total_points = (sum(b['points'] for b in self.meta['batches'].values()) +
-                        sum(self.meta['cases_data'][i]['points'] for i in self.meta['normal_cases']))
+        total_points = (
+            sum(b['points'] for b in self.meta['batches'].values()) +
+            sum(self.meta['cases_data'][i]['points'] for i in self.meta['normal_cases'])
+        )
         if total_points == 0:
             self.log('Total points is zero. Set partial to False.')
             self.meta['partial'] = False
@@ -814,16 +816,18 @@ class PolygonImporter:
     @transaction.atomic
     def update_or_create_problem(self):
         self.log('Creating/Updating problem in database.')
-        problem, _ = Problem.objects.update_or_create(code=self.meta['code'], defaults={
-            'code': self.meta['code'],
-            'name': self.meta['name'],
-            'time_limit': self.meta['time_limit'],
-            'memory_limit': self.meta['memory_limit'],
-            'description': self.meta['description'],
-            'partial': self.meta['partial'],
-            'group': ProblemGroup.objects.order_by('id').first(),  # Uncategorized
-            'points': 0.0,
-        })
+        problem, _ = Problem.objects.update_or_create(
+            code=self.meta['code'], defaults={
+                'code': self.meta['code'],
+                'name': self.meta['name'],
+                'time_limit': self.meta['time_limit'],
+                'memory_limit': self.meta['memory_limit'],
+                'description': self.meta['description'],
+                'partial': self.meta['partial'],
+                'group': ProblemGroup.objects.order_by('id').first(),  # Uncategorized
+                'points': 0.0,
+            },
+        )
         problem.save()
         problem.allowed_languages.set(Language.objects.filter(include_in_problem=True))
         problem.authors.set(self.meta['authors'])
@@ -850,13 +854,15 @@ class PolygonImporter:
             ).save()
 
         with open(self.meta['zipfile'], 'rb') as f:
-            problem_data, _ = ProblemData.objects.update_or_create(problem=problem, defaults={
-                'problem': problem,
-                'zipfile': File(f),
-                'grader': self.meta['grader'],
-                'checker': self.meta['checker'],
-                'grader_args': json.dumps(self.meta['grader_args']),
-            })
+            problem_data, _ = ProblemData.objects.update_or_create(
+                problem=problem, defaults={
+                    'problem': problem,
+                    'zipfile': File(f),
+                    'grader': self.meta['grader'],
+                    'checker': self.meta['checker'],
+                    'grader_args': json.dumps(self.meta['grader_args']),
+                },
+            )
             problem_data.save()
 
         if self.meta['checker'] == 'bridged':

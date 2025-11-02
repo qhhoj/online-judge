@@ -11,13 +11,13 @@ from reversion.admin import VersionAdmin
 from django_ace import AceWidget
 from judge.models import (
     Profile,
-    WebAuthnCredential
+    WebAuthnCredential,
 )
 from judge.utils.views import NoBatchDeleteMixin
 from judge.widgets import (
     AdminMartorWidget,
     AdminSelect2MultipleWidget,
-    AdminSelect2Widget
+    AdminSelect2Widget,
 )
 
 
@@ -68,13 +68,17 @@ class WebAuthnInline(admin.TabularInline):
 
 
 class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
-    fields = ('user', 'display_rank', 'badges', 'display_badge', 'about', 'organizations', 'vnoj_points', 'timezone',
-              'language', 'ace_theme', 'math_engine', 'last_access', 'ip', 'mute', 'is_unlisted', 'allow_tagging',
-              'notes', 'username_display_override', 'ban_reason', 'is_totp_enabled', 'ip_auth', 'user_script',
-              'current_contest')
+    fields = (
+        'user', 'display_rank', 'badges', 'display_badge', 'about', 'organizations', 'vnoj_points', 'timezone',
+        'language', 'ace_theme', 'math_engine', 'last_access', 'ip', 'mute', 'is_unlisted', 'allow_tagging',
+        'notes', 'username_display_override', 'ban_reason', 'is_totp_enabled', 'ip_auth', 'user_script',
+        'current_contest',
+    )
     readonly_fields = ('user',)
-    list_display = ('admin_user_admin', 'email', 'is_totp_enabled', 'timezone_full',
-                    'date_joined', 'last_access', 'ip', 'show_public')
+    list_display = (
+        'admin_user_admin', 'email', 'is_totp_enabled', 'timezone_full',
+        'date_joined', 'last_access', 'ip', 'show_public',
+    )
     ordering = ('user__username',)
     search_fields = ('user__username', 'ip', 'user__email')
     list_filter = ('language', TimezoneFilter)
@@ -115,8 +119,10 @@ class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
 
     @admin.display(description='')
     def show_public(self, obj):
-        return format_html('<a href="{0}" style="white-space:nowrap;">{1}</a>',
-                           obj.get_absolute_url(), gettext('View on site'))
+        return format_html(
+            '<a href="{0}" style="white-space:nowrap;">{1}</a>',
+            obj.get_absolute_url(), gettext('View on site'),
+        )
 
     @admin.display(description=_('user'), ordering='user__username')
     def admin_user_admin(self, obj):
@@ -140,9 +146,13 @@ class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
         for profile in queryset:
             profile.calculate_points()
             count += 1
-        self.message_user(request, ngettext('%d user had scores recalculated.',
-                                            '%d users had scores recalculated.',
-                                            count) % count)
+        self.message_user(
+            request, ngettext(
+                '%d user had scores recalculated.',
+                '%d users had scores recalculated.',
+                count,
+            ) % count,
+        )
 
     @admin.display(description=_('Recalulate contribution points'))
     def recalulate_contribution_points(self, request, queryset):
@@ -150,9 +160,13 @@ class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
         for profile in queryset:
             profile.calculate_contribution_points()
             count += 1
-        self.message_user(request, ngettext('%d user has contribution scores recalculated.',
-                                            '%d users have contribution scores recalculated.',
-                                            count) % count)
+        self.message_user(
+            request, ngettext(
+                '%d user has contribution scores recalculated.',
+                '%d users have contribution scores recalculated.',
+                count,
+            ) % count,
+        )
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(ProfileAdmin, self).get_form(request, obj, **kwargs)

@@ -1,7 +1,7 @@
 import django.db.models.deletion
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -26,6 +26,7 @@ class Migration(migrations.Migration):
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name='solution',
                 to='judge.Problem',
-                verbose_name='associated problem'),
+                verbose_name='associated problem',
+            ),
         ),
     ]

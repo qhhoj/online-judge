@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 import judge.models.problem
@@ -20,7 +20,8 @@ class Migration(migrations.Migration):
             name='contribution_points',
             field=models.IntegerField(
                 db_index=True,
-                default=0),
+                default=0,
+            ),
         ),
         migrations.AlterField(
             model_name='problem',
@@ -28,7 +29,9 @@ class Migration(migrations.Migration):
             field=models.TextField(
                 blank=True,
                 validators=[
-                    judge.models.problem.disallowed_characters_validator],
-                verbose_name='problem body'),
+                    judge.models.problem.disallowed_characters_validator,
+                ],
+                verbose_name='problem body',
+            ),
         ),
     ]

@@ -1,8 +1,8 @@
 import json
 import os
-from calendar import (
-    Calendar,
+from calendar import (  # noqa: I101
     SUNDAY,
+    Calendar,
 )
 from collections import (
     defaultdict,

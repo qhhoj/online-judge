@@ -14,12 +14,12 @@ if not settings.EVENT_DAEMON_USE:
 elif hasattr(settings, 'EVENT_DAEMON_AMQP'):
     from .event_poster_amqp import (
         last,
-        post
+        post,
     )
     real = True
 else:
     from .event_poster_ws import (
         last,
-        post
+        post,
     )
     real = True

@@ -1,21 +1,21 @@
 from django.core.exceptions import ValidationError
 from django.test import (
     SimpleTestCase,
-    TestCase
+    TestCase,
 )
 from django.utils import timezone
 
 from judge.models import (
     Contest,
     ContestParticipation,
-    ContestTag
+    ContestTag,
 )
 from judge.models.contest import MinValueOrNoneValidator
 from judge.models.tests.util import (
     CommonDataMixin,
     create_contest,
     create_contest_participation,
-    create_user
+    create_user,
 )
 
 

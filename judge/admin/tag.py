@@ -7,7 +7,7 @@ from reversion.admin import VersionAdmin
 from judge.models import (
     Tag,
     TagGroup,
-    TagProblem
+    TagProblem,
 )
 from judge.utils.views import NoBatchDeleteMixin
 from judge.widgets import AdminHeavySelect2Widget
@@ -43,11 +43,13 @@ class TagDataInlineForm(ModelForm):
 
 class TagAdmin(NoBatchDeleteMixin, VersionAdmin):
     fieldsets = (
-        (None, {
-            'fields': (
-                'code', 'name', 'group',
-            ),
-        }),
+        (
+            None, {
+                'fields': (
+                    'code', 'name', 'group',
+                ),
+            },
+        ),
     )
     list_display = ['code', 'name', 'group']
     ordering = ['code']
@@ -63,11 +65,13 @@ class TagAdmin(NoBatchDeleteMixin, VersionAdmin):
 
 class TagGroupAdmin(NoBatchDeleteMixin, VersionAdmin):
     fieldsets = (
-        (None, {
-            'fields': (
-                'code', 'name',
-            ),
-        }),
+        (
+            None, {
+                'fields': (
+                    'code', 'name',
+                ),
+            },
+        ),
     )
     list_display = ['code', 'name']
     ordering = ['code']
@@ -90,11 +94,13 @@ class TagDataInline(admin.TabularInline):
 
 class TagProblemAdmin(NoBatchDeleteMixin, VersionAdmin):
     fieldsets = (
-        (None, {
-            'fields': (
-                'code', 'name', 'link', 'judge',
-            ),
-        }),
+        (
+            None, {
+                'fields': (
+                    'code', 'name', 'link', 'judge',
+                ),
+            },
+        ),
     )
     inlines = [
         TagDataInline,

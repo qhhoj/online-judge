@@ -18,12 +18,12 @@ from registration.signals import user_registered
 
 from judge.caching import finished_submission
 from judge.models import (
-    EFFECTIVE_MATH_ENGINES,
     BlogPost,
     Comment,
     Contest,
     ContestAnnouncement,
     ContestSubmission,
+    EFFECTIVE_MATH_ENGINES,
     Judge,
     Language,
     License,
@@ -103,11 +103,10 @@ def contest_update(sender, instance, **kwargs):
     if hasattr(instance, '_updating_stats_only'):
         return
 
-    cache.delete_many(['generated-meta-contest:%d' % instance.id] +
-                      [
-                          make_template_fragment_key('contest_html', (instance.id, engine))
-                          for engine in EFFECTIVE_MATH_ENGINES
-                      ])
+    cache.delete_many(['generated-meta-contest:%d' % instance.id] + [  # noqa: E126,G004
+        make_template_fragment_key('contest_html', (instance.id, engine))
+        for engine in EFFECTIVE_MATH_ENGINES
+    ])
 
 
 @receiver(post_save, sender=License)

@@ -3,7 +3,7 @@
 import django.db.models.deletion
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -21,7 +21,8 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(
             create_python3,
-            reverse_code=migrations.RunPython.noop),
+            reverse_code=migrations.RunPython.noop,
+        ),
         migrations.AlterField(
             model_name='profile',
             name='language',
@@ -30,6 +31,7 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
                 to='judge.Language',
-                verbose_name='preferred language'),
+                verbose_name='preferred language',
+            ),
         ),
     ]

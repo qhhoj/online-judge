@@ -3,7 +3,7 @@
 import django.db.models.deletion
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -21,40 +21,64 @@ class Migration(migrations.Migration):
                     'order',
                 ),
                 'verbose_name': 'contest problem',
-                'verbose_name_plural': 'contest problems'},
+                'verbose_name_plural': 'contest problems',
+            },
         ),
         migrations.AlterModelOptions(
             name='problem',
             options={
                 'permissions': (
-                    ('see_private_problem',
-                     'See hidden problems'),
-                    ('edit_own_problem',
-                     'Edit own problems'),
-                    ('edit_all_problem',
-                     'Edit all problems'),
-                    ('edit_public_problem',
-                     'Edit all public problems'),
-                    ('suggest_new_problem',
-                     'Suggest new problem'),
-                    ('problem_full_markup',
-                     'Edit problems with full markup'),
-                    ('clone_problem',
-                     'Clone problem'),
-                    ('change_public_visibility',
-                     'Change is_public field'),
-                    ('change_manually_managed',
-                     'Change is_manually_managed field'),
-                    ('see_organization_problem',
-                     'See organization-private problems')),
+                    (
+                        'see_private_problem',
+                        'See hidden problems',
+                    ),
+                    (
+                        'edit_own_problem',
+                        'Edit own problems',
+                    ),
+                    (
+                        'edit_all_problem',
+                        'Edit all problems',
+                    ),
+                    (
+                        'edit_public_problem',
+                        'Edit all public problems',
+                    ),
+                    (
+                        'suggest_new_problem',
+                        'Suggest new problem',
+                    ),
+                    (
+                        'problem_full_markup',
+                        'Edit problems with full markup',
+                    ),
+                    (
+                        'clone_problem',
+                        'Clone problem',
+                    ),
+                    (
+                        'change_public_visibility',
+                        'Change is_public field',
+                    ),
+                    (
+                        'change_manually_managed',
+                        'Change is_manually_managed field',
+                    ),
+                    (
+                        'see_organization_problem',
+                        'See organization-private problems',
+                    ),
+                ),
                 'verbose_name': 'problem',
-                'verbose_name_plural': 'problems'},
+                'verbose_name_plural': 'problems',
+            },
         ),
         migrations.AlterModelOptions(
             name='webauthncredential',
             options={
                 'verbose_name': 'WebAuthn credential',
-                'verbose_name_plural': 'WebAuthn credentials'},
+                'verbose_name_plural': 'WebAuthn credentials',
+            },
         ),
         migrations.AddField(
             model_name='problem',
@@ -64,6 +88,7 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name='suggested_problems',
-                to='judge.Profile'),
+                to='judge.Profile',
+            ),
         ),
     ]

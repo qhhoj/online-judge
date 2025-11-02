@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 import judge.models.contest
@@ -36,10 +36,14 @@ class Migration(migrations.Migration):
                 validators=[
                     judge.models.contest.MinValueOrNoneValidator(
                         1,
-                        "Why include a problem you can't submit to?")]),
+                        "Why include a problem you can't submit to?",
+                    ),
+                ],
+            ),
         ),
         migrations.RunPython(
             zero_to_none,
             none_to_zero,
-            atomic=True),
+            atomic=True,
+        ),
     ]

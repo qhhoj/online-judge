@@ -1,7 +1,7 @@
 import threading
 from socketserver import (
     TCPServer,
-    ThreadingMixIn
+    ThreadingMixIn,
 )
 
 

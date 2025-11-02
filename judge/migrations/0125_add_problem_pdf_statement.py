@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -20,6 +20,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 help_text='URL to PDF statement. The PDF file must be embeddable (Mobile web browsersmay not support embedding). Fallback included.',
                 max_length=100,
-                verbose_name='PDF statement URL'),
+                verbose_name='PDF statement URL',
+            ),
         ),
     ]

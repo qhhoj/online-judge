@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -18,25 +18,43 @@ class Migration(migrations.Migration):
             name='format_name',
             field=models.CharField(
                 choices=[
-                    ('Ultimate',
-                     'Ultimate'),
-                    ('atcoder',
-                     'AtCoder'),
-                    ('default',
-                     'Default'),
-                    ('ecoo',
-                     'ECOO'),
-                    ('icpc',
-                     'ICPC'),
-                    ('ioi',
-                     'IOI (pre-2016)'),
-                    ('ioi16',
-                     'IOI'),
-                    ('vnoj',
-                     'VNOJ')],
+                    (
+                        'Ultimate',
+                        'Ultimate',
+                    ),
+                    (
+                        'atcoder',
+                        'AtCoder',
+                    ),
+                    (
+                        'default',
+                        'Default',
+                    ),
+                    (
+                        'ecoo',
+                        'ECOO',
+                    ),
+                    (
+                        'icpc',
+                        'ICPC',
+                    ),
+                    (
+                        'ioi',
+                        'IOI (pre-2016)',
+                    ),
+                    (
+                        'ioi16',
+                        'IOI',
+                    ),
+                    (
+                        'vnoj',
+                        'VNOJ',
+                    ),
+                ],
                 default='default',
                 help_text='The contest format module to use.',
                 max_length=32,
-                verbose_name='contest format'),
+                verbose_name='contest format',
+            ),
         ),
     ]

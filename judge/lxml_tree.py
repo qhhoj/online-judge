@@ -2,12 +2,12 @@ import logging
 
 from django.utils.safestring import (
     SafeData,
-    mark_safe
+    mark_safe,
 )
 from lxml import html
 from lxml.etree import (
     ParserError,
-    XMLSyntaxError
+    XMLSyntaxError,
 )
 
 

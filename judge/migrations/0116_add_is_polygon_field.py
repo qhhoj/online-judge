@@ -2,7 +2,7 @@
 # Formatted by Thuc Le to follow flake8
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -19,18 +19,25 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 default=False,
                 help_text='Is the problem statement copied from polygon html?',
-                verbose_name='polygon problem '),
+                verbose_name='polygon problem ',
+            ),
         ),
         migrations.AlterField(
             model_name='problemtranslation',
             name='language',
             field=models.CharField(
                 choices=[
-                    ('en',
-                     'English'),
-                    ('vi',
-                     'Vietnamese')],
+                    (
+                        'en',
+                        'English',
+                    ),
+                    (
+                        'vi',
+                        'Vietnamese',
+                    ),
+                ],
                 max_length=7,
-                verbose_name='language'),
+                verbose_name='language',
+            ),
         ),
     ]

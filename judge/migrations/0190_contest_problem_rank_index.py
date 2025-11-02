@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -21,7 +21,9 @@ class Migration(migrations.Migration):
                     'problem',
                     'user',
                     '-points',
-                    '-time'],
-                name='judge_submi_contest_59fbe3_idx'),
+                    '-time',
+                ],
+                name='judge_submi_contest_59fbe3_idx',
+            ),
         ),
     ]

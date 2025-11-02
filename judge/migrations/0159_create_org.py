@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -18,16 +18,26 @@ class Migration(migrations.Migration):
             options={
                 'ordering': ['name'],
                 'permissions': (
-                    ('organization_admin',
-                     'Administer organizations'),
-                    ('edit_all_organization',
-                     'Edit all organizations'),
-                    ('change_open_organization',
-                     'Change is_open field'),
-                    ('spam_organization',
-                     'Create organization without limit')),
+                    (
+                        'organization_admin',
+                        'Administer organizations',
+                    ),
+                    (
+                        'edit_all_organization',
+                        'Edit all organizations',
+                    ),
+                    (
+                        'change_open_organization',
+                        'Change is_open field',
+                    ),
+                    (
+                        'spam_organization',
+                        'Create organization without limit',
+                    ),
+                ),
                 'verbose_name': 'organization',
-                'verbose_name_plural': 'organizations'},
+                'verbose_name_plural': 'organizations',
+            },
         ),
         migrations.AlterField(
             model_name='organization',
@@ -35,6 +45,7 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 default=False,
                 help_text='Allow joining organization.',
-                verbose_name='is open organization?'),
+                verbose_name='is open organization?',
+            ),
         ),
     ]

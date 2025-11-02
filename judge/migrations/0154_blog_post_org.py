@@ -3,7 +3,7 @@
 import django.db.models.deletion
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -25,12 +25,18 @@ class Migration(migrations.Migration):
             name='blogpost',
             options={
                 'permissions': (
-                    ('edit_all_post',
-                     'Edit all posts'),
-                    ('edit_organization_post',
-                     'Edit organization posts')),
+                    (
+                        'edit_all_post',
+                        'Edit all posts',
+                    ),
+                    (
+                        'edit_organization_post',
+                        'Edit organization posts',
+                    ),
+                ),
                 'verbose_name': 'blog post',
-                'verbose_name_plural': 'blog posts'},
+                'verbose_name_plural': 'blog posts',
+            },
         ),
         migrations.AddField(
             model_name='blogpost',
@@ -38,7 +44,8 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 default=False,
                 help_text='Display this blog post at the homepage.',
-                verbose_name='global post'),
+                verbose_name='global post',
+            ),
         ),
         migrations.AddField(
             model_name='blogpost',
@@ -50,7 +57,8 @@ class Migration(migrations.Migration):
                 related_name='post_author_org',
                 to='judge.Organization',
                 verbose_name='organization',
-                db_index=True),
+                db_index=True,
+            ),
         ),
         migrations.RunPython(
             apply_global_post,

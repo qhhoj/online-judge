@@ -3,7 +3,7 @@ import zipfile
 
 from django.core.management.base import (
     BaseCommand,
-    CommandError
+    CommandError,
 )
 from django.db import transaction
 from django.utils import translation
@@ -14,7 +14,7 @@ from judge.models import (
     Problem,
     Profile,
     Submission,
-    SubmissionSource
+    SubmissionSource,
 )
 
 

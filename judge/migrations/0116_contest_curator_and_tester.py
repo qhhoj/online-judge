@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -19,7 +19,8 @@ class Migration(migrations.Migration):
             field=models.ManyToManyField(
                 help_text='These users will be able to edit the contest.',
                 related_name='_contest_authors_+',
-                to='judge.Profile'),
+                to='judge.Profile',
+            ),
         ),
         migrations.RenameField(
             model_name='contest',
@@ -33,7 +34,8 @@ class Migration(migrations.Migration):
                 blank=True,
                 help_text='These users will be able to edit the contest, but will not be listed as authors.',
                 related_name='_contest_curators_+',
-                to='judge.Profile'),
+                to='judge.Profile',
+            ),
         ),
         migrations.AddField(
             model_name='contest',
@@ -42,6 +44,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 help_text='These users will be able to view the contest, but not edit it.',
                 related_name='_contest_testers_+',
-                to='judge.Profile'),
+                to='judge.Profile',
+            ),
         ),
     ]

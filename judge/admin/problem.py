@@ -18,7 +18,7 @@ from judge.models import (
     ProblemClarification,
     ProblemTranslation,
     Profile,
-    Solution
+    Solution,
 )
 from judge.utils.views import NoBatchDeleteMixin
 from judge.widgets import (
@@ -27,7 +27,7 @@ from judge.widgets import (
     AdminMartorWidget,
     AdminSelect2MultipleWidget,
     AdminSelect2Widget,
-    CheckboxSelectMultipleWithSelectAll
+    CheckboxSelectMultipleWithSelectAll,
 )
 
 
@@ -51,10 +51,14 @@ class ProblemForm(ModelForm):
             'curators': AdminHeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%'}),
             'suggester': AdminHeavySelect2Widget(data_view='profile_select2', attrs={'style': 'width: 100%'}),
             'testers': AdminHeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%'}),
-            'banned_users': AdminHeavySelect2MultipleWidget(data_view='profile_select2',
-                                                            attrs={'style': 'width: 100%'}),
-            'organizations': AdminHeavySelect2MultipleWidget(data_view='organization_select2',
-                                                             attrs={'style': 'width: 100%'}),
+            'banned_users': AdminHeavySelect2MultipleWidget(
+                data_view='profile_select2',
+                attrs={'style': 'width: 100%'},
+            ),
+            'organizations': AdminHeavySelect2MultipleWidget(
+                data_view='organization_select2',
+                attrs={'style': 'width: 100%'},
+            ),
             'types': AdminSelect2MultipleWidget,
             'group': AdminSelect2Widget,
             'description': AdminMartorWidget(attrs={'data-markdownfy-url': reverse_lazy('problem_preview')}),
@@ -137,14 +141,17 @@ class ProblemTranslationInline(admin.StackedInline):
 
 class ProblemAdmin(NoBatchDeleteMixin, VersionAdmin):
     fieldsets = (
-        (None, {
-            'fields': (
-                'code', 'name', 'suggester', 'is_public', 'is_manually_managed', 'date', 'authors',
-                'curators', 'testers', 'is_organization_private', 'organizations', 'submission_source_visibility_mode',
-                'testcase_visibility_mode', 'testcase_result_visibility_mode', 'allow_view_feedback',
-                'is_full_markup', 'pdf_url', 'source', 'description', 'license',
-            ),
-        }),
+        (
+            None, {
+                'fields': (
+                    'code', 'name', 'suggester', 'is_public', 'is_manually_managed', 'date', 'authors',
+                    'curators', 'testers', 'is_organization_private', 'organizations',  # noqa: E501
+                    'submission_source_visibility_mode', 'testcase_visibility_mode',
+                    'testcase_result_visibility_mode', 'allow_view_feedback',
+                    'is_full_markup', 'pdf_url', 'source', 'description', 'license',
+                ),
+            },
+        ),
         (_('Social Media'), {'classes': ('collapse',), 'fields': ('og_image', 'summary')}),
         (_('Taxonomy'), {'fields': ('types', 'group')}),
         (_('Points'), {'fields': (('points', 'partial'), 'short_circuit')}),
@@ -206,18 +213,26 @@ class ProblemAdmin(NoBatchDeleteMixin, VersionAdmin):
         for problem_id in queryset.values_list('id', flat=True):
             self._rescore(request, problem_id, True)
 
-        self.message_user(request, ngettext('%d problem successfully marked as public.',
-                                            '%d problems successfully marked as public.',
-                                            count) % count)
+        self.message_user(
+            request, ngettext(
+                '%d problem successfully marked as public.',
+                '%d problems successfully marked as public.',
+                count,
+            ) % count,
+        )
 
     @admin.display(description=_('Mark problems as private'))
     def make_private(self, request, queryset):
         count = queryset.update(is_public=False)
         for problem_id in queryset.values_list('id', flat=True):
             self._rescore(request, problem_id, True)
-        self.message_user(request, ngettext('%d problem successfully marked as private.',
-                                            '%d problems successfully marked as private.',
-                                            count) % count)
+        self.message_user(
+            request, ngettext(
+                '%d problem successfully marked as private.',
+                '%d problems successfully marked as private.',
+                count,
+            ) % count,
+        )
 
     def get_queryset(self, request):
         return Problem.get_editable_problems(request.user).prefetch_related('authors__user').distinct()

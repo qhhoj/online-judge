@@ -2,7 +2,7 @@
 
 from django.db import (
     migrations,
-    models
+    models,
 )
 
 
@@ -28,7 +28,8 @@ class Migration(migrations.Migration):
         migrations.RunPython(
             make_slug_unique,
             migrations.RunPython.noop,
-            atomic=True),
+            atomic=True,
+        ),
         migrations.AlterField(
             model_name='organization',
             name='slug',
@@ -36,6 +37,7 @@ class Migration(migrations.Migration):
                 help_text='Organization name shown in URLs.',
                 max_length=128,
                 unique=True,
-                verbose_name='organization slug'),
+                verbose_name='organization slug',
+            ),
         ),
     ]

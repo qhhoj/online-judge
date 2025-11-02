@@ -12,7 +12,7 @@ from judge.judge_priority import (
     BATCH_REJUDGE_PRIORITY,
     CONTEST_SUBMISSION_PRIORITY,
     DEFAULT_PRIORITY,
-    REJUDGE_PRIORITY
+    REJUDGE_PRIORITY,
 )
 
 
@@ -21,35 +21,43 @@ size_pack = struct.Struct('!I')
 
 
 def _post_all_update_submission(submission):
-    event.post('grading-notify', {'id': submission.id,
-                                  'contest': submission.contest_key,
-                                  'user': submission.user_id, 'problem': submission.problem_id,
-                                  'status': submission.status, 'language': submission.language.key,
-                                  'points': submission.case_points, 'max_points': submission.case_total,
-                                  'result': submission.result,
-                                  'name': submission.problem.name,
-                                  'organizations':
-                                      [x[0] for x in submission.user.organizations.get_queryset().values_list('id')],
-                                  })
+    event.post(
+        'grading-notify', {
+            'id': submission.id,
+            'contest': submission.contest_key,
+            'user': submission.user_id, 'problem': submission.problem_id,
+            'status': submission.status, 'language': submission.language.key,
+            'points': submission.case_points, 'max_points': submission.case_total,
+            'result': submission.result,
+            'name': submission.problem.name,
+            'organizations':
+                [x[0] for x in submission.user.organizations.get_queryset().values_list('id')],
+        },
+    )
 
 
 def _post_update_submission(submission, done=False):
     if submission.problem.is_public:
-        event.post('submissions', {'type': 'done-submission' if done else 'update-submission',
-                                   'id': submission.id,
-                                   'contest': submission.contest_key,
-                                   'user': submission.user_id, 'problem': submission.problem_id,
-                                   'status': submission.status, 'language': submission.language.key,
-                                   'organizations':
-                                   [x[0] for x in submission.user.organizations.get_queryset().values_list('id')],
-                                   })
+        event.post(
+            'submissions', {
+                'type': 'done-submission' if done else 'update-submission',
+                'id': submission.id,
+                'contest': submission.contest_key,
+                'user': submission.user_id, 'problem': submission.problem_id,
+                'status': submission.status, 'language': submission.language.key,
+                'organizations':
+                [x[0] for x in submission.user.organizations.get_queryset().values_list('id')],
+            },
+        )
     if done:
         _post_all_update_submission(submission)
 
 
 def judge_request(packet, reply=True):
-    sock = socket.create_connection(settings.BRIDGED_DJANGO_CONNECT or
-                                    settings.BRIDGED_DJANGO_ADDRESS[0])
+    sock = socket.create_connection(
+        settings.BRIDGED_DJANGO_CONNECT or
+        settings.BRIDGED_DJANGO_ADDRESS[0],
+    )
 
     output = json.dumps(packet, separators=(',', ':'))
     output = zlib.compress(output.encode('utf-8'))
@@ -78,16 +86,20 @@ def judge_submission(submission, rejudge=False, batch_rejudge=False, judge_id=No
     from .models import (
         ContestSubmission,
         Submission,
-        SubmissionTestCase
+        SubmissionTestCase,
     )
 
-    updates = {'time': None, 'memory': None, 'points': None, 'result': None, 'case_points': 0, 'case_total': 0,
-               'error': None, 'rejudged_date': timezone.now() if rejudge or batch_rejudge else None, 'status': 'QU'}
+    updates = {
+        'time': None, 'memory': None, 'points': None, 'result': None, 'case_points': 0, 'case_total': 0,
+        'error': None, 'rejudged_date': timezone.now() if rejudge or batch_rejudge else None, 'status': 'QU',
+    }
     try:
         # This is set proactively; it might get unset in judgecallback's on_grading_begin if the problem doesn't
         # actually have pretests stored on the judge.
-        updates['is_pretested'] = all(ContestSubmission.objects.filter(submission=submission)
-                                      .values_list('problem__contest__run_pretests_only', 'problem__is_pretested')[0])
+        updates['is_pretested'] = all(
+            ContestSubmission.objects.filter(submission=submission)
+            .values_list('problem__contest__run_pretests_only', 'problem__is_pretested')[0],
+        )
     except IndexError:
         priority = DEFAULT_PRIORITY
     else:

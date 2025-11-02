@@ -6,7 +6,7 @@ from django import db
 
 from judge.bridge.base_handler import (
     Disconnect,
-    ZlibPacketHandler
+    ZlibPacketHandler,
 )
 
 

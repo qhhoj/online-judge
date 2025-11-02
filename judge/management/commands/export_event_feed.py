@@ -1,23 +1,23 @@
 from datetime import timedelta
 from typing import (
     Dict,
-    List
+    List,
 )
 
 from django.core.management.base import (
     BaseCommand,
-    CommandError
+    CommandError,
 )
 from django.utils import (
     timezone,
-    translation
+    translation,
 )
 from lxml import etree as ET
 
 from judge.models import (
     Contest,
     ContestSubmission,
-    Language
+    Language,
 )
 from judge.models.submission import SUBMISSION_RESULT
 
@@ -110,8 +110,10 @@ def fill_run(contest: Contest, root: ET.Element, problem_index: Dict[int, int], 
     for contest_sub in ContestSubmission.objects.filter(participation__contest=contest, participation__virtual=0) \
                                         .exclude(submission__result__isnull=True) \
                                         .exclude(submission__result__in=['IE', 'CE']) \
-                                        .select_related('submission', 'submission__problem',
-                                                        'submission__language', 'submission__user__user'):
+                                        .select_related(
+                                            'submission', 'submission__problem',
+                                            'submission__language', 'submission__user__user',
+    ):
         run = ET.SubElement(root, 'run')
         run.tail = '\n'
         sub = contest_sub.submission
@@ -147,12 +149,14 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('key', help='contest key')
         parser.add_argument('output', help='output XML file')
-        parser.add_argument('--medal',
-                            help='the last integer rank (position) in the contest which will be '
-                            'awarded Gold, Silver, and Bronze medals respectively',
-                            nargs=3,
-                            default=[4, 8, 12],
-                            metavar=('lastGold', 'lastSilver', 'lastBronze'))
+        parser.add_argument(
+            '--medal',
+            help='the last integer rank (position) in the contest which will be '
+            'awarded Gold, Silver, and Bronze medals respectively',
+            nargs=3,
+            default=[4, 8, 12],
+            metavar=('lastGold', 'lastSilver', 'lastBronze'),
+        )
 
     def handle(self, *args, **options):
         contest_key = options['key']

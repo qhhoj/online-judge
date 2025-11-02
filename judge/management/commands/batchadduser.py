@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand
 
 from judge.models import (
     Language,
-    Profile
+    Profile,
 )
 
 
@@ -117,11 +117,13 @@ class Command(BaseCommand):
             fhtml.write(html_header)
 
             for username, fullname, password in usr_list:
-                fhtml.write(user_html_template.format(
-                    username=username,
-                    fullname=fullname,
-                    password=password,
-                    site_url=settings.SITE_FULL_URL,
-                ))
+                fhtml.write(
+                    user_html_template.format(
+                        username=username,
+                        fullname=fullname,
+                        password=password,
+                        site_url=settings.SITE_FULL_URL,
+                    ),
+                )
         fin.close()
         fout.close()

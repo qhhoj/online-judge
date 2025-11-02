@@ -26,7 +26,8 @@ def render_pdf(*, title: str, html: str, footer: bool = True) -> bytes:
         footer_template = (
             '<center style="margin: 0 auto; font-family: Segoe UI; font-size: 10px">' +
             gettext('Page {page_number} of {total_pages}') +
-            '</center>')
+            '</center>'
+        )
     else:
         footer_template = None
 
