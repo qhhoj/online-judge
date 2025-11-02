@@ -222,17 +222,23 @@ def user_activity_detail(request, username):
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT EXTRACT(hour FROM timestamp) as hour, COUNT(*) as count
-                FROM judge_useractivity 
+                FROM judge_useractivity
                 WHERE user_id = %s {}
                 GROUP BY EXTRACT(hour FROM timestamp)
                 ORDER BY hour
-            """.format("AND timestamp >= %s" if time_ago else ""), 
+            """.format("AND timestamp >= %s" if time_ago else ""),
             [user.id] + ([time_ago] if time_ago else []))
-            
+
             hour_stats = [{'hour': int(row[0]), 'count': row[1]} for row in cursor.fetchall()]
     except Exception:
         hour_stats = []
-    
+
+    # Thống kê 404 errors - Lịch sử đầy đủ
+    error_404_stats = UserActivity.objects.filter(
+        **filter_condition,
+        response_code=404
+    ).values('path').annotate(count=Count('id')).order_by('-count')[:20]
+
     context = {
         'target_user': user,
         'activities': activities_page,
@@ -249,6 +255,7 @@ def user_activity_detail(request, username):
         'device_stats': device_stats,
         'browser_stats': browser_stats,
         'hour_stats': hour_stats,
+        'error_404_stats': error_404_stats,
         'days_filter': days,
         'has_complete_history': True,  # Flag để template biết có lịch sử đầy đủ
     }
