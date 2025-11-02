@@ -234,16 +234,17 @@ def user_activity_detail(request, username):
         hour_stats = []
 
     # Thống kê 404 errors - Lịch sử đầy đủ
-    error_404_paths = UserActivity.objects.filter(
-        **filter_condition,
-        response_code=404
-    ).values('path').annotate(count=Count('id')).order_by('-count')[:20]
+    # Tạm thời comment để test
+    # error_404_paths = UserActivity.objects.filter(
+    #     **filter_condition,
+    #     response_code=404
+    # ).values('path').annotate(count=Count('id')).order_by('-count')[:20]
 
-    # Tổng số 404 errors
-    error_404_count = UserActivity.objects.filter(
-        **filter_condition,
-        response_code=404
-    ).count()
+    # # Tổng số 404 errors
+    # error_404_count = UserActivity.objects.filter(
+    #     **filter_condition,
+    #     response_code=404
+    # ).count()
 
     context = {
         'target_user': user,
@@ -261,8 +262,9 @@ def user_activity_detail(request, username):
         'device_stats': device_stats,
         'browser_stats': browser_stats,
         'hour_stats': hour_stats,
-        'error_404_paths': error_404_paths,
-        'error_404_stats': error_404_count,  # Tổng số 404 errors
+        # 'error_404_paths': error_404_paths,
+        # 'error_404_stats': error_404_count,  # Tổng số 404 errors
+        'error_404_stats': 0,  # Tạm thời set = 0 để test
         'days_filter': days,
         'has_complete_history': True,  # Flag để template biết có lịch sử đầy đủ
     }
