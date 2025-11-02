@@ -19,11 +19,11 @@ django-admin-sortable2>=2.2.3
 mysqlclient>=2.2.6
 
 # Custom DMOJ packages
-dmoj-wpadmin @ git+https://github.com/DMOJ/dmoj-wpadmin.git
-django-fernet-fields @ git+https://github.com/DMOJ/django-fernet-fields.git
-jsonfield @ git+https://github.com/DMOJ/jsonfield.git
-ansi2html @ git+https://github.com/DMOJ/ansi2html.git
-martor @ git+https://github.com/phancddev/martor.git
+dmoj-wpadmin @ git+https://github.com/qhhoj/dmoj-wpadmin.git
+django-fernet-fields @ git+https://github.com/qhhoj/django-fernet-fields.git
+jsonfield @ git+https://github.com/qhhoj/jsonfield.git
+ansi2html @ git+https://github.com/qhhoj/ansi2html.git
+martor @ git+https://github.com/qhhoj/martor.git
 markdown2 @ git+https://github.com/qhhoj/python-markdown2.git
 
 # Syntax highlighting and text processing
