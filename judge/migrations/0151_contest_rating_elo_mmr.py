@@ -1,8 +1,18 @@
 import math
-from operator import attrgetter, itemgetter
+from operator import (
+    attrgetter,
+    itemgetter
+)
 
-from django.db import migrations, models
-from django.db.models import Count, OuterRef, Subquery
+from django.db import (
+    migrations,
+    models
+)
+from django.db.models import (
+    Count,
+    OuterRef,
+    Subquery
+)
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 

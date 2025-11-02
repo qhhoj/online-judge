@@ -1,8 +1,14 @@
 import os
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import (
+    BaseCommand,
+    CommandError
+)
 
-from judge.models import Contest, ContestParticipation
+from judge.models import (
+    Contest,
+    ContestParticipation
+)
 
 
 class Command(BaseCommand):

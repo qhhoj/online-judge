@@ -3,11 +3,22 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.db.models import FilteredRelation, Q
-from django.db.models.expressions import F, Value
+from django.db.models import (
+    FilteredRelation,
+    Q
+)
+from django.db.models.expressions import (
+    F,
+    Value
+)
 from django.db.models.functions import Coalesce
 from django.forms import ModelForm
-from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect
+from django.http import (
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    HttpResponseNotFound,
+    HttpResponseRedirect
+)
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -16,10 +27,16 @@ from django.views.generic import View
 from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.detail import SingleObjectMixin
 from reversion import revisions
-from reversion.models import Revision, Version
+from reversion.models import (
+    Revision,
+    Version
+)
 
 from judge.dblock import LockModel
-from judge.models import Comment, CommentLock
+from judge.models import (
+    Comment,
+    CommentLock
+)
 from judge.widgets import MartorWidget
 
 

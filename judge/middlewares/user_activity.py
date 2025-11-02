@@ -1,14 +1,17 @@
 import re
+
 from django.utils import timezone
-from django.contrib.sessions.models import Session
 from user_agents import parse
 
-from judge.models import UserActivity, UserSession
+from judge.models import (
+    UserActivity,
+    UserSession,
+)
 
 
 class UserActivityMiddleware:
     """Middleware để theo dõi hoạt động người dùng"""
-    
+
     # Các path không cần theo dõi
     EXCLUDED_PATHS = [
         r'^/admin/user-activity/',  # Tất cả user activity admin paths
@@ -20,15 +23,15 @@ class UserActivityMiddleware:
         r'^/admin/jsi18n/',  # Django admin i18n
         r'^/admin/logout/',  # Admin logout
     ]
-    
+
     def __init__(self, get_response):
         self.get_response = get_response
         self.excluded_patterns = [re.compile(pattern) for pattern in self.EXCLUDED_PATHS]
-        
+
     def __call__(self, request):
         # Luôn xử lý request trước
         response = self.get_response(request)
-        
+
         try:
             # Kiểm tra xem path có bị loại trừ không
             if not any(pattern.match(request.path) for pattern in self.excluded_patterns):
@@ -37,32 +40,31 @@ class UserActivityMiddleware:
                     self.log_authenticated_activity(request, response)
                 else:
                     self.log_anonymous_activity(request, response)
-        except Exception as e:
+        except Exception:
             # Log lỗi nhưng không làm gián đoạn request
             import logging
             logger = logging.getLogger(__name__)
-            logger.error(f"Error logging user activity: {e}")
-        
+            logger.exception('Error logging user activity')
+
         # LUÔN PHẢI return response
         return response
-        
-        
+
     def log_authenticated_activity(self, request, response):
         """Ghi lại hoạt động người dùng đã đăng nhập"""
         try:
             # Check if response is valid
             if not response or not hasattr(response, 'status_code'):
                 return
-                
+
             # Lấy hoặc tạo session
             session_key = request.session.session_key
             if session_key:
                 user_agent_string = request.META.get('HTTP_USER_AGENT', '')
                 user_agent = parse(user_agent_string)
-                
+
                 # Xác định loại thiết bị
                 device_type = self.get_device_type(user_agent)
-                
+
                 # Cập nhật hoặc tạo UserSession
                 user_session, created = UserSession.objects.update_or_create(
                     session_key=session_key,
@@ -75,9 +77,9 @@ class UserActivityMiddleware:
                         'os': user_agent.os.family if user_agent.os.family else '',
                         'last_activity': timezone.now(),
                         'is_active': True,
-                    }
+                    },
                 )
-                
+
                 # Ghi lại activity
                 UserActivity.objects.create(
                     user=request.user,
@@ -89,31 +91,31 @@ class UserActivityMiddleware:
                     referer=request.META.get('HTTP_REFERER', ''),
                     response_code=response.status_code,
                 )
-        except Exception as e:
+        except Exception:
             # Log lỗi nhưng không làm gián đoạn request
             import logging
             logger = logging.getLogger(__name__)
-            logger.error(f"Error logging authenticated user activity: {e}")
-            
+            logger.exception('Error logging authenticated user activity')
+
     def log_anonymous_activity(self, request, response):
         """Ghi lại hoạt động người dùng chưa đăng nhập"""
         try:
             # Check if response is valid
             if not response or not hasattr(response, 'status_code'):
                 return
-                
+
             # Tạo hoặc lấy session key cho anonymous user
             if not request.session.session_key:
                 request.session.create()
-            
+
             session_key = request.session.session_key
             if session_key:
                 user_agent_string = request.META.get('HTTP_USER_AGENT', '')
                 user_agent = parse(user_agent_string)
-                
+
                 # Xác định loại thiết bị
                 device_type = self.get_device_type(user_agent)
-                
+
                 # Cập nhật hoặc tạo UserSession cho anonymous user (user=None)
                 user_session, created = UserSession.objects.update_or_create(
                     session_key=session_key,
@@ -126,9 +128,9 @@ class UserActivityMiddleware:
                         'os': user_agent.os.family if user_agent.os.family else '',
                         'last_activity': timezone.now(),
                         'is_active': True,
-                    }
+                    },
                 )
-                
+
                 # Ghi lại activity cho anonymous user
                 UserActivity.objects.create(
                     user=None,  # Anonymous user
@@ -140,12 +142,12 @@ class UserActivityMiddleware:
                     referer=request.META.get('HTTP_REFERER', ''),
                     response_code=response.status_code,
                 )
-        except Exception as e:
+        except Exception:
             # Log lỗi nhưng không làm gián đoạn request
             import logging
             logger = logging.getLogger(__name__)
-            logger.error(f"Error logging anonymous user activity: {e}")
-            
+            logger.exception('Error logging anonymous user activity')
+
     def get_device_type(self, user_agent):
         """Xác định loại thiết bị từ user agent"""
         if user_agent.is_mobile:
@@ -158,7 +160,7 @@ class UserActivityMiddleware:
             return 'desktop'
         else:
             return 'unknown'
-            
+
     def get_client_ip(self, request):
         """Lấy IP thực của client"""
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -166,4 +168,4 @@ class UserActivityMiddleware:
             ip = x_forwarded_for.split(',')[0]
         else:
             ip = request.META.get('REMOTE_ADDR')
-        return ip 
+        return ip

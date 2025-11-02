@@ -1,6 +1,7 @@
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
+
 # You can put messages that you want to translate here
 # Check this link for more information
 # https://stackoverflow.com/questions/7878028/override-default-django-translations/20439571#20439571

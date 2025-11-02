@@ -1,6 +1,10 @@
-from operator import attrgetter, itemgetter
+from operator import (
+    attrgetter,
+    itemgetter,
+)
 
 from django import template
+
 
 register = template.Library()
 

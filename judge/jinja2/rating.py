@@ -1,4 +1,9 @@
-from judge.ratings import rating_class, rating_name, rating_progress
+from judge.ratings import (
+    rating_class,
+    rating_name,
+    rating_progress
+)
+
 from . import registry
 
 

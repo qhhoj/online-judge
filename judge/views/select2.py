@@ -1,12 +1,26 @@
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models import F, Q
-from django.http import Http404, JsonResponse
+from django.db.models import (
+    F,
+    Q
+)
+from django.http import (
+    Http404,
+    JsonResponse
+)
 from django.shortcuts import get_object_or_404
 from django.utils.encoding import smart_str
 from django.views.generic.list import BaseListView
 
 from judge.jinja2.gravatar import gravatar
-from judge.models import Comment, Contest, Organization, Problem, Profile, Tag, TagGroup
+from judge.models import (
+    Comment,
+    Contest,
+    Organization,
+    Problem,
+    Profile,
+    Tag,
+    TagGroup
+)
 
 
 def _get_user_queryset(term):

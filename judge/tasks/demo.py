@@ -4,6 +4,7 @@ from celery import shared_task
 
 from judge.utils.celery import Progress
 
+
 __all__ = ('success', 'failure', 'progress')
 
 

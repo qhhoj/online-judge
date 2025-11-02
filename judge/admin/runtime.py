@@ -1,9 +1,15 @@
 from django.core.exceptions import PermissionDenied
 from django.db.models import TextField
-from django.forms import ModelForm, TextInput
+from django.forms import (
+    ModelForm,
+    TextInput
+)
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from django.urls import path, reverse
+from django.urls import (
+    path,
+    reverse
+)
 from django.utils.decorators import method_decorator
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -12,7 +18,10 @@ from django.views.decorators.http import require_POST
 from reversion.admin import VersionAdmin
 
 from django_ace import AceWidget
-from judge.models import Judge, Problem
+from judge.models import (
+    Judge,
+    Problem
+)
 from judge.widgets import AdminMartorWidget
 
 

@@ -3,24 +3,57 @@ from random import randrange
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import IntegrityError
-from django.db.models import Prefetch, Q
-from django.http import Http404, HttpResponseRedirect
+from django.db.models import (
+    Prefetch,
+    Q
+)
+from django.http import (
+    Http404,
+    HttpResponseRedirect
+)
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.utils.html import escape, format_html
+from django.utils.html import (
+    escape,
+    format_html
+)
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext as _, gettext_lazy
-from django.views.generic import FormView, ListView, View
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
+from django.views.generic import (
+    FormView,
+    ListView,
+    View
+)
 from requests.exceptions import ReadTimeout
 from reversion import revisions
 
 from judge.comments import CommentedDetailView
-from judge.forms import TagProblemAssignForm, TagProblemCreateForm
-from judge.models import Tag, TagData, TagGroup, TagProblem
-from judge.tasks import on_new_tag, on_new_tag_problem
+from judge.forms import (
+    TagProblemAssignForm,
+    TagProblemCreateForm
+)
+from judge.models import (
+    Tag,
+    TagData,
+    TagGroup,
+    TagProblem
+)
+from judge.tasks import (
+    on_new_tag,
+    on_new_tag_problem
+)
 from judge.utils.diggpaginator import DiggPaginator
-from judge.utils.judge_api import APIError, OJAPI
-from judge.utils.views import SingleObjectFormView, TitleMixin, generic_message, paginate_query_context
+from judge.utils.judge_api import (
+    OJAPI,
+    APIError
+)
+from judge.utils.views import (
+    SingleObjectFormView,
+    TitleMixin,
+    generic_message,
+    paginate_query_context
+)
 
 
 class TagAllowingMixin(object):

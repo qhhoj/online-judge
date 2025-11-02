@@ -6,7 +6,12 @@ from django.shortcuts import render
 from django.utils.translation import gettext as _
 from packaging import version
 
-from judge.models import Judge, Language, RuntimeVersion
+from judge.models import (
+    Judge,
+    Language,
+    RuntimeVersion
+)
+
 
 __all__ = ['status_all', 'status_table']
 

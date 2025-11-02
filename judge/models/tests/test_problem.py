@@ -1,12 +1,32 @@
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase, TestCase, override_settings
+from django.test import (
+    SimpleTestCase,
+    TestCase,
+    override_settings
+)
 from django.utils import timezone
 
-from judge.models import ContestParticipation, Language, LanguageLimit, Problem
-from judge.models.problem import ProblemTestcaseAccess, disallowed_characters_validator
-from judge.models.tests.util import CommonDataMixin, create_contest, create_contest_participation, \
-    create_contest_problem, create_organization, create_problem, create_problem_type, create_solution, \
+from judge.models import (
+    ContestParticipation,
+    Language,
+    LanguageLimit,
+    Problem
+)
+from judge.models.problem import (
+    ProblemTestcaseAccess,
+    disallowed_characters_validator
+)
+from judge.models.tests.util import (
+    CommonDataMixin,
+    create_contest,
+    create_contest_participation,
+    create_contest_problem,
+    create_organization,
+    create_problem,
+    create_problem_type,
+    create_solution,
     create_user
+)
 
 
 class ProblemTestCase(CommonDataMixin, TestCase):

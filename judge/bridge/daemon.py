@@ -9,7 +9,11 @@ from judge.bridge.django_handler import DjangoHandler
 from judge.bridge.judge_handler import JudgeHandler
 from judge.bridge.judge_list import JudgeList
 from judge.bridge.server import Server
-from judge.models import Judge, Submission
+from judge.models import (
+    Judge,
+    Submission
+)
+
 
 logger = logging.getLogger('judge.bridge')
 

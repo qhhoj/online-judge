@@ -1,6 +1,10 @@
 import datetime
 
-from django.utils.translation import ngettext, npgettext, pgettext
+from django.utils.translation import (
+    ngettext,
+    npgettext,
+    pgettext
+)
 
 
 def nice_repr(timedelta, display='long', sep=', '):

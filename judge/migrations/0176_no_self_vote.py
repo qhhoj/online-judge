@@ -1,5 +1,10 @@
 from django.db import migrations
-from django.db.models import F, OuterRef, Subquery, Sum
+from django.db.models import (
+    F,
+    OuterRef,
+    Subquery,
+    Sum
+)
 from django.db.models.functions import Coalesce
 
 

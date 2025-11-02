@@ -10,7 +10,11 @@ from django.utils.translation import gettext_lazy as _
 from mptt.fields import TreeForeignKey
 from mptt.models import MPTTModel
 
-from judge.models.profile import Organization, Profile
+from judge.models.profile import (
+    Organization,
+    Profile
+)
+
 
 __all__ = ['MiscConfig', 'validate_regex', 'NavigationBar', 'BlogPost']
 

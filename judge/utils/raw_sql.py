@@ -1,5 +1,8 @@
 from django.db import connections
-from django.db.models.sql.constants import INNER, LOUTER
+from django.db.models.sql.constants import (
+    INNER,
+    LOUTER
+)
 from django.db.models.sql.datastructures import Join
 
 from judge.utils.cachedict import CacheDict

@@ -2,7 +2,10 @@
 # Formatted by Thuc Le to follow flake8
 
 import django.core.validators
-from django.db import migrations, models
+from django.db import (
+    migrations,
+    models
+)
 
 import judge.models.problem_data
 import judge.utils.problem_data
@@ -18,16 +21,72 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='problemdata',
             name='custom_cpp_checker',
-            field=models.FileField(blank=True, null=True, storage=judge.utils.problem_data.ProblemDataStorage(), upload_to=judge.models.problem_data.problem_directory_file, validators=[django.core.validators.FileExtensionValidator(allowed_extensions=['cpp'])], verbose_name='custom cpp checker file'),
+            field=models.FileField(
+                blank=True,
+                null=True,
+                storage=judge.utils.problem_data.ProblemDataStorage(),
+                upload_to=judge.models.problem_data.problem_directory_file,
+                validators=[
+                    django.core.validators.FileExtensionValidator(
+                        allowed_extensions=['cpp'])],
+                verbose_name='custom cpp checker file'),
         ),
         migrations.AlterField(
             model_name='problemdata',
             name='checker',
-            field=models.CharField(blank=True, choices=[('standard', 'Standard'), ('floats', 'Floats'), ('floatsabs', 'Floats (absolute)'), ('floatsrel', 'Floats (relative)'), ('rstripped', 'Non-trailing spaces'), ('sorted', 'Unordered'), ('identical', 'Byte identical'), ('linecount', 'Line-by-line'), ('custom_py', 'Custom checker (PY)'), ('custom_cpp', 'Custom checker (CPP17)')], max_length=10, verbose_name='checker'),
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ('standard',
+                     'Standard'),
+                    ('floats',
+                     'Floats'),
+                    ('floatsabs',
+                     'Floats (absolute)'),
+                    ('floatsrel',
+                     'Floats (relative)'),
+                    ('rstripped',
+                     'Non-trailing spaces'),
+                    ('sorted',
+                     'Unordered'),
+                    ('identical',
+                     'Byte identical'),
+                    ('linecount',
+                     'Line-by-line'),
+                    ('custom_py',
+                     'Custom checker (PY)'),
+                    ('custom_cpp',
+                     'Custom checker (CPP17)')],
+                max_length=10,
+                verbose_name='checker'),
         ),
         migrations.AlterField(
             model_name='problemtestcase',
             name='checker',
-            field=models.CharField(blank=True, choices=[('standard', 'Standard'), ('floats', 'Floats'), ('floatsabs', 'Floats (absolute)'), ('floatsrel', 'Floats (relative)'), ('rstripped', 'Non-trailing spaces'), ('sorted', 'Unordered'), ('identical', 'Byte identical'), ('linecount', 'Line-by-line'), ('custom_py', 'Custom checker (PY)'), ('custom_cpp', 'Custom checker (CPP17)')], max_length=10, verbose_name='checker'),
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ('standard',
+                     'Standard'),
+                    ('floats',
+                     'Floats'),
+                    ('floatsabs',
+                     'Floats (absolute)'),
+                    ('floatsrel',
+                     'Floats (relative)'),
+                    ('rstripped',
+                     'Non-trailing spaces'),
+                    ('sorted',
+                     'Unordered'),
+                    ('identical',
+                     'Byte identical'),
+                    ('linecount',
+                     'Line-by-line'),
+                    ('custom_py',
+                     'Custom checker (PY)'),
+                    ('custom_cpp',
+                     'Custom checker (CPP17)')],
+                max_length=10,
+                verbose_name='checker'),
         ),
     ]

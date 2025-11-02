@@ -1,6 +1,10 @@
 from django.core.management.base import BaseCommand
 
-from judge.models import Problem, ProblemGroup, ProblemType
+from judge.models import (
+    Problem,
+    ProblemGroup,
+    ProblemType
+)
 
 
 class Command(BaseCommand):

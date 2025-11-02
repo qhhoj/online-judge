@@ -15,6 +15,7 @@ from registration.models import RegistrationProfile
 
 from judge.utils.unicode import utf8bytes
 
+
 logger = logging.getLogger('judge.mail.activate')
 
 

@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.utils.log import AdminEmailHandler
 
+
 DEFAULT_THROTTLE = (10, 60)
 
 

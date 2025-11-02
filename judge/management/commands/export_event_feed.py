@@ -1,12 +1,26 @@
 from datetime import timedelta
-from typing import Dict, List
+from typing import (
+    Dict,
+    List
+)
 
-from django.core.management.base import BaseCommand, CommandError
-from django.utils import timezone, translation
+from django.core.management.base import (
+    BaseCommand,
+    CommandError
+)
+from django.utils import (
+    timezone,
+    translation
+)
 from lxml import etree as ET
 
-from judge.models import Contest, ContestSubmission, Language
+from judge.models import (
+    Contest,
+    ContestSubmission,
+    Language
+)
 from judge.models.submission import SUBMISSION_RESULT
+
 
 # Ref: https://clics.ecs.baylor.edu/index.php?title=Event_Feed_2016
 

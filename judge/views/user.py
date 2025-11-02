@@ -1,56 +1,129 @@
 import itertools
 import json
 import os
-from datetime import datetime, timezone as dt_timezone
-from datetime import timedelta
-from operator import attrgetter, itemgetter
+from datetime import (
+    datetime,
+    timedelta
+)
+from datetime import timezone as dt_timezone
+from operator import (
+    attrgetter,
+    itemgetter
+)
 
 import pytz
 from django.conf import settings
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import Permission, User
-from django.contrib.auth.views import LoginView, PasswordChangeView, PasswordResetView, redirect_to_login
+from django.contrib.auth.models import (
+    Permission,
+    User
+)
+from django.contrib.auth.views import (
+    LoginView,
+    PasswordChangeView,
+    PasswordResetView,
+    redirect_to_login
+)
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.core.exceptions import ImproperlyConfigured, PermissionDenied, ValidationError
-from django.db.models import Count, F, FilteredRelation, Max, Min, Prefetch, Q
+from django.core.exceptions import (
+    ImproperlyConfigured,
+    PermissionDenied,
+    ValidationError
+)
+from django.db.models import (
+    Count,
+    F,
+    FilteredRelation,
+    Max,
+    Min,
+    Prefetch,
+    Q
+)
 from django.db.models.expressions import Value
 from django.db.models.fields import DateField
-from django.db.models.functions import Cast, Coalesce, ExtractYear
+from django.db.models.functions import (
+    Cast,
+    Coalesce,
+    ExtractYear
+)
 from django.forms import Form
-from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseRedirect,
+    JsonResponse
+)
+from django.shortcuts import (
+    get_object_or_404,
+    render
+)
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.formats import date_format
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext as _, gettext_lazy
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 from django.views.decorators.http import require_POST
-from django.views.generic import DetailView, FormView, ListView, TemplateView, View
+from django.views.generic import (
+    DetailView,
+    FormView,
+    ListView,
+    TemplateView,
+    View
+)
 from reversion import revisions
 
-from judge.forms import CustomAuthenticationForm, ProfileForm, UserBanForm, UserDownloadDataForm, UserForm, \
+from judge.forms import (
+    CustomAuthenticationForm,
+    ProfileForm,
+    UserBanForm,
+    UserDownloadDataForm,
+    UserForm,
     newsletter_id
-from judge.models import BlogPost, Organization, Profile, Submission
-from judge.models import Comment
+)
+from judge.models import (
+    BlogPost,
+    Comment,
+    Organization,
+    Profile,
+    Submission
+)
 from judge.performance_points import get_pp_breakdown
-from judge.ratings import rating_class, rating_progress
+from judge.ratings import (
+    rating_class,
+    rating_progress
+)
 from judge.tasks import prepare_user_data
-from judge.utils.celery import task_status_by_id, task_status_url_by_id
+from judge.utils.celery import (
+    task_status_by_id,
+    task_status_url_by_id
+)
 from judge.utils.infinite_paginator import InfinitePaginationMixin
-from judge.utils.problems import contest_completed_ids, user_completed_ids
+from judge.utils.problems import (
+    contest_completed_ids,
+    user_completed_ids
+)
 from judge.utils.pwned import PwnedPasswordsValidator
 from judge.utils.ranker import ranker
 from judge.utils.subscription import Subscription
 from judge.utils.unicode import utf8text
-from judge.utils.views import DiggPaginatorMixin, QueryStringSortMixin, SingleObjectFormView, TitleMixin, \
-    add_file_response, generic_message
+from judge.utils.views import (
+    DiggPaginatorMixin,
+    QueryStringSortMixin,
+    SingleObjectFormView,
+    TitleMixin,
+    add_file_response,
+    generic_message
+)
 from judge.views.blog import PostListBase
+
 from .contests import ContestRanking
+
 
 __all__ = ['UserPage', 'UserAboutPage', 'UserProblemsPage', 'UserCommentPage', 'UserDownloadData', 'UserPrepareData',
            'users', 'edit_profile']

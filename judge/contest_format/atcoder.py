@@ -6,7 +6,11 @@ from django.template.defaultfilters import floatformat
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext as _, gettext_lazy, ngettext
+from django.utils.translation import gettext as _
+from django.utils.translation import (
+    gettext_lazy,
+    ngettext
+)
 
 from judge.contest_format.default import DefaultContestFormat
 from judge.contest_format.registry import register_contest_format

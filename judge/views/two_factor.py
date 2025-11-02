@@ -9,18 +9,35 @@ import webauthn
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import RedirectURLMixin
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect, JsonResponse
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseRedirect,
+    JsonResponse
+)
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme as is_safe_url
-from django.utils.translation import gettext as _, gettext_lazy
-from django.views.generic import FormView, View
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
+from django.views.generic import (
+    FormView,
+    View
+)
 from django.views.generic.base import ContextMixin
 from django.views.generic.detail import SingleObjectMixin
 
-from judge.forms import TOTPEnableForm, TOTPForm, TwoFactorLoginForm
+from judge.forms import (
+    TOTPEnableForm,
+    TOTPForm,
+    TwoFactorLoginForm
+)
 from judge.jinja2.gravatar import gravatar
 from judge.models import WebAuthnCredential
-from judge.utils.two_factor import WebAuthnJSONEncoder, webauthn_encode
+from judge.utils.two_factor import (
+    WebAuthnJSONEncoder,
+    webauthn_encode
+)
 from judge.utils.views import TitleMixin
 
 

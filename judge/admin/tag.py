@@ -4,7 +4,11 @@ from django.forms import ModelForm
 from django.utils.translation import gettext_lazy as _
 from reversion.admin import VersionAdmin
 
-from judge.models import Tag, TagGroup, TagProblem
+from judge.models import (
+    Tag,
+    TagGroup,
+    TagProblem
+)
 from judge.utils.views import NoBatchDeleteMixin
 from judge.widgets import AdminHeavySelect2Widget
 

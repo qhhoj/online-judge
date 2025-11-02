@@ -1,12 +1,21 @@
 import os
 import zipfile
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import (
+    BaseCommand,
+    CommandError
+)
 from django.db import transaction
 from django.utils import translation
 from lxml import etree as ET
 
-from judge.models import Language, Problem, Profile, Submission, SubmissionSource
+from judge.models import (
+    Language,
+    Problem,
+    Profile,
+    Submission,
+    SubmissionSource
+)
 
 
 class Command(BaseCommand):

@@ -5,6 +5,7 @@ from django.utils.http import urlencode
 
 from judge.models import Profile
 from judge.utils.unicode import utf8bytes
+
 from . import registry
 
 

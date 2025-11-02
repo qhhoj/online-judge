@@ -3,7 +3,13 @@ from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
 from django.utils import timezone
 
-from judge.models import BlogPost, Contest, Organization, Problem, Solution
+from judge.models import (
+    BlogPost,
+    Contest,
+    Organization,
+    Problem,
+    Solution
+)
 
 
 class ProblemSitemap(Sitemap):

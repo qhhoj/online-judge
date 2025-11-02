@@ -2,24 +2,25 @@
 # This file exists to maintain compatibility with existing settings.py configuration
 
 from .middleware import (
-    ShortCircuitMiddleware,
+    APIMiddleware,
+    ContestMiddleware,
+    DMOJImpersonationMiddleware,
     DMOJLoginMiddleware,
     IPBasedAuthMiddleware,
-    DMOJImpersonationMiddleware,
-    ContestMiddleware,
-    APIMiddleware,
     MiscConfigMiddleware,
     OrganizationSubdomainMiddleware,
+    ShortCircuitMiddleware,
 )
+
 
 # Make all middleware classes available at module level
 __all__ = [
     'ShortCircuitMiddleware',
-    'DMOJLoginMiddleware', 
+    'DMOJLoginMiddleware',
     'IPBasedAuthMiddleware',
     'DMOJImpersonationMiddleware',
     'ContestMiddleware',
     'APIMiddleware',
     'MiscConfigMiddleware',
     'OrganizationSubdomainMiddleware',
-] 
+]

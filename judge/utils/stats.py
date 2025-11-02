@@ -1,5 +1,6 @@
 from operator import itemgetter
 
+
 __all__ = ('chart_colors', 'get_pie_chart', 'get_bar_chart', 'get_stacked_bar_chart')
 
 

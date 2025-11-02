@@ -3,17 +3,33 @@ from operator import itemgetter
 from celery.result import AsyncResult
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseRedirect
+)
 from django.urls import reverse
-from django.utils.html import escape, format_html
+from django.utils.html import (
+    escape,
+    format_html
+)
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext as _, ngettext
+from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 from django.views.generic import DetailView
 from django.views.generic.detail import BaseDetailView
 
 from judge.forms import CompareSubmissionsForm
-from judge.models import Language, Submission
-from judge.tasks import apply_submission_filter, rejudge_problem_filter, rescore_problem
+from judge.models import (
+    Language,
+    Submission
+)
+from judge.tasks import (
+    apply_submission_filter,
+    rejudge_problem_filter,
+    rescore_problem
+)
 from judge.utils.celery import redirect_to_task_status
 from judge.utils.views import TitleMixin
 from judge.views.problem import ProblemMixin

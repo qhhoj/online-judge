@@ -3,7 +3,10 @@ import json
 import logging
 import threading
 import time
-from collections import deque, namedtuple
+from collections import (
+    deque,
+    namedtuple
+)
 from operator import itemgetter
 
 from django import db
@@ -11,12 +14,24 @@ from django.conf import settings
 from django.utils import timezone
 
 from judge import event_poster as event
-from judge.bridge.base_handler import ZlibPacketHandler, proxy_list
+from judge.bridge.base_handler import (
+    ZlibPacketHandler,
+    proxy_list
+)
 from judge.caching import finished_submission
-from judge.models import Judge, Language, LanguageLimit, Problem, Profile, \
-    RuntimeVersion, Submission, SubmissionTestCase
+from judge.models import (
+    Judge,
+    Language,
+    LanguageLimit,
+    Problem,
+    Profile,
+    RuntimeVersion,
+    Submission,
+    SubmissionTestCase
+)
 from judge.models.problem import ProblemTestcaseResultAccess
 from judge.utils.url import get_absolute_submission_file_url
+
 
 logger = logging.getLogger('judge.bridge')
 json_log = logging.getLogger('judge.json.bridge')

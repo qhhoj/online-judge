@@ -2,31 +2,63 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError
-from django.db.models import Count, FilteredRelation, Max, Q
-from django.db.models.expressions import F, Value
+from django.db.models import (
+    Count,
+    FilteredRelation,
+    Max,
+    Q
+)
+from django.db.models.expressions import (
+    F,
+    Value
+)
 from django.db.models.functions import Coalesce
-from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
-                         HttpResponseForbidden, HttpResponseNotFound,
-                         HttpResponseRedirect)
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    HttpResponseNotFound,
+    HttpResponseRedirect
+)
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from django.views.generic import CreateView, ListView, UpdateView
-from django.views.generic.detail import SingleObjectMixin, View
+from django.views.generic import (
+    CreateView,
+    ListView,
+    UpdateView
+)
+from django.views.generic.detail import (
+    SingleObjectMixin,
+    View
+)
 from reversion import revisions
 
 from judge.comments import CommentedDetailView
 from judge.dblock import LockModel
 from judge.forms import BlogPostForm
-from judge.models import (BlogPost, BlogVote, Comment, Contest, Language,
-                          Problem, Profile, Submission, Ticket)
+from judge.models import (
+    BlogPost,
+    BlogVote,
+    Comment,
+    Contest,
+    Language,
+    Problem,
+    Profile,
+    Submission,
+    Ticket
+)
 from judge.tasks import on_new_blogpost
 from judge.utils.cachedict import CacheDict
 from judge.utils.diggpaginator import DiggPaginator
 from judge.utils.opengraph import generate_opengraph
 from judge.utils.tickets import filter_visible_tickets
 from judge.utils.unicode import remove_accents
-from judge.utils.views import TitleMixin, generic_message
+from judge.utils.views import (
+    TitleMixin,
+    generic_message
+)
 
 
 @login_required

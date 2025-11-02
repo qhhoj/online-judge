@@ -1,4 +1,7 @@
-from collections import OrderedDict, defaultdict
+from collections import (
+    OrderedDict,
+    defaultdict
+)
 from operator import attrgetter
 
 from django.conf import settings
@@ -10,7 +13,11 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
-from judge.judgeapi import disconnect_judge, update_disable_judge
+from judge.judgeapi import (
+    disconnect_judge,
+    update_disable_judge
+)
+
 
 __all__ = ['Language', 'RuntimeVersion', 'Judge']
 
