@@ -1,6 +1,7 @@
 import itertools
 import json
 import os
+import zoneinfo
 from datetime import (
     datetime,
     timedelta,
@@ -11,7 +12,6 @@ from operator import (
     itemgetter,
 )
 
-import pytz
 from django.conf import settings
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
@@ -296,7 +296,7 @@ class UserAboutPage(UserPage):
         user_timezone = settings.DEFAULT_USER_TIME_ZONE
         if self.request is not None and self.request.profile is not None:
             user_timezone = user_timezone or self.request.profile.timezone
-        timezone_offset = pytz.timezone(user_timezone).utcoffset(datetime.utcnow()).seconds
+        timezone_offset = zoneinfo.ZoneInfo(user_timezone).utcoffset(datetime.now(dt_timezone.utc)).seconds
 
         submissions = (
             self.object.submission_set

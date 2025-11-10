@@ -1,4 +1,5 @@
-import pytz
+import zoneinfo
+
 from celery import shared_task
 from discord_webhook import (
     DiscordEmbed,
@@ -178,7 +179,7 @@ def on_new_contest(contest_key):
     url = settings.SITE_FULL_URL + contest.get_absolute_url()
     title = f'New contest {url}'
 
-    tz = pytz.timezone(settings.DEFAULT_USER_TIME_ZONE)
+    tz = zoneinfo.ZoneInfo(settings.DEFAULT_USER_TIME_ZONE)
 
     description = [
         ('Title', contest.name),

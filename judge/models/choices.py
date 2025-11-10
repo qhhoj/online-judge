@@ -1,13 +1,13 @@
 from collections import defaultdict
 from operator import itemgetter
+import zoneinfo
 
-import pytz
 from django.utils.translation import gettext_lazy as _
 
 
 def make_timezones():
     data = defaultdict(list)
-    for tz in pytz.all_timezones:
+    for tz in zoneinfo.available_timezones():
         if '/' in tz:
             area, loc = tz.split('/', 1)
         else:
