@@ -27,7 +27,15 @@ def get_task_status(task_id):
     result = AsyncResult(task_id)
     info = result.result
     if result.state == 'PROGRESS':
-        return {'code': 'PROGRESS', 'done': info['done'], 'total': info['total'], 'stage': info['stage']}
+        # Handle both old format (done/total/stage) and new format (current/total/percent)
+        if isinstance(info, dict):
+            done = info.get('done') or info.get('current', 0)
+            total = info.get('total', 0)
+            stage = info.get('stage', '')
+            return {'code': 'PROGRESS', 'done': done, 'total': total, 'stage': stage}
+        else:
+            # Fallback if info is not a dict
+            return {'code': 'PROGRESS', 'done': 0, 'total': 0, 'stage': ''}
     elif result.state == 'SUCCESS':
         return {'code': 'SUCCESS'}
     elif result.state == 'FAILURE':
