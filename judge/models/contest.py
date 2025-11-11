@@ -665,6 +665,53 @@ class Contest(models.Model):
             ).order_by('end_time'):
                 rate_contest(contest)
 
+    def trigger_final_submission_judging(self):
+        """
+        Trigger judging for Final Submission Only contests.
+        This is called automatically when contest ends and someone accesses the contest.
+        Uses cache to ensure judging is only triggered once.
+        """
+        from django.core.cache import cache
+
+        # Only for final_submission format
+        if self.format_name != 'final_submission':
+            return False
+
+        # Only if contest has ended
+        if not self.ended:
+            return False
+
+        # Check if auto_judge is enabled (default: True)
+        format_config = self.format_config or {}
+        auto_judge = format_config.get('auto_judge', True)
+        if not auto_judge:
+            return False
+
+        # Use cache to ensure we only trigger once
+        cache_key = f'fso_judged_{self.id}'
+        if cache.get(cache_key):
+            return False  # Already triggered
+
+        # Check if there are pending submissions
+        pending_count = Submission.objects.filter(
+            contest__participation__contest=self,
+            status='PD',
+        ).count()
+
+        if pending_count == 0:
+            return False  # Nothing to judge
+
+        # Mark as triggered (cache for 24 hours)
+        cache.set(cache_key, True, 86400)
+
+        # Trigger the judging task
+        from judge.tasks.contest import judge_final_submissions
+        judge_final_submissions.delay(self.key)
+
+        return True  # Successfully triggered
+
+    trigger_final_submission_judging.alters_data = True
+
     class Meta:
         permissions = (
             ('see_private_contest', _('See private contests')),

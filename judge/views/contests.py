@@ -412,6 +412,11 @@ class ContestDetail(ContestMixin, TitleMixin, CommentedDetailView):
 
     def get_context_data(self, **kwargs):
         context = super(ContestDetail, self).get_context_data(**kwargs)
+
+        # Auto-trigger judging for Final Submission Only contests when accessed after end
+        if self.object.ended:
+            self.object.trigger_final_submission_judging()
+
         context['can_view_all_problems'] = self.can_view_all_problems
         context['contest_problems'] = Problem.objects.filter(contests__contest=self.object) \
             .order_by('contests__order').defer('description') \
@@ -1134,6 +1139,10 @@ class ContestRankingBase(ContestMixin, TitleMixin, DetailView):
         context = super().get_context_data(**kwargs)
 
         self.check_can_see_own_scoreboard()
+
+        # Auto-trigger judging for Final Submission Only contests when accessed after end
+        if self.object.ended:
+            self.object.trigger_final_submission_judging()
 
         context['rendered_ranking_table'] = self.get_rendered_ranking_table()
         context['tab'] = self.tab
