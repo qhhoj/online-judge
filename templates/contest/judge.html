@@ -1,0 +1,98 @@
+{% extends "common-content.html" %}
+
+{% block title_ruler %}{% endblock %}
+
+{% block title_row %}
+    {% set tab = 'judge' %}
+    {% include "contest/contest-tabs.html" %}
+{% endblock %}
+
+{% block content_media %}
+    <style>
+        .panes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .pane {
+            padding: 20px;
+        }
+        .judge-info {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        .judge-info h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .judge-info .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .judge-info .stat:last-child {
+            border-bottom: none;
+        }
+        .judge-info .stat-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .judge-info .stat-value {
+            color: #2196F3;
+            font-size: 1.2em;
+        }
+        .judge-info .stat-value.pending {
+            color: #FF9800;
+        }
+    </style>
+{% endblock %}
+
+{% block content_js_media %}
+    <script type="text/javascript">
+        $(function () {
+            $('.contest-judge').click(function () {
+                return confirm('{{ _('Are you sure you want to judge all submissions in this contest?') }}');
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block body %}
+    <div class="judge-info">
+        <h3>{{ _('Contest Submission Statistics') }}</h3>
+        <div class="stat">
+            <span class="stat-label">{{ _('Total Submissions:') }}</span>
+            <span class="stat-value">{{ total_count }}</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">{{ _('Pending Submissions:') }}</span>
+            <span class="stat-value pending">{{ pending_count }}</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">{{ _('Judged Submissions:') }}</span>
+            <span class="stat-value">{{ total_count - pending_count }}</span>
+        </div>
+    </div>
+
+    <div class="panes">
+        <div class="pane">
+            <form method="post" action="{{ url('contest_judge', contest.key) }}">
+                {% csrf_token %}
+                <input type="submit" class="unselectable button full contest-judge" style="padding: 10px;"
+                       value="{% if has_pending %}{{ _('Judge Pending Submissions') }}{% else %}{{ _('Rejudge All Submissions') }}{% endif %}">
+            </form>
+        </div>
+    </div>
+
+    {% if not has_pending %}
+        <div style="text-align: center; margin-top: 20px; color: #666;">
+            <p>{{ _('No pending submissions. Click the button above to rejudge all submissions in this contest.') }}</p>
+        </div>
+    {% endif %}
+{% endblock %}
+

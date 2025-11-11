@@ -155,7 +155,7 @@ __all__ = [
     'ContestList', 'ContestDetail', 'ContestRanking', 'ContestJoin', 'ContestLeave', 'ContestCalendar',
     'ContestClone', 'ContestStats', 'ContestMossView', 'ContestMossDelete',
     'ContestParticipationList', 'ContestParticipationDisqualify', 'get_contest_ranking_list',
-    'base_contest_ranking_list',
+    'base_contest_ranking_list', 'ContestJudgeView',
 ]
 
 
@@ -412,6 +412,11 @@ class ContestDetail(ContestMixin, TitleMixin, CommentedDetailView):
 
     def get_context_data(self, **kwargs):
         context = super(ContestDetail, self).get_context_data(**kwargs)
+
+        # Auto-trigger judging for Final Submission Only contests when accessed after end
+        if self.object.ended:
+            self.object.trigger_final_submission_judging()
+
         context['can_view_all_problems'] = self.can_view_all_problems
         context['contest_problems'] = Problem.objects.filter(contests__contest=self.object) \
             .order_by('contests__order').defer('description') \
@@ -1135,6 +1140,10 @@ class ContestRankingBase(ContestMixin, TitleMixin, DetailView):
 
         self.check_can_see_own_scoreboard()
 
+        # Auto-trigger judging for Final Submission Only contests when accessed after end
+        if self.object.ended:
+            self.object.trigger_final_submission_judging()
+
         context['rendered_ranking_table'] = self.get_rendered_ranking_table()
         context['tab'] = self.tab
         return context
@@ -1403,6 +1412,56 @@ class ContestMossDelete(ContestMossMixin, SingleObjectMixin, View):
         self.object = self.get_object()
         ContestMoss.objects.filter(contest=self.object).delete()
         return HttpResponseRedirect(reverse('contest_moss', args=(self.object.key,)))
+
+
+class ContestJudgeView(ContestMixin, TitleMixin, DetailView):
+    template_name = 'contest/judge.html'
+
+    def get_object(self, queryset=None):
+        contest = super().get_object(queryset)
+        # Only allow for Final Submission Only contests
+        if contest.format_name != 'final_submission':
+            raise Http404()
+        # Only editors can access
+        if not contest.is_editable_by(self.request.user):
+            raise Http404()
+        return contest
+
+    def get_title(self):
+        return _('%s Judge Submissions') % self.object.name
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Count pending submissions
+        from judge.models.submission import Submission
+        pending_count = Submission.objects.filter(
+            contest__participation__contest=self.object,
+            status='PD',
+        ).count()
+
+        # Count total submissions in contest
+        total_count = Submission.objects.filter(
+            contest__participation__contest=self.object,
+        ).count()
+
+        context['pending_count'] = pending_count
+        context['total_count'] = total_count
+        context['has_pending'] = pending_count > 0
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        # Trigger judging task
+        from judge.tasks.contest import judge_final_submissions
+        status = judge_final_submissions.delay(self.object.key)
+
+        return redirect_to_task_status(
+            status, message=_('Judging submissions for %s...') % (self.object.name,),
+            redirect=reverse('contest_judge', args=(self.object.key,)),
+        )
 
 
 class ContestTagDetailAjax(DetailView):
