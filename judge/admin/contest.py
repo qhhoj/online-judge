@@ -19,6 +19,7 @@ from django.forms import (
 from django.http import (
     Http404,
     HttpResponseRedirect,
+    JsonResponse,
 )
 from django.shortcuts import get_object_or_404
 from django.urls import (
@@ -231,7 +232,7 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
     )
     list_display = (
         'key', 'name', 'is_visible', 'is_rated', 'locked_after', 'start_time', 'end_time', 'time_limit',
-        'user_count',
+        'user_count', 'pending_submissions_display',
     )
     search_fields = ('key', 'name')
     inlines = [ContestProblemInline, ContestAnnouncementInline]
@@ -278,6 +279,46 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
         if not request.user.has_perm('judge.contest_problem_label'):
             readonly += ['problem_label_script']
         return readonly
+
+    def get_queryset(self, request):
+        """
+        Override get_queryset to annotate pending submissions count for Final Submission Only contests.
+        """
+        from django.db.models import Count, Q
+
+        qs = super().get_queryset(request)
+
+        # Annotate pending submissions count for FSO contests
+        qs = qs.annotate(
+            _pending_count=Count(
+                'contestsubmission__submission',
+                filter=Q(
+                    format_name='final_submission',
+                    contestsubmission__submission__status='PD',
+                ),
+                distinct=True,
+            ),
+        )
+        return qs
+
+    @admin.display(description=_('Pending Submissions'))
+    def pending_submissions_display(self, obj):
+        """
+        Display pending submissions count for Final Submission Only contests.
+        Shows count in orange if there are pending submissions.
+        """
+        if obj.format_name != 'final_submission':
+            return '-'
+
+        # Use annotated value
+        count = getattr(obj, '_pending_count', 0)
+
+        if count > 0:
+            return format_html(
+                '<span style="color: orange; font-weight: bold;">{}</span>',
+                count,
+            )
+        return count
 
     def save_model(self, request, obj, form, change):
         # `is_visible` will not appear in `cleaned_data` if user cannot edit it
@@ -384,6 +425,8 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
             path('<int:contest_id>/rejudge/<int:problem_id>/', self.rejudge_view, name='judge_contest_rejudge'),
             path('<int:contest_id>/rescore/<int:problem_id>/', self.rescore_view, name='judge_contest_rescore'),
             path('<int:contest_id>/resend/<int:announcement_id>/', self.resend_view, name='judge_contest_resend'),
+            path('<int:contest_id>/judge-final/', self.judge_final_view, name='judge_contest_judge_final'),
+            path('<int:contest_id>/judge-progress/', self.judge_progress_view, name='judge_contest_judge_progress'),
         ] + super(ContestAdmin, self).get_urls()
 
     @method_decorator(require_POST)
@@ -459,6 +502,165 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
         with transaction.atomic():
             contest.rate()
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('admin:judge_contest_changelist')))
+
+    @method_decorator(require_POST)
+    def judge_final_view(self, request, contest_id):
+        """
+        Manually trigger judging for Final Submission Only contests.
+        Only available for contests that have ended and have pending submissions.
+        """
+        contest = get_object_or_404(Contest, id=contest_id)
+
+        # Permission check
+        if not request.user.is_staff or not self.has_change_permission(request, contest):
+            raise PermissionDenied()
+
+        # Validate contest format
+        if contest.format_name != 'final_submission':
+            self.message_user(
+                request,
+                'This action is only available for Final Submission Only contests.',
+                level='error',
+            )
+            return HttpResponseRedirect(reverse('admin:judge_contest_change', args=(contest_id,)))
+
+        # Validate contest has ended
+        if not contest.ended:
+            self.message_user(
+                request,
+                'Contest has not ended yet. Judging can only be triggered after the contest ends.',
+                level='error',
+            )
+            return HttpResponseRedirect(reverse('admin:judge_contest_change', args=(contest_id,)))
+
+        # Count pending submissions
+        pending_count = Submission.objects.filter(
+            contest__participation__contest=contest,
+            status='PD',
+        ).count()
+
+        if pending_count == 0:
+            self.message_user(
+                request,
+                'No pending submissions to judge.',
+                level='warning',
+            )
+            return HttpResponseRedirect(reverse('admin:judge_contest_change', args=(contest_id,)))
+
+        # Trigger judging task
+        from judge.tasks.contest import judge_final_submissions
+        task = judge_final_submissions.delay(contest.key)
+
+        # Store task_id in session for progress tracking
+        request.session[f'judge_task_{contest_id}'] = task.id
+
+        self.message_user(
+            request,
+            ngettext(
+                'Judging task started for %d pending submission.',
+                'Judging task started for %d pending submissions.',
+                pending_count,
+            ) % pending_count,
+            level='success',
+        )
+        return HttpResponseRedirect(reverse('admin:judge_contest_change', args=(contest_id,)))
+
+    def judge_progress_view(self, request, contest_id):
+        """
+        API endpoint to check judging progress for Final Submission Only contests.
+        Returns JSON with current progress status.
+        """
+        from celery.result import AsyncResult
+
+        contest = get_object_or_404(Contest, id=contest_id)
+
+        # Permission check
+        if not request.user.is_staff or not self.has_change_permission(request, contest):
+            return JsonResponse({'error': 'Permission denied'}, status=403)
+
+        # Get task_id from session
+        task_id = request.session.get(f'judge_task_{contest_id}')
+
+        if not task_id:
+            return JsonResponse({
+                'status': 'no_task',
+                'message': 'No judging task found for this contest',
+            })
+
+        # Get task result
+        result = AsyncResult(task_id)
+
+        if result.state == 'PENDING':
+            return JsonResponse({
+                'status': 'pending',
+                'message': 'Task is waiting to start',
+            })
+        elif result.state == 'PROGRESS':
+            info = result.info or {}
+            return JsonResponse({
+                'status': 'in_progress',
+                'current': info.get('current', 0),
+                'total': info.get('total', 0),
+                'percent': info.get('percent', 0),
+                'judged_count': info.get('judged_count', 0),
+            })
+        elif result.state == 'SUCCESS':
+            result_data = result.result or {}
+            # Clear task_id from session
+            if f'judge_task_{contest_id}' in request.session:
+                del request.session[f'judge_task_{contest_id}']
+            return JsonResponse({
+                'status': 'completed',
+                'judged_count': result_data.get('judged_count', 0),
+                'total': result_data.get('total', 0),
+            })
+        elif result.state == 'FAILURE':
+            # Clear task_id from session
+            if f'judge_task_{contest_id}' in request.session:
+                del request.session[f'judge_task_{contest_id}']
+            return JsonResponse({
+                'status': 'failed',
+                'error': str(result.info),
+            })
+        else:
+            return JsonResponse({
+                'status': result.state.lower(),
+            })
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        """
+        Override change_view to add pending submissions count to template context.
+        """
+        extra_context = extra_context or {}
+
+        # Get contest object
+        try:
+            contest = Contest.objects.get(pk=object_id)
+
+            # Add pending submissions count for Final Submission Only contests
+            if contest.format_name == 'final_submission' and contest.ended:
+                pending_count = Submission.objects.filter(
+                    contest__participation__contest=contest,
+                    status='PD',
+                ).count()
+                extra_context['pending_submissions_count'] = pending_count
+
+            # Add current auto_judge setting for template
+            if contest.format_name == 'final_submission':
+                format_config = contest.format_config or {}
+                extra_context['auto_judge_enabled'] = format_config.get('auto_judge', True)
+        except Contest.DoesNotExist:
+            pass
+
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    def add_view(self, request, form_url='', extra_context=None):
+        """
+        Override add_view to add default auto_judge setting.
+        """
+        extra_context = extra_context or {}
+        extra_context['auto_judge_enabled'] = True  # Default to True for new contests
+        return super().add_view(request, form_url, extra_context)
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(ContestAdmin, self).get_form(request, obj, **kwargs)
