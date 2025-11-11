@@ -282,25 +282,9 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
 
     def get_queryset(self, request):
         """
-        Override get_queryset to annotate pending submissions count for Final Submission Only contests.
+        Override get_queryset - no annotation needed, will compute in display method.
         """
-        from django.db.models import Count, Q
-
-        qs = super().get_queryset(request)
-
-        # Annotate pending submissions count for FSO contests
-        # Relation path: Contest -> users (ContestParticipation) -> submissions (ContestSubmission) -> submission (Submission)
-        qs = qs.annotate(
-            _pending_count=Count(
-                'users__submissions__submission',
-                filter=Q(
-                    format_name='final_submission',
-                    users__submissions__submission__status='PD',
-                ),
-                distinct=True,
-            ),
-        )
-        return qs
+        return super().get_queryset(request)
 
     @admin.display(description=_('Pending Submissions'))
     def pending_submissions_display(self, obj):
@@ -311,8 +295,12 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
         if obj.format_name != 'final_submission':
             return '-'
 
-        # Use annotated value
-        count = getattr(obj, '_pending_count', 0)
+        # Query pending submissions count directly
+        from judge.models.contest import ContestSubmission
+        count = Submission.objects.filter(
+            contest__participation__contest=obj,
+            status='PD',
+        ).count()
 
         if count > 0:
             return format_html(
