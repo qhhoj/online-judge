@@ -20,9 +20,14 @@ if hasattr(settings, 'CELERY_RESULT_BACKEND_SECRET'):
     app.conf.result_backend = settings.CELERY_RESULT_BACKEND_SECRET
 
 # Configure Celery Beat schedule for periodic tasks
-# Note: Final Submission Only contests are now auto-triggered when accessed after end
-# No need for periodic checking anymore
-app.conf.beat_schedule = {}
+# Auto-trigger when contest accessed (primary method)
+# Periodic check as backup every 1 minute for immediate judging
+app.conf.beat_schedule = {
+    'check-final-submission-contests': {
+        'task': 'judge.tasks.contest.check_final_submission_contests',
+        'schedule': crontab(minute='*'),  # Run every 1 minute
+    },
+}
 
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()

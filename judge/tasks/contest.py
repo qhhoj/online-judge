@@ -284,21 +284,22 @@ def check_final_submission_contests(self):
     Periodic task to check for Final Submission Only contests that have ended
     and trigger judging for their pending submissions.
     Only processes contests with auto_judge enabled.
+    Runs every minute to ensure immediate judging after contest ends.
     """
     import logging
     from django.utils import timezone
+    from django.core.cache import cache
 
     logger = logging.getLogger('judge.tasks.contest')
 
-    # Find all final_submission contests that have ended but haven't been processed yet
+    # Find all final_submission contests that have ended
     now = timezone.now()
     ended_contests = Contest.objects.filter(
         format_name='final_submission',
         end_time__lte=now,
-        end_time__gte=now - timezone.timedelta(minutes=10),  # Only check contests ended in last 10 minutes
     )
 
-    logger.info(f'Checking {ended_contests.count()} final_submission contests that ended in last 10 minutes')
+    logger.info(f'Checking {ended_contests.count()} ended final_submission contests')
 
     processed_count = 0
     for contest in ended_contests:
@@ -306,11 +307,15 @@ def check_final_submission_contests(self):
         format_config = contest.format_config or {}
         auto_judge = format_config.get('auto_judge', True)
 
-        logger.info(f'Contest {contest.key}: auto_judge={auto_judge}')
-
-        # Skip if auto_judge is disabled
         if not auto_judge:
-            logger.info(f'Skipping contest {contest.key} - auto_judge disabled')
+            continue
+
+        # Use same cache key as trigger_final_submission_judging to avoid duplicate triggers
+        end_time_ts = int(contest.end_time.timestamp())
+        cache_key = f'fso_judged_{contest.id}_{end_time_ts}'
+
+        # Skip if already triggered for this end_time
+        if cache.get(cache_key):
             continue
 
         # Check if there are any pending submissions
@@ -319,13 +324,15 @@ def check_final_submission_contests(self):
             status='PD',
         ).count()
 
-        logger.info(f'Contest {contest.key}: {pending_count} pending submissions')
-
         if pending_count > 0:
+            # Mark as triggered (cache for 24 hours)
+            cache.set(cache_key, True, 86400)
+
             # Trigger judging task for this contest
-            logger.info(f'Triggering judge task for contest {contest.key}')
+            logger.info(f'Triggering judge task for contest {contest.key} ({pending_count} pending submissions)')
             judge_final_submissions.delay(contest.key)
             processed_count += 1
 
-    logger.info(f'Processed {processed_count} contests')
+    if processed_count > 0:
+        logger.info(f'Processed {processed_count} contests')
     return processed_count

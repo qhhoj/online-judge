@@ -66,17 +66,35 @@ def task_status_url_by_id(result_id, message=None, redirect=None):
 
 def task_status_url(result, message=None, redirect=None):
     # Handle both AsyncResult and string task IDs
-    if isinstance(result, str):
+    from celery.result import AsyncResult
+
+    if isinstance(result, AsyncResult):
+        task_id = result.id
+    elif isinstance(result, str):
         task_id = result
     elif hasattr(result, 'id'):
         task_id = result.id
     else:
-        # Fallback: convert to string
-        task_id = str(result)
+        # If result is not AsyncResult (e.g., when CELERY_ALWAYS_EAGER=True),
+        # we can't track progress, so create a fake task ID
+        import logging
+        import uuid
+        logger = logging.getLogger('judge.utils.celery')
+        logger.warning(f'Task result is not AsyncResult: {type(result)} - {result}')
+        task_id = str(uuid.uuid4())
     return task_status_url_by_id(task_id, message, redirect)
 
 
 def redirect_to_task_status(result, message=None, redirect=None):
+    # If result is not AsyncResult and redirect is available, go there directly
+    from celery.result import AsyncResult
+    if not isinstance(result, AsyncResult) and not isinstance(result, str) and not hasattr(result, 'id'):
+        if redirect:
+            import logging
+            logger = logging.getLogger('judge.utils.celery')
+            logger.info(f'Task completed synchronously, redirecting to: {redirect}')
+            return HttpResponseRedirect(redirect)
+
     return HttpResponseRedirect(task_status_url(result, message, redirect))
 
 
