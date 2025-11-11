@@ -669,7 +669,8 @@ class Contest(models.Model):
         """
         Trigger judging for Final Submission Only contests.
         This is called automatically when contest ends and someone accesses the contest.
-        Uses cache to ensure judging is only triggered once.
+        Uses cache to ensure judging is only triggered once per end_time.
+        If contest time is extended, it will trigger again after the new end_time.
         """
         from django.core.cache import cache
 
@@ -687,10 +688,12 @@ class Contest(models.Model):
         if not auto_judge:
             return False
 
-        # Use cache to ensure we only trigger once
-        cache_key = f'fso_judged_{self.id}'
+        # Use cache to ensure we only trigger once per end_time
+        # Include end_time timestamp in cache key so extending contest time creates new cache key
+        end_time_ts = int(self.end_time.timestamp())
+        cache_key = f'fso_judged_{self.id}_{end_time_ts}'
         if cache.get(cache_key):
-            return False  # Already triggered
+            return False  # Already triggered for this end_time
 
         # Check if there are pending submissions
         pending_count = Submission.objects.filter(
