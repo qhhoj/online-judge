@@ -69,16 +69,33 @@
             // Auto-judge checkbox for Final Submission Only format
             var $formatField = $('#id_format_name');
             var $formatConfigField = $('#id_format_config');
+
+            if ($formatField.length === 0) {
+                console.error('Format field not found!');
+                return;
+            }
+
+            if ($formatConfigField.length === 0) {
+                console.error('Format config field not found!');
+                return;
+            }
+
             var autoJudgeCheckboxHtml =
-                '<div id="auto-judge-container">' +
-                '<input type="checkbox" id="auto-judge-checkbox" checked>' +
-                '<label for="auto-judge-checkbox">Tự động chấm điểm khi contest kết thúc</label>' +
-                '<span class="help-text">Nếu bỏ chọn, bạn sẽ phải bấm nút "Judge Final Submissions" để chấm điểm thủ công sau khi contest kết thúc.</span>' +
+                '<div id="auto-judge-container" style="margin-top: 10px; padding: 10px; background: #f9f9f9; border: 1px solid #ddd;">' +
+                '<label style="display: block; margin-bottom: 5px;">' +
+                '<input type="checkbox" id="auto-judge-checkbox" checked style="margin-right: 5px;">' +
+                '<strong>Tự động chấm điểm khi contest kết thúc</strong>' +
+                '</label>' +
+                '<p class="help" style="margin: 5px 0 0 20px; color: #666; font-size: 12px;">Nếu bỏ chọn, bạn sẽ phải bấm nút "Judge Final Submissions" để chấm điểm thủ công sau khi contest kết thúc.</p>' +
                 '</div>';
 
-            // Insert checkbox after format_config field
-            if ($formatConfigField.length) {
-                $formatConfigField.closest('.form-row').after(autoJudgeCheckboxHtml);
+            // Insert checkbox after format_config field's form-row
+            var $formatConfigRow = $formatConfigField.closest('.form-row');
+            if ($formatConfigRow.length) {
+                $formatConfigRow.after(autoJudgeCheckboxHtml);
+            } else {
+                // Fallback: insert after the field itself
+                $formatConfigField.after(autoJudgeCheckboxHtml);
             }
 
             var $autoJudgeContainer = $('#auto-judge-container');
@@ -237,7 +254,7 @@
             }
 
             // Check on page load
-            {% if original and original.format_name == 'final_submission' and original.ended %}
+            {% if original and original.format_name == 'final_submission' and contest_ended %}
                 checkJudgingProgress();
             {% endif %}
 
@@ -275,7 +292,7 @@
         </a>
     {% endif %}
 
-    {% if original and original.format_name == 'final_submission' and original.ended %}
+    {% if original and original.format_name == 'final_submission' and contest_ended %}
         <div id="judge-progress-container" style="display: none;">
             <h3>{% trans "Judging Progress" %}</h3>
             <div id="judge-progress-bar-container">

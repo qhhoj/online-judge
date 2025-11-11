@@ -289,12 +289,13 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
         qs = super().get_queryset(request)
 
         # Annotate pending submissions count for FSO contests
+        # Relation path: Contest -> users (ContestParticipation) -> submissions (ContestSubmission) -> submission (Submission)
         qs = qs.annotate(
             _pending_count=Count(
-                'contestsubmission__submission',
+                'users__submissions__submission',
                 filter=Q(
                     format_name='final_submission',
-                    contestsubmission__submission__status='PD',
+                    users__submissions__submission__status='PD',
                 ),
                 distinct=True,
             ),
@@ -638,12 +639,14 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
             contest = Contest.objects.get(pk=object_id)
 
             # Add pending submissions count for Final Submission Only contests
-            if contest.format_name == 'final_submission' and contest.ended:
+            if contest.format_name == 'final_submission':
+                from judge.models.contest import ContestSubmission
                 pending_count = Submission.objects.filter(
                     contest__participation__contest=contest,
                     status='PD',
                 ).count()
                 extra_context['pending_submissions_count'] = pending_count
+                extra_context['contest_ended'] = contest.ended
 
             # Add current auto_judge setting for template
             if contest.format_name == 'final_submission':
