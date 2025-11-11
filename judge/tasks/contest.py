@@ -184,10 +184,15 @@ def prepare_contest_data(self, contest_id, options):
 
 
 @shared_task(bind=True)
-def judge_final_submissions(self, contest_key):
+def judge_final_submissions(self, contest_key, rejudge_all=False):
     """
-    Judge all pending submissions for a Final Submission Only contest.
+    Judge submissions for a Final Submission Only contest.
     Only judges the last submission for each (user, problem) pair.
+
+    Args:
+        contest_key: Contest key
+        rejudge_all: If True, rejudge all submissions (not just pending ones)
+
     Reports progress that can be tracked via task state.
     """
     from django.db.models import Max
@@ -203,14 +208,21 @@ def judge_final_submissions(self, contest_key):
             'contest_key': contest_key,
         }
 
-    # Get all pending submissions for this contest
-    pending_submissions = Submission.objects.filter(
-        contest__participation__contest=contest,
-        status='PD',  # Pending status
-    ).select_related('user', 'problem', 'language')
+    # Get submissions for this contest
+    if rejudge_all:
+        # Rejudge all submissions (not just pending)
+        submissions = Submission.objects.filter(
+            contest__participation__contest=contest,
+        ).select_related('user', 'problem', 'language')
+    else:
+        # Only judge pending submissions
+        submissions = Submission.objects.filter(
+            contest__participation__contest=contest,
+            status='PD',  # Pending status
+        ).select_related('user', 'problem', 'language')
 
     # Group by (user, problem) and get the last submission for each
-    user_problem_pairs = pending_submissions.values('user_id', 'problem_id').distinct()
+    user_problem_pairs = submissions.values('user_id', 'problem_id').distinct()
 
     judged_count = 0
     total_pairs = user_problem_pairs.count()
@@ -227,10 +239,11 @@ def judge_final_submissions(self, contest_key):
         },
     )
 
-    with Progress(self, total_pairs, stage=_('Judging final submissions')) as p:
+    stage_msg = _('Rejudging all submissions') if rejudge_all else _('Judging final submissions')
+    with Progress(self, total_pairs, stage=stage_msg) as p:
         for i, pair in enumerate(user_problem_pairs, 1):
             # Get the last submission for this (user, problem) pair
-            last_submission = pending_submissions.filter(
+            last_submission = submissions.filter(
                 user_id=pair['user_id'],
                 problem_id=pair['problem_id'],
             ).order_by('-date').first()
