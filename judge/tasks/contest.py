@@ -186,8 +186,8 @@ def prepare_contest_data(self, contest_id, options):
 @shared_task(bind=True)
 def judge_final_submissions(self, contest_key, rejudge_all=False):
     """
-    Judge submissions for a Final Submission Only contest.
-    Only judges the last submission for each (user, problem) pair.
+    Judge ALL submissions for a Final Submission Only contest.
+    Judges every submission, but scoring only uses the last submission for each (user, problem) pair.
 
     Args:
         contest_key: Contest key
@@ -208,59 +208,50 @@ def judge_final_submissions(self, contest_key, rejudge_all=False):
             'contest_key': contest_key,
         }
 
-    # Get submissions for this contest
+    # Get ALL submissions for this contest
     if rejudge_all:
         # Rejudge all submissions (not just pending)
         submissions = Submission.objects.filter(
             contest__participation__contest=contest,
-        ).select_related('user', 'problem', 'language')
+        ).select_related('user', 'problem', 'language').order_by('date')
     else:
         # Only judge pending submissions
         submissions = Submission.objects.filter(
             contest__participation__contest=contest,
             status='PD',  # Pending status
-        ).select_related('user', 'problem', 'language')
-
-    # Group by (user, problem) and get the last submission for each
-    user_problem_pairs = submissions.values('user_id', 'problem_id').distinct()
+        ).select_related('user', 'problem', 'language').order_by('date')
 
     judged_count = 0
-    total_pairs = user_problem_pairs.count()
+    total_submissions = submissions.count()
 
     # Update initial state
     self.update_state(
         state='PROGRESS',
         meta={
             'current': 0,
-            'total': total_pairs,
+            'total': total_submissions,
             'percent': 0,
             'contest_key': contest_key,
             'status': 'starting',
         },
     )
 
-    stage_msg = _('Rejudging all submissions') if rejudge_all else _('Judging final submissions')
-    with Progress(self, total_pairs, stage=stage_msg) as p:
-        for i, pair in enumerate(user_problem_pairs, 1):
-            # Get the last submission for this (user, problem) pair
-            last_submission = submissions.filter(
-                user_id=pair['user_id'],
-                problem_id=pair['problem_id'],
-            ).order_by('-date').first()
-
-            if last_submission:
-                # Judge this submission with rejudge=True to bypass pending check
-                # This is intentional - we want to judge pending submissions after contest ends
-                judge_submission(last_submission, rejudge=True)
-                judged_count += 1
+    stage_msg = _('Rejudging all submissions') if rejudge_all else _('Judging all submissions')
+    with Progress(self, total_submissions, stage=stage_msg) as p:
+        # Judge ALL submissions (not just the last one)
+        for i, submission in enumerate(submissions, 1):
+            # Judge this submission with rejudge=True to bypass pending check
+            # This is intentional - we want to judge pending submissions after contest ends
+            judge_submission(submission, rejudge=True)
+            judged_count += 1
 
             # Update progress
-            percent = int((i / total_pairs) * 100) if total_pairs > 0 else 100
+            percent = int((i / total_submissions) * 100) if total_submissions > 0 else 100
             self.update_state(
                 state='PROGRESS',
                 meta={
                     'current': i,
-                    'total': total_pairs,
+                    'total': total_submissions,
                     'percent': percent,
                     'contest_key': contest_key,
                     'judged_count': judged_count,
@@ -274,7 +265,7 @@ def judge_final_submissions(self, contest_key, rejudge_all=False):
         'status': 'completed',
         'contest_key': contest_key,
         'judged_count': judged_count,
-        'total': total_pairs,
+        'total': total_submissions,
     }
 
 
