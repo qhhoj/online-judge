@@ -2,6 +2,7 @@ import logging
 import socket
 
 from celery import Celery
+from celery.schedules import crontab
 from celery.signals import task_failure
 
 
@@ -17,6 +18,14 @@ if hasattr(settings, 'CELERY_BROKER_URL_SECRET'):
     app.conf.broker_url = settings.CELERY_BROKER_URL_SECRET
 if hasattr(settings, 'CELERY_RESULT_BACKEND_SECRET'):
     app.conf.result_backend = settings.CELERY_RESULT_BACKEND_SECRET
+
+# Configure Celery Beat schedule for periodic tasks
+app.conf.beat_schedule = {
+    'check-final-submission-contests': {
+        'task': 'judge.tasks.contest.check_final_submission_contests',
+        'schedule': crontab(minute='*/5'),  # Run every 5 minutes
+    },
+}
 
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()

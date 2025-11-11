@@ -22,7 +22,7 @@ from judge.models import (
 from judge.utils.celery import Progress
 
 
-__all__ = ('rescore_contest', 'run_moss', 'prepare_contest_data')
+__all__ = ('rescore_contest', 'run_moss', 'prepare_contest_data', 'judge_final_submissions', 'check_final_submission_contests')
 rewildcard = re.compile(r'\*+')
 
 
@@ -181,3 +181,125 @@ def prepare_contest_data(self, contest_id, options):
         data_file.close()
 
     return length
+
+
+@shared_task(bind=True)
+def judge_final_submissions(self, contest_key):
+    """
+    Judge all pending submissions for a Final Submission Only contest.
+    Only judges the last submission for each (user, problem) pair.
+    Reports progress that can be tracked via task state.
+    """
+    from django.db.models import Max
+    from judge.judgeapi import judge_submission
+
+    contest = Contest.objects.get(key=contest_key)
+
+    # Verify this is a final_submission format contest
+    if contest.format_name != 'final_submission':
+        return {
+            'status': 'error',
+            'message': 'Not a Final Submission Only contest',
+            'contest_key': contest_key,
+        }
+
+    # Get all pending submissions for this contest
+    pending_submissions = Submission.objects.filter(
+        contest__participation__contest=contest,
+        status='PD',  # Pending status
+    ).select_related('user', 'problem', 'language')
+
+    # Group by (user, problem) and get the last submission for each
+    user_problem_pairs = pending_submissions.values('user_id', 'problem_id').distinct()
+
+    judged_count = 0
+    total_pairs = user_problem_pairs.count()
+
+    # Update initial state
+    self.update_state(
+        state='PROGRESS',
+        meta={
+            'current': 0,
+            'total': total_pairs,
+            'percent': 0,
+            'contest_key': contest_key,
+            'status': 'starting',
+        },
+    )
+
+    with Progress(self, total_pairs, stage=_('Judging final submissions')) as p:
+        for i, pair in enumerate(user_problem_pairs, 1):
+            # Get the last submission for this (user, problem) pair
+            last_submission = pending_submissions.filter(
+                user_id=pair['user_id'],
+                problem_id=pair['problem_id'],
+            ).order_by('-date').first()
+
+            if last_submission:
+                # Judge this submission
+                judge_submission(last_submission, rejudge=False)
+                judged_count += 1
+
+            # Update progress
+            percent = int((i / total_pairs) * 100) if total_pairs > 0 else 100
+            self.update_state(
+                state='PROGRESS',
+                meta={
+                    'current': i,
+                    'total': total_pairs,
+                    'percent': percent,
+                    'contest_key': contest_key,
+                    'judged_count': judged_count,
+                    'status': 'judging',
+                },
+            )
+
+            p.did(1)
+
+    return {
+        'status': 'completed',
+        'contest_key': contest_key,
+        'judged_count': judged_count,
+        'total': total_pairs,
+    }
+
+
+@shared_task(bind=True)
+def check_final_submission_contests(self):
+    """
+    Periodic task to check for Final Submission Only contests that have ended
+    and trigger judging for their pending submissions.
+    Only processes contests with auto_judge enabled.
+    """
+    from django.utils import timezone
+
+    # Find all final_submission contests that have ended but haven't been processed yet
+    now = timezone.now()
+    ended_contests = Contest.objects.filter(
+        format_name='final_submission',
+        end_time__lte=now,
+        end_time__gte=now - timezone.timedelta(minutes=10),  # Only check contests ended in last 10 minutes
+    )
+
+    processed_count = 0
+    for contest in ended_contests:
+        # Check if auto_judge is enabled (default: True)
+        format_config = contest.format_config or {}
+        auto_judge = format_config.get('auto_judge', True)
+
+        # Skip if auto_judge is disabled
+        if not auto_judge:
+            continue
+
+        # Check if there are any pending submissions
+        pending_count = Submission.objects.filter(
+            contest__participation__contest=contest,
+            status='PD',
+        ).count()
+
+        if pending_count > 0:
+            # Trigger judging task for this contest
+            judge_final_submissions.delay(contest.key)
+            processed_count += 1
+
+    return processed_count
