@@ -130,7 +130,9 @@ def get_contest_problem(problem, profile):
 
 
 def get_contest_submission_count(problem, profile, virtual):
-    return profile.current_contest.submissions.exclude(submission__status__in=['IE']) \
+    # Exclude IE (Internal Error) and PD (Pending) submissions from count
+    # PD submissions are used in Final Submission Only format and shouldn't count towards limit
+    return profile.current_contest.submissions.exclude(submission__status__in=['IE', 'PD']) \
                   .filter(problem__problem=problem, participation__virtual=virtual).count()
 
 
