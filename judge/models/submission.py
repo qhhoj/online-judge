@@ -49,6 +49,7 @@ SUBMISSION_STATUS = (
     ('IE', _('Internal Error')),
     ('CE', _('Compile Error')),
     ('AB', _('Aborted')),
+    ('PD', _('Pending')),
 )
 
 SUBMISSION_SEARCHABLE_STATUS = \
@@ -78,6 +79,7 @@ class Submission(models.Model):
         'D': _('Completed'),
         'AB': _('Aborted'),
         'RJ': _('Rejected'),
+        'PD': _('Pending Judging'),
     }
 
     user = models.ForeignKey(Profile, on_delete=models.CASCADE, db_index=False)
