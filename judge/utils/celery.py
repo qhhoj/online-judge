@@ -65,7 +65,15 @@ def task_status_url_by_id(result_id, message=None, redirect=None):
 
 
 def task_status_url(result, message=None, redirect=None):
-    return task_status_url_by_id(result.id, message, redirect)
+    # Handle both AsyncResult and string task IDs
+    if isinstance(result, str):
+        task_id = result
+    elif hasattr(result, 'id'):
+        task_id = result.id
+    else:
+        # Fallback: convert to string
+        task_id = str(result)
+    return task_status_url_by_id(task_id, message, redirect)
 
 
 def redirect_to_task_status(result, message=None, redirect=None):

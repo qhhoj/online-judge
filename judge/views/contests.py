@@ -1454,12 +1454,29 @@ class ContestJudgeView(ContestMixin, TitleMixin, DetailView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
 
+        # Check if there are pending submissions
+        from judge.models.submission import Submission
+        pending_count = Submission.objects.filter(
+            contest__participation__contest=self.object,
+            status='PD',
+        ).count()
+
+        # If no pending submissions, rejudge all; otherwise judge pending only
+        rejudge_all = (pending_count == 0)
+
         # Trigger judging task
         from judge.tasks.contest import judge_final_submissions
-        status = judge_final_submissions.delay(self.object.key)
+        result = judge_final_submissions.delay(self.object.key, rejudge_all=rejudge_all)
 
+        # Debug: Check if result is AsyncResult
+        import logging
+        logger = logging.getLogger('judge.views.contests')
+        logger.info(f'Task result type: {type(result)}, value: {result}')
+        logger.info(f'Task ID: {result.id if hasattr(result, "id") else "NO ID"}')
+
+        message = _('Rejudging all submissions for %s...') if rejudge_all else _('Judging pending submissions for %s...')
         return redirect_to_task_status(
-            status, message=_('Judging submissions for %s...') % (self.object.name,),
+            result, message=message % (self.object.name,),
             redirect=reverse('contest_judge', args=(self.object.key,)),
         )
 
