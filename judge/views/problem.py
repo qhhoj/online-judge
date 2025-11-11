@@ -130,7 +130,9 @@ def get_contest_problem(problem, profile):
 
 
 def get_contest_submission_count(problem, profile, virtual):
-    return profile.current_contest.submissions.exclude(submission__status__in=['IE']) \
+    # Exclude IE (Internal Error) and PD (Pending) submissions from count
+    # PD submissions are used in Final Submission Only format and shouldn't count towards limit
+    return profile.current_contest.submissions.exclude(submission__status__in=['IE', 'PD']) \
                   .filter(problem__problem=problem, participation__virtual=virtual).count()
 
 
@@ -751,12 +753,21 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
         return reverse('submission_status', args=(self.new_submission.id,))
 
     def form_valid(self, form):
-        if (
-            not self.request.user.has_perm('judge.spam_submission') and
-            Submission.objects.filter(user=self.request.profile, rejudged_date__isnull=True)
-                              .exclude(status__in=['D', 'IE', 'CE', 'AB']).count() >= settings.DMOJ_SUBMISSION_LIMIT
-        ):
-            return HttpResponse(format_html('<h1>{0}</h1>', _('You submitted too many submissions.')), status=429)
+        # Check if user is in a Final Submission Only contest
+        in_fso_contest = False
+        if self.contest_problem:
+            contest = self.request.profile.current_contest.contest
+            in_fso_contest = contest.format_name == 'final_submission'
+
+        # For FSO contests, don't limit queue (pending submissions don't count)
+        # For normal contests/problems, apply the usual DMOJ_SUBMISSION_LIMIT
+        if not in_fso_contest:
+            if (
+                not self.request.user.has_perm('judge.spam_submission') and
+                Submission.objects.filter(user=self.request.profile, rejudged_date__isnull=True)
+                                  .exclude(status__in=['D', 'IE', 'CE', 'AB']).count() >= settings.DMOJ_SUBMISSION_LIMIT
+            ):
+                return HttpResponse(format_html('<h1>{0}</h1>', _('You submitted too many submissions.')), status=429)
         if not self.object.allowed_languages.filter(id=form.cleaned_data['language'].id).exists():
             raise PermissionDenied()
         if not self.request.user.is_superuser and self.object.banned_users.filter(id=self.request.profile.id).exists():

@@ -236,8 +236,9 @@ def judge_final_submissions(self, contest_key):
             ).order_by('-date').first()
 
             if last_submission:
-                # Judge this submission
-                judge_submission(last_submission, rejudge=False)
+                # Judge this submission with rejudge=True to bypass pending check
+                # This is intentional - we want to judge pending submissions after contest ends
+                judge_submission(last_submission, rejudge=True)
                 judged_count += 1
 
             # Update progress
@@ -271,7 +272,10 @@ def check_final_submission_contests(self):
     and trigger judging for their pending submissions.
     Only processes contests with auto_judge enabled.
     """
+    import logging
     from django.utils import timezone
+
+    logger = logging.getLogger('judge.tasks.contest')
 
     # Find all final_submission contests that have ended but haven't been processed yet
     now = timezone.now()
@@ -281,14 +285,19 @@ def check_final_submission_contests(self):
         end_time__gte=now - timezone.timedelta(minutes=10),  # Only check contests ended in last 10 minutes
     )
 
+    logger.info(f'Checking {ended_contests.count()} final_submission contests that ended in last 10 minutes')
+
     processed_count = 0
     for contest in ended_contests:
         # Check if auto_judge is enabled (default: True)
         format_config = contest.format_config or {}
         auto_judge = format_config.get('auto_judge', True)
 
+        logger.info(f'Contest {contest.key}: auto_judge={auto_judge}')
+
         # Skip if auto_judge is disabled
         if not auto_judge:
+            logger.info(f'Skipping contest {contest.key} - auto_judge disabled')
             continue
 
         # Check if there are any pending submissions
@@ -297,9 +306,13 @@ def check_final_submission_contests(self):
             status='PD',
         ).count()
 
+        logger.info(f'Contest {contest.key}: {pending_count} pending submissions')
+
         if pending_count > 0:
             # Trigger judging task for this contest
+            logger.info(f'Triggering judge task for contest {contest.key}')
             judge_final_submissions.delay(contest.key)
             processed_count += 1
 
+    logger.info(f'Processed {processed_count} contests')
     return processed_count

@@ -254,7 +254,7 @@
             }
 
             // Check on page load
-            {% if original and original.format_name == 'final_submission' and contest_ended %}
+            {% if original and original.format_name == 'final_submission' %}
                 checkJudgingProgress();
             {% endif %}
 
@@ -292,7 +292,7 @@
         </a>
     {% endif %}
 
-    {% if original and original.format_name == 'final_submission' and contest_ended %}
+    {% if original and original.format_name == 'final_submission' %}
         <div id="judge-progress-container" style="display: none;">
             <h3>{% trans "Judging Progress" %}</h3>
             <div id="judge-progress-bar-container">

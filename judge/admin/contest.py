@@ -513,14 +513,13 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
             )
             return HttpResponseRedirect(reverse('admin:judge_contest_change', args=(contest_id,)))
 
-        # Validate contest has ended
+        # Warning if contest hasn't ended yet (but still allow judging for rejudge purposes)
         if not contest.ended:
             self.message_user(
                 request,
-                'Contest has not ended yet. Judging can only be triggered after the contest ends.',
-                level='error',
+                'Warning: Contest has not ended yet. Judging anyway (useful for rejudging).',
+                level='warning',
             )
-            return HttpResponseRedirect(reverse('admin:judge_contest_change', args=(contest_id,)))
 
         # Count pending submissions
         pending_count = Submission.objects.filter(
