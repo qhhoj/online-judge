@@ -522,16 +522,14 @@ class JudgeHandler(ZlibPacketHandler):
             contest = participation.contest
 
             if contest.format_name == 'final_submission':
-                # Schedule rescore with debouncing after transaction commits
+                # Call rescore directly with debouncing
                 problem_id = submission.contest.problem_id
                 contest_id = contest.id
 
-                logger.info(f'[FSO AUTO-RESCORE] Submission {submission.id} graded, scheduling debounced rescore')
+                logger.info(f'[FSO AUTO-RESCORE] Submission {submission.id} graded, calling rescore for problem {problem_id}')
 
-                from django.db import transaction
-                transaction.on_commit(
-                    lambda: self._schedule_fso_rescore_with_debounce(contest_id, problem_id)
-                )
+                # Call rescore directly (no transaction.on_commit needed)
+                self._schedule_fso_rescore_with_debounce(contest_id, problem_id)
         self._post_update_submission(submission.id, 'grading-end', done=True)
 
     def on_compile_error(self, packet):
