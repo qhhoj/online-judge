@@ -1454,30 +1454,37 @@ class ContestJudgeView(ContestMixin, TitleMixin, DetailView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
 
-        # Always rejudge ALL submissions (not just pending)
-        # This ensures fairness and consistency
-        from judge.tasks.contest import judge_final_submissions
-        from celery.result import AsyncResult
+        # Call judging implementation directly (synchronous)
+        # This doesn't require Celery worker and is faster
+        from judge.tasks.contest import _judge_final_submissions_impl
+        from django.contrib import messages
         import logging
         logger = logging.getLogger('judge.views.contests')
 
-        # Trigger judging task for ALL submissions
-        result = judge_final_submissions.delay(self.object.key, rejudge_all=False)
+        try:
+            # Trigger judging for ALL submissions (synchronous)
+            logger.info(f'Triggering judging for contest {self.object.key}')
+            result = _judge_final_submissions_impl(self.object.key, rejudge_all=False)
 
-        # Debug logging
-        logger.info(f'Task result type: {type(result)}')
-        logger.info(f'Task result repr: {repr(result)}')
-        logger.info(f'Is AsyncResult: {isinstance(result, AsyncResult)}')
-        if hasattr(result, 'id'):
-            logger.info(f'Task ID: {result.id}')
-        if hasattr(result, '__dict__'):
-            logger.info(f'Task attributes: {result.__dict__}')
+            # Show success message
+            messages.success(
+                request,
+                _('Successfully queued %(count)d submissions for judging. Judge server will process them automatically.') % {
+                    'count': result.get('queued_count', 0),
+                }
+            )
+            logger.info(f'Judging completed: {result.get("message")}')
 
-        message = _('Queueing all submissions for judging: %s...')
-        return redirect_to_task_status(
-            result, message=message % (self.object.name,),
-            redirect=reverse('contest_judge', args=(self.object.key,)),
-        )
+        except Exception as e:
+            # Show error message
+            messages.error(
+                request,
+                _('Error triggering judging: %(error)s') % {'error': str(e)}
+            )
+            logger.error(f'Error judging contest {self.object.key}: {e}', exc_info=True)
+
+        # Redirect back to judge page
+        return HttpResponseRedirect(reverse('contest_judge', args=(self.object.key,)))
 
 
 class ContestTagDetailAjax(DetailView):
