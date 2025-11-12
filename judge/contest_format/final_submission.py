@@ -55,9 +55,20 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
         Only considers submissions that have been judged (not in pending state).
         """
         from django.db.models import OuterRef, Subquery
+        import logging
+        logger = logging.getLogger('judge.contest_format.final_submission')
 
         score = 0
         format_data = {}
+
+        # Debug: Log all submissions for this participation
+        all_subs = participation.submissions.all()
+        logger.info(f'[FSO] Participation {participation.id}: Total submissions = {all_subs.count()}')
+        for sub in all_subs:
+            logger.info(
+                f'[FSO]   Sub {sub.submission_id}: problem={sub.problem_id}, '
+                f'date={sub.submission.date}, status={sub.submission.status}, points={sub.points}'
+            )
 
         # Get the last submission for each problem (by submission date)
         # Similar to Ultimate format but exclude PD status
@@ -77,19 +88,26 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
             .values_list('problem_id', 'points')
         )
 
+        logger.info(f'[FSO] Queryset count = {queryset.count()}')
+
         # Calculate score from last submissions
         for problem_id, points in queryset:
+            logger.info(f'[FSO] Problem {problem_id}: points = {points}')
             format_data[str(problem_id)] = {
                 'points': points,
                 'time': 0,  # Time is not considered
             }
             score += points
 
+        logger.info(f'[FSO] Total score = {score}, format_data = {format_data}')
+
         participation.cumtime = 0  # No time penalty
         participation.score = round(score, self.contest.points_precision)
         participation.tiebreaker = 0  # No tiebreaker
         participation.format_data = format_data
         participation.save()
+
+        logger.info(f'[FSO] Saved: participation.score = {participation.score}')
 
     def get_first_solves_and_total_ac(self, problems, participations, frozen=False):
         """
