@@ -96,31 +96,46 @@ class JudgeHandler(ZlibPacketHandler):
 
     def _schedule_fso_rescore(self, contest):
         """
-        Schedule a rescore task for FSO contest with debouncing.
-        If a rescore is already scheduled, revoke it and schedule a new one.
+        Schedule a rescore for FSO contest with debouncing using threading.Timer.
+        If a rescore is already scheduled, cancel it and schedule a new one.
         This ensures only one rescore runs after all submissions are judged.
         """
         from django.core.cache import cache
-        from judge.tasks.contest import rescore_contest
-        from celery.result import AsyncResult
+        import threading
 
-        cache_key = f'rescore_scheduled_{contest.key}'
+        cache_key = f'rescore_timer_{contest.key}'
         delay_seconds = 30  # Wait 30 seconds before rescoring
 
         # Check if there's already a scheduled rescore
-        old_task_id = cache.get(cache_key)
-        if old_task_id:
-            # Revoke the old task
+        old_timer = cache.get(cache_key)
+        if old_timer and isinstance(old_timer, threading.Timer):
+            # Cancel the old timer
             try:
-                AsyncResult(old_task_id).revoke()
-                logger.info(f'Revoked old rescore task {old_task_id} for contest {contest.key}')
+                old_timer.cancel()
+                logger.info(f'Cancelled old rescore timer for contest {contest.key}')
             except Exception as e:
-                logger.warning(f'Failed to revoke old rescore task: {e}')
+                logger.warning(f'Failed to cancel old rescore timer: {e}')
 
-        # Schedule new rescore task
-        task = rescore_contest.apply_async((contest.key,), countdown=delay_seconds)
-        cache.set(cache_key, task.id, delay_seconds + 60)  # Cache for delay + 1 minute
-        logger.info(f'Scheduled rescore task {task.id} for contest {contest.key} in {delay_seconds}s')
+        # Create new timer to rescore after delay
+        def rescore_all_participations():
+            try:
+                logger.info(f'Starting rescore for contest {contest.key}')
+                # Rescore all participations in this contest
+                for participation in contest.users.iterator():
+                    participation.recompute_results()
+                logger.info(f'Completed rescore for contest {contest.key}')
+                # Clear cache
+                cache.delete(cache_key)
+            except Exception as e:
+                logger.error(f'Error rescoring contest {contest.key}: {e}', exc_info=True)
+
+        timer = threading.Timer(delay_seconds, rescore_all_participations)
+        timer.daemon = True
+        timer.start()
+
+        # Store timer in cache (note: this won't survive server restart, but that's OK)
+        cache.set(cache_key, timer, delay_seconds + 60)
+        logger.info(f'Scheduled rescore timer for contest {contest.key} in {delay_seconds}s')
 
     def on_connect(self):
         self.timeout = 15
