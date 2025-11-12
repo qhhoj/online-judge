@@ -54,6 +54,9 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
         Update participation score based on the last submission for each problem.
         Only considers submissions that have been judged (not in pending state).
         """
+        import logging
+        logger = logging.getLogger('judge.contest_format.final_submission')
+
         score = 0
         format_data = {}
 
@@ -67,6 +70,9 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
             .values_list('problem_id', 'last_date')
         )
 
+        logger.info(f'Updating participation {participation.id} for contest {self.contest.key}')
+        logger.info(f'Found {queryset.count()} problems with submissions')
+
         # For each problem, get the last submission and its points
         for problem_id, last_date in queryset:
             last_submission = (
@@ -78,17 +84,26 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
 
             if last_submission:
                 points = last_submission.points
+                logger.info(
+                    f'Problem {problem_id}: last submission {last_submission.submission_id} '
+                    f'(date: {last_date}, status: {last_submission.submission.status}, '
+                    f'points: {points})'
+                )
                 format_data[str(problem_id)] = {
                     'points': points,
                     'time': 0,  # Time is not considered
                 }
                 score += points
 
+        logger.info(f'Total score: {score}, format_data: {format_data}')
+
         participation.cumtime = 0  # No time penalty
         participation.score = round(score, self.contest.points_precision)
         participation.tiebreaker = 0  # No tiebreaker
         participation.format_data = format_data
         participation.save()
+
+        logger.info(f'Saved participation: score={participation.score}, format_data={participation.format_data}')
 
     def get_first_solves_and_total_ac(self, problems, participations, frozen=False):
         """
