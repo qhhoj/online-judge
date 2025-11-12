@@ -1466,13 +1466,20 @@ class ContestJudgeView(ContestMixin, TitleMixin, DetailView):
 
         # Trigger judging task
         from judge.tasks.contest import judge_final_submissions
-        result = judge_final_submissions.delay(self.object.key, rejudge_all=rejudge_all)
-
-        # Debug: Check if result is AsyncResult
+        from celery.result import AsyncResult
         import logging
         logger = logging.getLogger('judge.views.contests')
-        logger.info(f'Task result type: {type(result)}, value: {result}')
-        logger.info(f'Task ID: {result.id if hasattr(result, "id") else "NO ID"}')
+
+        result = judge_final_submissions.delay(self.object.key, rejudge_all=rejudge_all)
+
+        # Debug logging
+        logger.info(f'Task result type: {type(result)}')
+        logger.info(f'Task result repr: {repr(result)}')
+        logger.info(f'Is AsyncResult: {isinstance(result, AsyncResult)}')
+        if hasattr(result, 'id'):
+            logger.info(f'Task ID: {result.id}')
+        if hasattr(result, '__dict__'):
+            logger.info(f'Task attributes: {result.__dict__}')
 
         message = _('Rejudging all submissions for %s...') if rejudge_all else _('Judging pending submissions for %s...')
         return redirect_to_task_status(
