@@ -525,6 +525,7 @@ urlpatterns = [
         'widgets/', include([
             path('rejudge', widgets.rejudge_submission, name='submission_rejudge'),
             path('reject', widgets.reject_submission, name='submission_reject'),
+            path('rescore_contest_problem', widgets.rescore_contest_problem, name='rescore_contest_problem'),
             path('single_submission', submission.single_submission, name='submission_single_query'),
             path(
                 'submission_testcases',

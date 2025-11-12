@@ -96,10 +96,12 @@ class JudgeHandler(ZlibPacketHandler):
 
     def _schedule_fso_rescore_with_debounce(self, contest_id, problem_id):
         """
-        Schedule rescore for FSO problem with debouncing.
+        Schedule rescore for FSO contest with debouncing.
         Uses threading.Timer to delay rescore by 5 seconds.
         If another submission finishes within 5 seconds, cancel old timer and reschedule.
         This ensures only one rescore runs after all submissions are done.
+
+        For FSO format, rescore means: recompute participation scores based on last submission rule.
         """
         from django.core.cache import cache
         import threading
@@ -116,23 +118,24 @@ class JudgeHandler(ZlibPacketHandler):
         # Create new timer
         def rescore_now():
             try:
-                from judge.models import ContestSubmission
+                from judge.models import Contest, ContestParticipation
 
                 logger.info(f'[FSO AUTO-RESCORE] Starting rescore for problem {problem_id} in contest {contest_id}')
 
-                # Get all submissions for this problem in this contest
-                queryset = ContestSubmission.objects.filter(
-                    participation__contest_id=contest_id,
-                    problem_id=problem_id,
-                ).select_related('submission', 'participation')
+                # Get all participations that have submissions for this problem
+                participations = ContestParticipation.objects.filter(
+                    contest_id=contest_id,
+                    submissions__problem_id=problem_id,
+                ).distinct()
 
                 count = 0
-                # Rescore each submission
-                for contest_submission in queryset:
-                    contest_submission.submission.update_contest()
+                # Recompute results for each affected participation
+                # This will call update_participation() which applies FSO rule (last submission only)
+                for participation in participations:
+                    participation.recompute_results()
                     count += 1
 
-                logger.info(f'[FSO AUTO-RESCORE] ✓ Rescored {count} submissions for problem {problem_id} in contest {contest_id}')
+                logger.info(f'[FSO AUTO-RESCORE] ✓ Rescored {count} participations for problem {problem_id} in contest {contest_id}')
 
                 # Clear cache
                 cache.delete(cache_key)
@@ -522,16 +525,14 @@ class JudgeHandler(ZlibPacketHandler):
             contest = participation.contest
 
             if contest.format_name == 'final_submission':
-                # Schedule rescore with debouncing after transaction commits
+                # Call rescore directly with debouncing
                 problem_id = submission.contest.problem_id
                 contest_id = contest.id
 
-                logger.info(f'[FSO AUTO-RESCORE] Submission {submission.id} graded, scheduling debounced rescore')
+                logger.info(f'[FSO AUTO-RESCORE] Submission {submission.id} graded, calling rescore for problem {problem_id}')
 
-                from django.db import transaction
-                transaction.on_commit(
-                    lambda: self._schedule_fso_rescore_with_debounce(contest_id, problem_id)
-                )
+                # Call rescore directly (no transaction.on_commit needed)
+                self._schedule_fso_rescore_with_debounce(contest_id, problem_id)
         self._post_update_submission(submission.id, 'grading-end', done=True)
 
     def on_compile_error(self, packet):

@@ -102,7 +102,7 @@
                 <script type="text/javascript">
                 window.confirm_and_reject = function (form) {
                     if (confirm("{{ _('Are you sure you want to reject?') }}")) {
-                        form.submit(); 
+                        form.submit();
                     }
                 };
             </script>
@@ -115,6 +115,28 @@
                 <input type="hidden" name="path" value = "{{ url('submission_status', submission.id) }}">
             </form>
         </div>
+    {% endif %}
+
+    {% if perms.judge.rejudge_submission and can_edit %}
+        {% if submission.contest_object and submission.contest_object.format_name == 'final_submission' %}
+            {% compress js %}
+                <script type="text/javascript">
+                    window.confirm_and_rescore = function (form) {
+                        if (confirm("{{ _('Are you sure you want to rescore all submissions for this problem in this contest?') }}")) {
+                            form.submit();
+                        }
+                    };
+                </script>
+            {% endcompress %}
+            <div>
+                <form action="{{ url('rescore_contest_problem') }}" method="post">
+                    {% csrf_token %}
+                    <a href="#" onclick="confirm_and_rescore(parentNode)">{{ _('Rescore Contest Problem') }}</a>
+                    <input type="hidden" name="id" value="{{ submission.id }}">
+                    <input type="hidden" name="path" value="{{ url('submission_status', submission.id) }}">
+                </form>
+            </div>
+        {% endif %}
     {% endif %}
 
     {% if can_edit and not submission.language.file_only %}

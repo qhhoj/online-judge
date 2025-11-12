@@ -16,10 +16,10 @@ from django.http import (
 from django.views.decorators.http import require_POST
 from martor.api import imgur_uploader
 
-from judge.models import Submission
+from judge.models import Submission, ContestSubmission
 
 
-__all__ = ['rejudge_submission']
+__all__ = ['rejudge_submission', 'rescore_contest_problem']
 
 
 @login_required
@@ -62,6 +62,46 @@ def reject_submission(request):
     redirect = request.POST.get('path', None)
 
     return HttpResponseRedirect(redirect) if redirect else HttpResponse('success', content_type='text/plain')
+
+
+@login_required
+@require_POST
+def rescore_contest_problem(request):
+    """Rescore all submissions for a specific problem in a contest."""
+    if 'id' not in request.POST or not request.POST['id'].isdigit():
+        return HttpResponseBadRequest()
+
+    try:
+        submission = Submission.objects.get(id=request.POST['id'])
+    except Submission.DoesNotExist:
+        return HttpResponseBadRequest()
+
+    # Check if submission belongs to a contest
+    try:
+        contest_submission = submission.contest
+        contest = contest_submission.participation.contest
+        problem = contest_submission.problem
+    except (AttributeError, ContestSubmission.DoesNotExist):
+        return HttpResponseBadRequest('Submission is not part of a contest')
+
+    # Check permissions
+    if not submission.problem.is_rejudgeable_by(request.user):
+        return HttpResponseForbidden()
+
+    # Rescore all participations that have submissions for this problem in this contest
+    participations = contest.users.filter(
+        submissions__problem=problem,
+    ).distinct()
+
+    rescored_count = 0
+    for participation in participations:
+        participation.recompute_results()
+        rescored_count += 1
+
+    redirect = request.POST.get('path', None)
+    return HttpResponseRedirect(redirect) if redirect else HttpResponse(
+        f'Rescored {rescored_count} participations', content_type='text/plain',
+    )
 
 
 def django_uploader(image):
