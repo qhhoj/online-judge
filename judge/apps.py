@@ -41,3 +41,11 @@ class JudgeAppConfig(AppConfig):
                 profile.save()
         except DatabaseError:
             pass
+
+        # Schedule all pending FSO contests on server startup
+        try:
+            from judge.utils.fso_scheduler import reschedule_all_fso_contests
+            reschedule_all_fso_contests()
+        except Exception:
+            # Don't crash if scheduling fails
+            pass

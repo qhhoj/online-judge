@@ -695,21 +695,20 @@ class Contest(models.Model):
         if cache.get(cache_key):
             return False  # Already triggered for this end_time
 
-        # Check if there are pending submissions
-        pending_count = Submission.objects.filter(
+        # Check if there are any submissions (not just pending)
+        total_count = Submission.objects.filter(
             contest__participation__contest=self,
-            status='PD',
         ).count()
 
-        if pending_count == 0:
+        if total_count == 0:
             return False  # Nothing to judge
 
         # Mark as triggered (cache for 24 hours)
         cache.set(cache_key, True, 86400)
 
-        # Trigger the judging task
+        # Trigger the judging task for ALL submissions
         from judge.tasks.contest import judge_final_submissions
-        judge_final_submissions.delay(self.key)
+        judge_final_submissions.delay(self.key, rejudge_all=False)
 
         return True  # Successfully triggered
 
