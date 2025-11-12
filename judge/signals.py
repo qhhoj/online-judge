@@ -108,6 +108,11 @@ def contest_update(sender, instance, **kwargs):
         for engine in EFFECTIVE_MATH_ENGINES
     ])
 
+    # Schedule FSO contest judging when contest is created or end_time is updated
+    if instance.format_name == 'final_submission':
+        from judge.utils.fso_scheduler import schedule_fso_contest_judging
+        schedule_fso_contest_judging(instance)
+
 
 @receiver(post_save, sender=License)
 def license_update(sender, instance, **kwargs):
