@@ -778,11 +778,6 @@ class ContestParticipation(models.Model):
     format_data = JSONField(verbose_name=_('contest format specific data'), null=True, blank=True)
 
     def recompute_results(self):
-        import logging
-        logger = logging.getLogger('judge.models.contest')
-
-        logger.info(f'Recomputing results for participation {self.id} in contest {self.contest.key}')
-
         with transaction.atomic():
             self.contest.format.update_participation(self)
             if self.is_disqualified:
@@ -790,8 +785,6 @@ class ContestParticipation(models.Model):
                 self.cumtime = 0
                 self.tiebreaker = 0
                 self.save(update_fields=['score', 'cumtime', 'tiebreaker'])
-
-        logger.info(f'Recompute complete: score={self.score}, cumtime={self.cumtime}')
 
         # Clear ranking cache to ensure updated scores are displayed
         from django.core.cache import cache
@@ -805,7 +798,6 @@ class ContestParticipation(models.Model):
         ])
         for key in cache_keys:
             cache.delete(key)
-            logger.debug(f'Cleared cache key: {key}')
 
     recompute_results.alters_data = True
 

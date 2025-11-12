@@ -218,13 +218,9 @@ class Submission(models.Model):
         return False
 
     def update_contest(self):
-        import logging
-        logger = logging.getLogger('judge.models.submission')
-
         try:
             contest = self.contest
         except AttributeError:
-            logger.debug(f'Submission {self.id} has no contest')
             return
 
         contest_problem = contest.problem
@@ -236,13 +232,6 @@ class Submission(models.Model):
         partial = (contest_problem.partial and contest_problem.problem.partial)
         if not partial and contest.points != contest_problem.points:
             contest.points = 0
-
-        logger.info(
-            f'Updating ContestSubmission for submission {self.id}: '
-            f'case_points={self.case_points}, case_total={self.case_total}, '
-            f'problem_points={contest_problem.points}, partial={partial}, '
-            f'final_points={contest.points}'
-        )
 
         contest.save()
         contest.participation.recompute_results()
