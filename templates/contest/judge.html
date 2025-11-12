@@ -58,6 +58,10 @@
             $('.contest-judge').click(function () {
                 return confirm('{{ _('Are you sure you want to judge all submissions in this contest?') }}');
             });
+
+            $('.contest-rescore').click(function () {
+                return confirm('{{ _('Are you sure you want to rescore all participations in this contest?') }}');
+            });
         });
     </script>
 {% endblock %}
@@ -83,8 +87,17 @@
         <div class="pane">
             <form method="post" action="{{ url('contest_judge', contest.key) }}">
                 {% csrf_token %}
+                <input type="hidden" name="action" value="judge">
                 <input type="submit" class="unselectable button full contest-judge" style="padding: 10px;"
                        value="{% if has_pending %}{{ _('Judge Pending Submissions') }}{% else %}{{ _('Rejudge All Submissions') }}{% endif %}">
+            </form>
+        </div>
+        <div class="pane">
+            <form method="post" action="{{ url('contest_judge', contest.key) }}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="rescore">
+                <input type="submit" class="unselectable button full contest-rescore" style="padding: 10px; background: linear-gradient(to bottom, #4CAF50 0, #2E7D32 100%);"
+                       value="{{ _('Rescore All Participations') }}">
             </form>
         </div>
     </div>
