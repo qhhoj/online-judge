@@ -60,26 +60,27 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
         score = 0
         format_data = {}
 
-        # Get the last submission for each problem (by submission date)
+        # Get the last submission for each problem (by submission date and ID)
         # Exclude pending submissions (PD status)
+        # Use both date and ID to ensure we get exactly one submission per problem
         queryset = (
             participation.submissions
             .exclude(submission__status='PD')
             .values('problem_id')
             .filter(
-                submission__date=Subquery(
+                submission__id=Subquery(
                     participation.submissions
                     .exclude(submission__status='PD')
                     .filter(problem_id=OuterRef('problem_id'))
-                    .order_by('-submission__date')
-                    .values('submission__date')[:1],
+                    .order_by('-submission__date', '-submission__id')
+                    .values('submission__id')[:1],
                 ),
             )
-            .values_list('problem_id', 'submission__date', 'points')
+            .values_list('problem_id', 'points')
         )
 
-        # Calculate score from last submissions (same as Ultimate but time = 0)
-        for problem_id, time, points in queryset:
+        # Calculate score from last submissions
+        for problem_id, points in queryset:
             format_data[str(problem_id)] = {'points': points, 'time': 0}
             score += points
 
