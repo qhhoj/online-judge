@@ -59,9 +59,8 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
         score = 0
         format_data = {}
 
-        # Get the last submission for each problem (by submission date and ID)
-        # Use Subquery similar to Ultimate format
-        # Exclude pending submissions (PD status)
+        # Get the last submission for each problem (by submission date)
+        # Similar to Ultimate format but exclude PD status
         queryset = (
             participation.submissions
             .exclude(submission__status='PD')
@@ -71,15 +70,8 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
                     participation.submissions
                     .exclude(submission__status='PD')
                     .filter(problem_id=OuterRef('problem_id'))
-                    .order_by('-submission__date', '-submission__id')
+                    .order_by('-submission__date')
                     .values('submission__date')[:1]
-                ),
-                submission__id=Subquery(
-                    participation.submissions
-                    .exclude(submission__status='PD')
-                    .filter(problem_id=OuterRef('problem_id'))
-                    .order_by('-submission__date', '-submission__id')
-                    .values('submission__id')[:1]
                 )
             )
             .values_list('problem_id', 'points')
