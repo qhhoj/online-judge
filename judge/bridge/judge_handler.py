@@ -94,43 +94,58 @@ class JudgeHandler(ZlibPacketHandler):
         self._submission_cache_id = None
         self._submission_cache = {}
 
-    def _check_and_rescore_fso_problem(self, contest_id, problem_id):
+    def _schedule_fso_rescore_with_debounce(self, contest_id, problem_id):
         """
-        Check if all submissions for a problem are done judging, then rescore.
-        Only rescores if there are no pending/processing submissions for this problem.
+        Schedule rescore for FSO problem with debouncing.
+        Uses threading.Timer to delay rescore by 5 seconds.
+        If another submission finishes within 5 seconds, cancel old timer and reschedule.
+        This ensures only one rescore runs after all submissions are done.
         """
-        from judge.models import ContestSubmission, Submission
+        from django.core.cache import cache
+        import threading
 
-        try:
-            # Check if there are any submissions still being judged for this problem
-            pending_count = Submission.objects.filter(
-                contest__participation__contest_id=contest_id,
-                contest__problem_id=problem_id,
-                status__in=['QU', 'P', 'G'],  # Queued, Processing, Grading
-            ).count()
+        cache_key = f'fso_rescore_timer_{contest_id}_{problem_id}'
+        delay_seconds = 5  # Short delay for debouncing
 
-            if pending_count > 0:
-                logger.info(f'Skipping rescore for problem {problem_id} in contest {contest_id}: {pending_count} submissions still being judged')
-                return
+        # Cancel old timer if exists
+        old_timer = cache.get(cache_key)
+        if old_timer and isinstance(old_timer, threading.Timer):
+            old_timer.cancel()
+            logger.info(f'[FSO AUTO-RESCORE] Cancelled old timer for problem {problem_id} in contest {contest_id}')
 
-            # All submissions are done, rescore them
-            logger.info(f'All submissions done for problem {problem_id} in contest {contest_id}, rescoring...')
+        # Create new timer
+        def rescore_now():
+            try:
+                from judge.models import ContestSubmission
 
-            # Get all submissions for this problem in this contest
-            queryset = ContestSubmission.objects.filter(
-                participation__contest_id=contest_id,
-                problem_id=problem_id,
-            ).select_related('submission', 'participation')
+                logger.info(f'[FSO AUTO-RESCORE] Starting rescore for problem {problem_id} in contest {contest_id}')
 
-            count = 0
-            # Rescore each submission (this will update ContestSubmission.points and participation.score)
-            for contest_submission in queryset:
-                contest_submission.submission.update_contest()
-                count += 1
+                # Get all submissions for this problem in this contest
+                queryset = ContestSubmission.objects.filter(
+                    participation__contest_id=contest_id,
+                    problem_id=problem_id,
+                ).select_related('submission', 'participation')
 
-            logger.info(f'✓ Rescored {count} submissions for problem {problem_id} in contest {contest_id}')
-        except Exception as e:
-            logger.error(f'Error rescoring problem {problem_id} in contest {contest_id}: {e}', exc_info=True)
+                count = 0
+                # Rescore each submission
+                for contest_submission in queryset:
+                    contest_submission.submission.update_contest()
+                    count += 1
+
+                logger.info(f'[FSO AUTO-RESCORE] ✓ Rescored {count} submissions for problem {problem_id} in contest {contest_id}')
+
+                # Clear cache
+                cache.delete(cache_key)
+            except Exception as e:
+                logger.error(f'[FSO AUTO-RESCORE] Error: {e}', exc_info=True)
+
+        timer = threading.Timer(delay_seconds, rescore_now)
+        timer.daemon = True
+        timer.start()
+
+        # Store timer in cache
+        cache.set(cache_key, timer, delay_seconds + 60)
+        logger.info(f'[FSO AUTO-RESCORE] Scheduled rescore for problem {problem_id} in contest {contest_id} in {delay_seconds}s')
 
     def on_connect(self):
         self.timeout = 15
@@ -505,15 +520,17 @@ class JudgeHandler(ZlibPacketHandler):
 
             # Auto-rescore for FSO contests after judging
             contest = participation.contest
+
             if contest.format_name == 'final_submission':
-                # Schedule rescore after transaction commits
-                # This ensures submission.save() is committed before rescore runs
+                # Schedule rescore with debouncing after transaction commits
                 problem_id = submission.contest.problem_id
                 contest_id = contest.id
 
+                logger.info(f'[FSO AUTO-RESCORE] Submission {submission.id} graded, scheduling debounced rescore')
+
                 from django.db import transaction
                 transaction.on_commit(
-                    lambda: self._check_and_rescore_fso_problem(contest_id, problem_id)
+                    lambda: self._schedule_fso_rescore_with_debounce(contest_id, problem_id)
                 )
         self._post_update_submission(submission.id, 'grading-end', done=True)
 
