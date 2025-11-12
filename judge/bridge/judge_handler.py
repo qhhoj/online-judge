@@ -94,27 +94,15 @@ class JudgeHandler(ZlibPacketHandler):
         self._submission_cache_id = None
         self._submission_cache = {}
 
-    def _check_and_rescore_fso_problem(self, contest_id, problem_id):
+    def _rescore_fso_problem_direct(self, contest_id, problem_id):
         """
-        Check if all submissions for a problem are done judging, then rescore.
-        Only rescores if there are no pending/processing submissions for this problem.
+        Directly rescore all submissions for a problem in FSO contest.
+        This mimics the admin panel rescore behavior.
         """
-        from judge.models import ContestSubmission, Submission
+        from judge.models import ContestSubmission
 
         try:
-            # Check if there are any submissions still being judged for this problem
-            pending_count = Submission.objects.filter(
-                contest__participation__contest_id=contest_id,
-                contest__problem_id=problem_id,
-                status__in=['QU', 'P', 'G'],  # Queued, Processing, Grading
-            ).count()
-
-            if pending_count > 0:
-                logger.info(f'Skipping rescore for problem {problem_id} in contest {contest_id}: {pending_count} submissions still being judged')
-                return
-
-            # All submissions are done, rescore them
-            logger.info(f'All submissions done for problem {problem_id} in contest {contest_id}, rescoring...')
+            logger.info(f'[FSO AUTO-RESCORE] Starting rescore for problem {problem_id} in contest {contest_id}')
 
             # Get all submissions for this problem in this contest
             queryset = ContestSubmission.objects.filter(
@@ -125,12 +113,13 @@ class JudgeHandler(ZlibPacketHandler):
             count = 0
             # Rescore each submission (this will update ContestSubmission.points and participation.score)
             for contest_submission in queryset:
+                logger.info(f'[FSO AUTO-RESCORE] Rescoring submission {contest_submission.submission.id} (status={contest_submission.submission.status})')
                 contest_submission.submission.update_contest()
                 count += 1
 
-            logger.info(f'✓ Rescored {count} submissions for problem {problem_id} in contest {contest_id}')
+            logger.info(f'[FSO AUTO-RESCORE] ✓ Rescored {count} submissions for problem {problem_id} in contest {contest_id}')
         except Exception as e:
-            logger.error(f'Error rescoring problem {problem_id} in contest {contest_id}: {e}', exc_info=True)
+            logger.error(f'[FSO AUTO-RESCORE] Error rescoring problem {problem_id} in contest {contest_id}: {e}', exc_info=True)
 
     def on_connect(self):
         self.timeout = 15
@@ -505,15 +494,19 @@ class JudgeHandler(ZlibPacketHandler):
 
             # Auto-rescore for FSO contests after judging
             contest = participation.contest
+            logger.info(f'[FSO AUTO-RESCORE] Submission {submission.id} graded, contest format: {contest.format_name}')
+
             if contest.format_name == 'final_submission':
                 # Schedule rescore after transaction commits
                 # This ensures submission.save() is committed before rescore runs
                 problem_id = submission.contest.problem_id
                 contest_id = contest.id
 
+                logger.info(f'[FSO AUTO-RESCORE] Scheduling rescore for problem {problem_id} in contest {contest_id}')
+
                 from django.db import transaction
                 transaction.on_commit(
-                    lambda: self._check_and_rescore_fso_problem(contest_id, problem_id)
+                    lambda: self._rescore_fso_problem_direct(contest_id, problem_id)
                 )
         self._post_update_submission(submission.id, 'grading-end', done=True)
 
