@@ -810,6 +810,14 @@ class BlogPostForm(ModelForm):
 class ContestForm(ModelForm):
     required_css_class = 'required'
 
+    # Add auto_judge checkbox for Final Submission Only format
+    auto_judge = forms.BooleanField(
+        required=False,
+        initial=True,
+        label=_('Auto Judge'),
+        help_text=_('Automatically judge all submissions when contest ends (for Final Submission Only format)'),
+    )
+
     def __init__(self, *args, **kwargs):
         self.org_pk = org_pk = kwargs.pop('org_pk', None)
         self.user = kwargs.pop('user', None)
@@ -828,6 +836,11 @@ class ContestForm(ModelForm):
         self.fields['private_contestants'].help_text = \
             str(self.fields['private_contestants'].help_text) + ' ' + \
             str(_('You can paste a list of usernames into this box.'))
+
+        # Initialize auto_judge from format_config if editing existing contest
+        if self.instance and self.instance.pk:
+            format_config = self.instance.format_config or {}
+            self.fields['auto_judge'].initial = format_config.get('auto_judge', True)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -856,6 +869,20 @@ class ContestForm(ModelForm):
                 'contest_id_invalid_prefix',
             )
         return key
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        # Save auto_judge to format_config for Final Submission Only format
+        if instance.format_name == 'final_submission':
+            format_config = instance.format_config or {}
+            format_config['auto_judge'] = self.cleaned_data.get('auto_judge', True)
+            instance.format_config = format_config
+
+        if commit:
+            instance.save()
+
+        return instance
 
     class Meta:
         model = Contest

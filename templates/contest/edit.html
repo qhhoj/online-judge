@@ -59,6 +59,26 @@
                     });
                 }
             });
+
+            // Show/hide auto_judge checkbox based on format_name
+            function updateAutoJudgeVisibility() {
+                var formatName = $('#id_format_name').val();
+                var $autoJudgeRow = $('#id_auto_judge').closest('tr');
+
+                if (formatName === 'final_submission') {
+                    $autoJudgeRow.show();
+                } else {
+                    $autoJudgeRow.hide();
+                }
+            }
+
+            // Initialize visibility on page load
+            updateAutoJudgeVisibility();
+
+            // Update visibility when format changes
+            $('#id_format_name').change(function() {
+                updateAutoJudgeVisibility();
+            });
         })
     </script>
     {{ form.media.js }}
