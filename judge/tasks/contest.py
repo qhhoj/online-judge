@@ -183,19 +183,18 @@ def prepare_contest_data(self, contest_id, options):
     return length
 
 
-@shared_task(bind=True)
-def judge_final_submissions(self, contest_key, rejudge_all=False):
+def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callback=None):
     """
-    Queue ALL submissions for a Final Submission Only contest for judging.
-    Changes submission status to 'QU' (Queued) and dispatches to judge server.
-    Judge server will automatically pick up and process queued submissions in parallel.
+    Implementation of judging logic for FSO contests.
+    Can be called directly (synchronous) or from Celery task (asynchronous).
 
     Args:
         contest_key: Contest key
-        rejudge_all: If True, rejudge all submissions (including already judged ones)
-                     If False, only queue pending submissions
+        rejudge_all: If True, rejudge all submissions
+        progress_callback: Optional callback function(current, total, percent) for progress updates
 
-    Reports progress that can be tracked via task state.
+    Returns:
+        dict with status, counts, and message
     """
     from django.utils import timezone
     from judge.models import SubmissionTestCase
@@ -225,17 +224,9 @@ def judge_final_submissions(self, contest_key, rejudge_all=False):
     total_submissions = submissions.count()
     logger.info(f'Submissions to queue: {total_submissions}')
 
-    # Update initial state
-    self.update_state(
-        state='PROGRESS',
-        meta={
-            'current': 0,
-            'total': total_submissions,
-            'percent': 0,
-            'contest_key': contest_key,
-            'status': 'starting',
-        },
-    )
+    # Report progress if callback provided
+    if progress_callback:
+        progress_callback(0, total_submissions, 0)
 
     if total_submissions == 0:
         logger.info('No submissions to queue')
@@ -294,20 +285,9 @@ def judge_final_submissions(self, contest_key, rejudge_all=False):
 
     logger.info(f'✓ Dispatched {dispatched} submissions to judge server ({failed} failed)')
 
-    # Update progress to 100%
-    self.update_state(
-        state='PROGRESS',
-        meta={
-            'current': queued_count,
-            'total': total_submissions,
-            'percent': 100,
-            'contest_key': contest_key,
-            'queued_count': queued_count,
-            'dispatched_count': dispatched,
-            'failed_count': failed,
-            'status': 'completed',
-        },
-    )
+    # Report final progress
+    if progress_callback:
+        progress_callback(queued_count, total_submissions, 100)
 
     logger.info(f'=== judge_final_submissions completed for {contest_key} ===')
 
@@ -320,6 +300,27 @@ def judge_final_submissions(self, contest_key, rejudge_all=False):
         'total': total_submissions,
         'message': f'Queued {queued_count} submissions, dispatched {dispatched} to judge server',
     }
+
+
+@shared_task(bind=True)
+def judge_final_submissions(self, contest_key, rejudge_all=False):
+    """
+    Celery task wrapper for judging FSO contest submissions.
+    Reports progress via Celery task state.
+    """
+    def progress_callback(current, total, percent):
+        self.update_state(
+            state='PROGRESS',
+            meta={
+                'current': current,
+                'total': total,
+                'percent': percent,
+                'contest_key': contest_key,
+                'status': 'judging',
+            },
+        )
+
+    return _judge_final_submissions_impl(contest_key, rejudge_all, progress_callback)
 
 
 @shared_task(bind=True)
