@@ -54,56 +54,43 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
         Update participation score based on the last submission for each problem.
         Only considers submissions that have been judged (not in pending state).
         """
-        import logging
-        logger = logging.getLogger('judge.contest_format.final_submission')
+        from django.db.models import OuterRef, Subquery
 
         score = 0
         format_data = {}
 
         # Get the last submission for each problem (by submission date)
-        # Only consider graded submissions (exclude 'PD' - Pending status)
+        # Use Subquery to get the last submission directly (similar to Ultimate format)
+        # Exclude pending submissions (PD status)
         queryset = (
             participation.submissions
             .exclude(submission__status='PD')  # Exclude pending submissions
             .values('problem_id')
-            .annotate(last_date=Max('submission__date'))
-            .values_list('problem_id', 'last_date')
+            .filter(
+                submission__date=Subquery(
+                    participation.submissions
+                    .exclude(submission__status='PD')  # Also exclude PD in subquery
+                    .filter(problem_id=OuterRef('problem_id'))
+                    .order_by('-submission__date')
+                    .values('submission__date')[:1]
+                )
+            )
+            .values_list('problem_id', 'points')
         )
 
-        logger.info(f'Updating participation {participation.id} for contest {self.contest.key}')
-        logger.info(f'Found {queryset.count()} problems with submissions')
-
-        # For each problem, get the last submission and its points
-        for problem_id, last_date in queryset:
-            last_submission = (
-                participation.submissions
-                .filter(problem_id=problem_id, submission__date=last_date)
-                .exclude(submission__status='PD')
-                .first()
-            )
-
-            if last_submission:
-                points = last_submission.points
-                logger.info(
-                    f'Problem {problem_id}: last submission {last_submission.submission_id} '
-                    f'(date: {last_date}, status: {last_submission.submission.status}, '
-                    f'points: {points})'
-                )
-                format_data[str(problem_id)] = {
-                    'points': points,
-                    'time': 0,  # Time is not considered
-                }
-                score += points
-
-        logger.info(f'Total score: {score}, format_data: {format_data}')
+        # Calculate score from last submissions
+        for problem_id, points in queryset:
+            format_data[str(problem_id)] = {
+                'points': points,
+                'time': 0,  # Time is not considered
+            }
+            score += points
 
         participation.cumtime = 0  # No time penalty
         participation.score = round(score, self.contest.points_precision)
         participation.tiebreaker = 0  # No tiebreaker
         participation.format_data = format_data
         participation.save()
-
-        logger.info(f'Saved participation: score={participation.score}, format_data={participation.format_data}')
 
     def get_first_solves_and_total_ac(self, problems, participations, frozen=False):
         """
