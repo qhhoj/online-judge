@@ -1454,34 +1454,65 @@ class ContestJudgeView(ContestMixin, TitleMixin, DetailView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
 
-        # Call judging implementation directly (synchronous)
-        # This doesn't require Celery worker and is faster
-        from judge.tasks.contest import _judge_final_submissions_impl
         from django.contrib import messages
         import logging
         logger = logging.getLogger('judge.views.contests')
 
-        try:
-            # Trigger judging for ALL submissions (synchronous)
-            logger.info(f'Triggering judging for contest {self.object.key}')
-            result = _judge_final_submissions_impl(self.object.key, rejudge_all=False)
+        # Check action type
+        action = request.POST.get('action', 'judge')
 
-            # Show success message
-            messages.success(
-                request,
-                _('Successfully queued %(count)d submissions for judging. Judge server will process them automatically.') % {
-                    'count': result.get('queued_count', 0),
-                }
-            )
-            logger.info(f'Judging completed: {result.get("message")}')
+        if action == 'rescore':
+            # Rescore all participations in the contest
+            try:
+                logger.info(f'Rescoring all participations for contest {self.object.key}')
 
-        except Exception as e:
-            # Show error message
-            messages.error(
-                request,
-                _('Error triggering judging: %(error)s') % {'error': str(e)}
-            )
-            logger.error(f'Error judging contest {self.object.key}: {e}', exc_info=True)
+                participations = self.object.users.all()
+                rescored_count = 0
+
+                for participation in participations:
+                    participation.recompute_results()
+                    rescored_count += 1
+
+                messages.success(
+                    request,
+                    _('Successfully rescored %(count)d participations.') % {
+                        'count': rescored_count,
+                    }
+                )
+                logger.info(f'Rescored {rescored_count} participations for contest {self.object.key}')
+
+            except Exception as e:
+                messages.error(
+                    request,
+                    _('Error rescoring contest: %(error)s') % {'error': str(e)}
+                )
+                logger.error(f'Error rescoring contest {self.object.key}: {e}', exc_info=True)
+        else:
+            # Call judging implementation directly (synchronous)
+            # This doesn't require Celery worker and is faster
+            from judge.tasks.contest import _judge_final_submissions_impl
+
+            try:
+                # Trigger judging for ALL submissions (synchronous)
+                logger.info(f'Triggering judging for contest {self.object.key}')
+                result = _judge_final_submissions_impl(self.object.key, rejudge_all=False)
+
+                # Show success message
+                messages.success(
+                    request,
+                    _('Successfully queued %(count)d submissions for judging. Judge server will process them automatically.') % {
+                        'count': result.get('queued_count', 0),
+                    }
+                )
+                logger.info(f'Judging completed: {result.get("message")}')
+
+            except Exception as e:
+                # Show error message
+                messages.error(
+                    request,
+                    _('Error triggering judging: %(error)s') % {'error': str(e)}
+                )
+                logger.error(f'Error judging contest {self.object.key}: {e}', exc_info=True)
 
         # Redirect back to judge page
         return HttpResponseRedirect(reverse('contest_judge', args=(self.object.key,)))
