@@ -22,12 +22,13 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
     }
     """
         cumtime: Always False for this format. Time is not considered in scoring.
-        auto_judge: If True, automatically judge submissions when contest ends.
+        auto_judge: If True, automatically rejudge all submissions when contest ends.
                     If False, require manual trigger from admin panel.
 
-        This format allows multiple submissions during the contest, but only judges them
-        after the contest ends. Only the last submission for each problem is scored.
+        This format allows multiple submissions during the contest and judges them immediately.
+        Users can see results in real-time, but only the last submission for each problem is scored.
         Ranking is based purely on total score (IOI-style), with no time penalties.
+        Ranking updates in real-time as submissions are judged.
     """
 
     @classmethod
@@ -52,7 +53,7 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
     def update_participation(self, participation):
         """
         Update participation score based on the last submission for each problem.
-        Only considers submissions that have been judged (not in pending state).
+        Only considers submissions that have been judged (status is graded).
         """
         import logging
         logger = logging.getLogger('judge.contest_format.final_submission')
@@ -61,10 +62,10 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
         format_data = {}
 
         # Get the last submission for each problem (by submission date)
-        # Only consider graded submissions (exclude 'PD' - Pending status)
+        # Only consider graded submissions (exclude pending/queued/processing)
         queryset = (
             participation.submissions
-            .exclude(submission__status='PD')  # Exclude pending submissions
+            .exclude(submission__status__in=['PD', 'QU', 'P', 'G'])  # Exclude non-graded submissions
             .values('problem_id')
             .annotate(last_date=Max('submission__date'))
             .values_list('problem_id', 'last_date')
@@ -78,7 +79,7 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
             last_submission = (
                 participation.submissions
                 .filter(problem_id=problem_id, submission__date=last_date)
-                .exclude(submission__status='PD')
+                .exclude(submission__status__in=['PD', 'QU', 'P', 'G'])  # Exclude non-graded
                 .first()
             )
 
@@ -167,14 +168,15 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
         """
         Display format description in contest settings.
         """
-        yield _('Chế độ cho nộp bài nhiều lần, cuối giờ chấm điểm và tính điểm cho lần nộp cuối cùng.')
-        yield _('Submissions are not judged during the contest.')
-        yield _('After the contest ends, only the last submission for each problem will be judged and scored.')
-        yield _('Ranking is based purely on total score, with no time penalties.')
+        yield _('Chế độ cho nộp bài nhiều lần, chấm điểm ngay và tính điểm cho lần nộp cuối cùng.')
+        yield _('Submissions are judged immediately during the contest.')
+        yield _('Users can see results in real-time.')
+        yield _('Only the last submission for each problem is scored.')
+        yield _('Ranking updates in real-time and is based purely on total score, with no time penalties.')
         yield _('Ties by score will **not** be broken.')
         yield ''
         yield _('Configuration options:')
-        yield _('- auto_judge: true (default) = Automatically judge when contest ends')
-        yield _('- auto_judge: false = Require manual judge trigger from admin panel')
+        yield _('- auto_judge: true (default) = Automatically rejudge all submissions when contest ends')
+        yield _('- auto_judge: false = No automatic rejudge')
         yield _('Example: {"auto_judge": false}')
 
