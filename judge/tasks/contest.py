@@ -289,12 +289,8 @@ def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callb
     if progress_callback:
         progress_callback(queued_count, total_submissions, 100)
 
-    # Schedule rescore after all submissions are judged
-    # Use Celery countdown to delay rescore until judging is likely complete
-    # Estimate: 10 seconds per submission + 60 seconds buffer
-    delay_seconds = max(60, total_submissions * 10 + 60)
-    logger.info(f'Scheduling rescore in {delay_seconds} seconds')
-    rescore_contest.apply_async((contest_key,), countdown=delay_seconds)
+    # Note: Auto-rescore is handled by judge_handler.py after each submission is graded
+    # No need to schedule rescore here as it will be triggered automatically
 
     logger.info(f'=== judge_final_submissions completed for {contest_key} ===')
 
@@ -305,7 +301,7 @@ def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callb
         'dispatched_count': dispatched,
         'failed_count': failed,
         'total': total_submissions,
-        'message': f'Queued {queued_count} submissions, dispatched {dispatched} to judge server. Rescore scheduled in {delay_seconds}s',
+        'message': f'Queued {queued_count} submissions, dispatched {dispatched} to judge server. Auto-rescore will trigger after grading.',
     }
 
 
