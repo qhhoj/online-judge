@@ -94,33 +94,31 @@ class JudgeHandler(ZlibPacketHandler):
         self._submission_cache_id = None
         self._submission_cache = {}
 
-    def _schedule_fso_rescore(self, contest):
+    def _rescore_fso_problem(self, contest, problem_id):
         """
-        Schedule a rescore task for FSO contest with debouncing.
-        If a rescore is already scheduled, revoke it and schedule a new one.
-        This ensures only one rescore runs after all submissions are judged.
+        Rescore all submissions for a specific problem in FSO contest.
+        This mimics the admin panel rescore behavior.
         """
-        from django.core.cache import cache
-        from judge.tasks.contest import rescore_contest
-        from celery.result import AsyncResult
+        from judge.models import ContestSubmission
 
-        cache_key = f'rescore_scheduled_{contest.key}'
-        delay_seconds = 30  # Wait 30 seconds before rescoring
+        try:
+            logger.info(f'Rescoring problem {problem_id} in contest {contest.key}')
 
-        # Check if there's already a scheduled rescore
-        old_task_id = cache.get(cache_key)
-        if old_task_id:
-            # Revoke the old task
-            try:
-                AsyncResult(old_task_id).revoke()
-                logger.info(f'Revoked old rescore task {old_task_id} for contest {contest.key}')
-            except Exception as e:
-                logger.warning(f'Failed to revoke old rescore task: {e}')
+            # Get all submissions for this problem in this contest
+            queryset = ContestSubmission.objects.filter(
+                participation__contest_id=contest.id,
+                problem_id=problem_id,
+            ).select_related('submission', 'participation')
 
-        # Schedule new rescore task
-        task = rescore_contest.apply_async((contest.key,), countdown=delay_seconds)
-        cache.set(cache_key, task.id, delay_seconds + 60)  # Cache for delay + 1 minute
-        logger.info(f'Scheduled rescore task {task.id} for contest {contest.key} in {delay_seconds}s')
+            count = 0
+            # Rescore each submission (this will update ContestSubmission.points and participation.score)
+            for contest_submission in queryset:
+                contest_submission.submission.update_contest()
+                count += 1
+
+            logger.info(f'Rescored {count} submissions for problem {problem_id} in contest {contest.key}')
+        except Exception as e:
+            logger.error(f'Error rescoring problem {problem_id} in contest {contest.key}: {e}', exc_info=True)
 
     def on_connect(self):
         self.timeout = 15
@@ -493,10 +491,12 @@ class JudgeHandler(ZlibPacketHandler):
             participation = submission.contest.participation
             event.post('contest_%d' % participation.contest_id, {'type': 'update'})
 
-            # Auto-schedule rescore for FSO contests after judging
+            # Auto-rescore for FSO contests after judging
             contest = participation.contest
             if contest.format_name == 'final_submission':
-                self._schedule_fso_rescore(contest)
+                # Rescore all submissions for this problem (like admin panel)
+                problem_id = submission.contest.problem_id
+                self._rescore_fso_problem(contest, problem_id)
         self._post_update_submission(submission.id, 'grading-end', done=True)
 
     def on_compile_error(self, packet):
