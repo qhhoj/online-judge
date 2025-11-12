@@ -53,39 +53,36 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
         """
         Update participation score based on the last submission for each problem.
         Only considers submissions that have been judged (not in pending state).
-        Same as Ultimate format but excludes PD status and doesn't consider time.
         """
-        from django.db.models import OuterRef, Subquery
-
         score = 0
         format_data = {}
 
-        # Get the last submission for each problem (by submission date and ID)
-        # Exclude pending submissions (PD status)
-        # Use both date and ID to ensure we get exactly one submission per problem
-        queryset = (
+        # Get all problems that have submissions
+        problem_ids = (
             participation.submissions
             .exclude(submission__status='PD')
-            .values('problem_id')
-            .filter(
-                submission__id=Subquery(
-                    participation.submissions
-                    .exclude(submission__status='PD')
-                    .filter(problem_id=OuterRef('problem_id'))
-                    .order_by('-submission__date', '-submission__id')
-                    .values('submission__id')[:1],
-                ),
-            )
-            .values_list('problem_id', 'points')
+            .values_list('problem_id', flat=True)
+            .distinct()
         )
 
-        # Calculate score from last submissions
-        for problem_id, points in queryset:
-            format_data[str(problem_id)] = {'points': points, 'time': 0}
-            score += points
+        # For each problem, get the last submission and its points
+        for problem_id in problem_ids:
+            # Get the last submission for this problem (by date and ID)
+            last_submission = (
+                participation.submissions
+                .exclude(submission__status='PD')
+                .filter(problem_id=problem_id)
+                .order_by('-submission__date', '-submission__id')
+                .first()
+            )
+
+            if last_submission:
+                points = last_submission.points
+                format_data[str(problem_id)] = {'points': points, 'time': 0}
+                score += points
 
         participation.cumtime = 0  # No time penalty
-        participation.score = score  # Don't round, let Django handle precision
+        participation.score = score
         participation.tiebreaker = 0  # No tiebreaker
         participation.format_data = format_data
         participation.save()
