@@ -89,9 +89,25 @@ def judge_submission(submission, rejudge=False, batch_rejudge=False, judge_id=No
         SubmissionTestCase,
     )
 
-    # Note: Final Submission Only contests now judge submissions immediately during the contest
-    # The contest format will handle scoring only the last submission per problem
-    # This allows users to see results in real-time while maintaining FSO scoring rules
+    # Check if this submission is in a Final Submission Only contest
+    # If so, and the contest is still running, mark as Pending instead of judging
+    try:
+        contest_submission = ContestSubmission.objects.filter(submission=submission).first()
+        if contest_submission and not rejudge and not batch_rejudge:
+            contest = contest_submission.participation.contest
+            # Check if contest uses final_submission format and is still running
+            if contest.format_name == 'final_submission' and not contest.ended:
+                # Mark submission as Pending, don't judge yet
+                Submission.objects.filter(id=submission.id).update(
+                    time=None, memory=None, points=None, result=None,
+                    case_points=0, case_total=0, error=None,
+                    status='PD',  # Pending status
+                )
+                _post_update_submission(submission)
+                return True  # Successfully marked as pending
+    except Exception:
+        # If anything goes wrong, proceed with normal judging
+        pass
 
     updates = {
         'time': None, 'memory': None, 'points': None, 'result': None, 'case_points': 0, 'case_total': 0,
