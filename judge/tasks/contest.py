@@ -186,8 +186,9 @@ def prepare_contest_data(self, contest_id, options):
 @shared_task(bind=True)
 def judge_final_submissions(self, contest_key, rejudge_all=False):
     """
-    Judge ALL submissions for a Final Submission Only contest.
-    Judges every submission, but scoring only uses the last submission for each (user, problem) pair.
+    Queue ALL submissions for a Final Submission Only contest for judging.
+    Changes submission status from 'PD' (Pending) to 'QU' (Queued).
+    Judge server will automatically pick up and process queued submissions.
 
     Args:
         contest_key: Contest key
@@ -195,8 +196,8 @@ def judge_final_submissions(self, contest_key, rejudge_all=False):
 
     Reports progress that can be tracked via task state.
     """
-    from django.db.models import Max
-    from judge.judgeapi import judge_submission
+    from django.utils import timezone
+    from judge.models import SubmissionTestCase
 
     contest = Contest.objects.get(key=contest_key)
 
@@ -213,15 +214,14 @@ def judge_final_submissions(self, contest_key, rejudge_all=False):
         # Rejudge all submissions (not just pending)
         submissions = Submission.objects.filter(
             contest__participation__contest=contest,
-        ).select_related('user', 'problem', 'language').order_by('date')
+        ).exclude(status__in=('P', 'G'))  # Exclude currently processing
     else:
-        # Only judge pending submissions
+        # Only queue pending submissions
         submissions = Submission.objects.filter(
             contest__participation__contest=contest,
             status='PD',  # Pending status
-        ).select_related('user', 'problem', 'language').order_by('date')
+        )
 
-    judged_count = 0
     total_submissions = submissions.count()
 
     # Update initial state
@@ -236,36 +236,82 @@ def judge_final_submissions(self, contest_key, rejudge_all=False):
         },
     )
 
-    stage_msg = _('Rejudging all submissions') if rejudge_all else _('Judging all submissions')
-    with Progress(self, total_submissions, stage=stage_msg) as p:
-        # Judge ALL submissions (not just the last one)
-        for i, submission in enumerate(submissions, 1):
-            # Judge this submission with rejudge=True to bypass pending check
-            # This is intentional - we want to judge pending submissions after contest ends
-            judge_submission(submission, rejudge=True)
-            judged_count += 1
+    if total_submissions == 0:
+        return {
+            'status': 'completed',
+            'contest_key': contest_key,
+            'queued_count': 0,
+            'total': 0,
+            'message': 'No submissions to queue',
+        }
 
-            # Update progress
-            percent = int((i / total_submissions) * 100) if total_submissions > 0 else 100
-            self.update_state(
-                state='PROGRESS',
-                meta={
-                    'current': i,
-                    'total': total_submissions,
-                    'percent': percent,
-                    'contest_key': contest_key,
-                    'judged_count': judged_count,
-                    'status': 'judging',
-                },
-            )
+    stage_msg = _('Queueing submissions for judging')
 
-            p.did(1)
+    # For rejudge, delete old test cases
+    if rejudge_all:
+        submission_ids = list(submissions.values_list('id', flat=True))
+        SubmissionTestCase.objects.filter(submission_id__in=submission_ids).delete()
+
+    # Bulk update all submissions to Queued status
+    # This is much faster than calling judge_submission() for each one
+    update_fields = {
+        'time': None,
+        'memory': None,
+        'points': None,
+        'result': None,
+        'case_points': 0,
+        'case_total': 0,
+        'error': None,
+        'status': 'QU',  # Queued - judge server will pick up automatically
+    }
+
+    if rejudge_all:
+        update_fields['rejudged_date'] = timezone.now()
+
+    # Bulk update in one query - much faster!
+    queued_count = submissions.update(**update_fields)
+
+    # Now dispatch all submissions to judge server
+    from judge.judgeapi import judge_submission
+
+    # Get submission IDs before they're modified
+    submission_ids = list(submissions.values_list('id', flat=True))
+
+    # Dispatch all submissions to judge server
+    # This will send them to bridge which will queue them
+    dispatched = 0
+    for submission_id in submission_ids:
+        try:
+            submission = Submission.objects.select_related('problem', 'language', 'source').get(id=submission_id)
+            # Call judge_submission with rejudge=True to dispatch to bridge
+            # This won't change status (already QU) but will send to bridge
+            judge_submission(submission, rejudge=True, batch_rejudge=True)
+            dispatched += 1
+        except Exception:
+            # If dispatch fails, submission will stay in QU and can be retried
+            pass
+
+    # Update progress to 100%
+    self.update_state(
+        state='PROGRESS',
+        meta={
+            'current': queued_count,
+            'total': total_submissions,
+            'percent': 100,
+            'contest_key': contest_key,
+            'queued_count': queued_count,
+            'dispatched_count': dispatched,
+            'status': 'completed',
+        },
+    )
 
     return {
         'status': 'completed',
         'contest_key': contest_key,
-        'judged_count': judged_count,
+        'queued_count': queued_count,
+        'dispatched_count': dispatched,
         'total': total_submissions,
+        'message': f'Queued {queued_count} submissions and dispatched {dispatched} to judge server',
     }
 
 
