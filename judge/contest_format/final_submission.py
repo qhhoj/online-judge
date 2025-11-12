@@ -53,25 +53,15 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
         """
         Update participation score based on the last submission for each problem.
         Only considers submissions that have been judged (not in pending state).
+        Same as Ultimate format but excludes PD status and doesn't consider time.
         """
         from django.db.models import OuterRef, Subquery
-        import logging
-        logger = logging.getLogger('judge.contest_format.final_submission')
 
         score = 0
         format_data = {}
 
-        # Debug: Log all submissions for this participation
-        all_subs = participation.submissions.all()
-        logger.info(f'[FSO] Participation {participation.id}: Total submissions = {all_subs.count()}')
-        for sub in all_subs:
-            logger.info(
-                f'[FSO]   Sub {sub.submission_id}: problem={sub.problem_id}, '
-                f'date={sub.submission.date}, status={sub.submission.status}, points={sub.points}'
-            )
-
         # Get the last submission for each problem (by submission date)
-        # Similar to Ultimate format but exclude PD status
+        # Exclude pending submissions (PD status)
         queryset = (
             participation.submissions
             .exclude(submission__status='PD')
@@ -82,32 +72,22 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
                     .exclude(submission__status='PD')
                     .filter(problem_id=OuterRef('problem_id'))
                     .order_by('-submission__date')
-                    .values('submission__date')[:1]
-                )
+                    .values('submission__date')[:1],
+                ),
             )
-            .values_list('problem_id', 'points')
+            .values_list('problem_id', 'submission__date', 'points')
         )
 
-        logger.info(f'[FSO] Queryset count = {queryset.count()}')
-
-        # Calculate score from last submissions
-        for problem_id, points in queryset:
-            logger.info(f'[FSO] Problem {problem_id}: points = {points}')
-            format_data[str(problem_id)] = {
-                'points': points,
-                'time': 0,  # Time is not considered
-            }
+        # Calculate score from last submissions (same as Ultimate but time = 0)
+        for problem_id, time, points in queryset:
+            format_data[str(problem_id)] = {'points': points, 'time': 0}
             score += points
 
-        logger.info(f'[FSO] Total score = {score}, format_data = {format_data}')
-
         participation.cumtime = 0  # No time penalty
-        participation.score = round(score, self.contest.points_precision)
+        participation.score = score  # Don't round, let Django handle precision
         participation.tiebreaker = 0  # No tiebreaker
         participation.format_data = format_data
         participation.save()
-
-        logger.info(f'[FSO] Saved: participation.score = {participation.score}')
 
     def get_first_solves_and_total_ac(self, problems, participations, frozen=False):
         """
