@@ -187,17 +187,22 @@ def prepare_contest_data(self, contest_id, options):
 def judge_final_submissions(self, contest_key, rejudge_all=False):
     """
     Queue ALL submissions for a Final Submission Only contest for judging.
-    Changes submission status from 'PD' (Pending) to 'QU' (Queued).
-    Judge server will automatically pick up and process queued submissions.
+    Changes submission status to 'QU' (Queued) and dispatches to judge server.
+    Judge server will automatically pick up and process queued submissions in parallel.
 
     Args:
         contest_key: Contest key
-        rejudge_all: If True, rejudge all submissions (not just pending ones)
+        rejudge_all: If True, rejudge all submissions (including already judged ones)
+                     If False, only queue pending submissions
 
     Reports progress that can be tracked via task state.
     """
     from django.utils import timezone
     from judge.models import SubmissionTestCase
+    import logging
+
+    logger = logging.getLogger('judge.tasks.contest')
+    logger.info(f'=== judge_final_submissions started for {contest_key}, rejudge_all={rejudge_all} ===')
 
     contest = Contest.objects.get(key=contest_key)
 
@@ -210,19 +215,15 @@ def judge_final_submissions(self, contest_key, rejudge_all=False):
         }
 
     # Get ALL submissions for this contest
-    if rejudge_all:
-        # Rejudge all submissions (not just pending)
-        submissions = Submission.objects.filter(
-            contest__participation__contest=contest,
-        ).exclude(status__in=('P', 'G'))  # Exclude currently processing
-    else:
-        # Only queue pending submissions
-        submissions = Submission.objects.filter(
-            contest__participation__contest=contest,
-            status='PD',  # Pending status
-        )
+    # Exclude only currently processing submissions (P, G)
+    submissions = Submission.objects.filter(
+        contest__participation__contest=contest,
+    ).exclude(status__in=('P', 'G'))  # Exclude currently processing
+
+    logger.info(f'Total submissions in contest: {submissions.count()}')
 
     total_submissions = submissions.count()
+    logger.info(f'Submissions to queue: {total_submissions}')
 
     # Update initial state
     self.update_state(
@@ -237,6 +238,7 @@ def judge_final_submissions(self, contest_key, rejudge_all=False):
     )
 
     if total_submissions == 0:
+        logger.info('No submissions to queue')
         return {
             'status': 'completed',
             'contest_key': contest_key,
@@ -245,15 +247,13 @@ def judge_final_submissions(self, contest_key, rejudge_all=False):
             'message': 'No submissions to queue',
         }
 
-    stage_msg = _('Queueing submissions for judging')
-
-    # For rejudge, delete old test cases
-    if rejudge_all:
-        submission_ids = list(submissions.values_list('id', flat=True))
-        SubmissionTestCase.objects.filter(submission_id__in=submission_ids).delete()
+    # Delete old test cases for all submissions (to ensure clean rejudge)
+    submission_ids = list(submissions.values_list('id', flat=True))
+    deleted_count = SubmissionTestCase.objects.filter(submission_id__in=submission_ids).delete()[0]
+    logger.info(f'Deleted {deleted_count} old test cases')
 
     # Bulk update all submissions to Queued status
-    # This is much faster than calling judge_submission() for each one
+    # This is MUCH faster than calling judge_submission() for each one
     update_fields = {
         'time': None,
         'memory': None,
@@ -263,33 +263,36 @@ def judge_final_submissions(self, contest_key, rejudge_all=False):
         'case_total': 0,
         'error': None,
         'status': 'QU',  # Queued - judge server will pick up automatically
+        'rejudged_date': timezone.now(),  # Always set rejudged_date
     }
 
-    if rejudge_all:
-        update_fields['rejudged_date'] = timezone.now()
-
-    # Bulk update in one query - much faster!
+    # Bulk update in one query - instant!
     queued_count = submissions.update(**update_fields)
+    logger.info(f'✓ Bulk updated {queued_count} submissions to QU status')
 
     # Now dispatch all submissions to judge server
+    # Get fresh submission objects after update
     from judge.judgeapi import judge_submission
 
-    # Get submission IDs before they're modified
-    submission_ids = list(submissions.values_list('id', flat=True))
-
-    # Dispatch all submissions to judge server
-    # This will send them to bridge which will queue them
+    logger.info('Dispatching submissions to judge server...')
     dispatched = 0
+    failed = 0
+
+    # Dispatch in batches to avoid overwhelming the system
     for submission_id in submission_ids:
         try:
             submission = Submission.objects.select_related('problem', 'language', 'source').get(id=submission_id)
-            # Call judge_submission with rejudge=True to dispatch to bridge
-            # This won't change status (already QU) but will send to bridge
-            judge_submission(submission, rejudge=True, batch_rejudge=True)
-            dispatched += 1
-        except Exception:
-            # If dispatch fails, submission will stay in QU and can be retried
-            pass
+            # Call judge_submission with batch_rejudge=True
+            # This will dispatch to bridge without changing status (already QU)
+            if judge_submission(submission, rejudge=True, batch_rejudge=True):
+                dispatched += 1
+            else:
+                failed += 1
+        except Exception as e:
+            logger.error(f'Failed to dispatch submission {submission_id}: {e}')
+            failed += 1
+
+    logger.info(f'✓ Dispatched {dispatched} submissions to judge server ({failed} failed)')
 
     # Update progress to 100%
     self.update_state(
@@ -301,17 +304,21 @@ def judge_final_submissions(self, contest_key, rejudge_all=False):
             'contest_key': contest_key,
             'queued_count': queued_count,
             'dispatched_count': dispatched,
+            'failed_count': failed,
             'status': 'completed',
         },
     )
+
+    logger.info(f'=== judge_final_submissions completed for {contest_key} ===')
 
     return {
         'status': 'completed',
         'contest_key': contest_key,
         'queued_count': queued_count,
         'dispatched_count': dispatched,
+        'failed_count': failed,
         'total': total_submissions,
-        'message': f'Queued {queued_count} submissions and dispatched {dispatched} to judge server',
+        'message': f'Queued {queued_count} submissions, dispatched {dispatched} to judge server',
     }
 
 
@@ -366,23 +373,31 @@ def check_final_submission_contests(self):
             logger.info(f'  Skipping {contest.key}: already triggered (cache hit)')
             continue
 
-        # Check if there are any pending submissions
+        # Check if there are any submissions (pending or not)
+        total_count = Submission.objects.filter(
+            contest__participation__contest=contest,
+        ).count()
+
         pending_count = Submission.objects.filter(
             contest__participation__contest=contest,
             status='PD',
         ).count()
-        logger.info(f'  pending_count: {pending_count}')
 
-        if pending_count > 0:
+        logger.info(f'  total_submissions: {total_count}, pending: {pending_count}')
+
+        # Trigger if there are ANY submissions (not just pending)
+        # This ensures all submissions are rejudged after contest ends
+        if total_count > 0:
             # Mark as triggered (cache for 24 hours)
             cache.set(cache_key, True, 86400)
 
             # Trigger judging task for this contest
-            logger.info(f'✓ Triggering judge task for contest {contest.key} ({pending_count} pending submissions)')
-            judge_final_submissions.delay(contest.key)
+            # Always use rejudge_all=False to let the task handle all submissions
+            logger.info(f'✓ Triggering judge task for contest {contest.key} ({total_count} total submissions)')
+            judge_final_submissions.delay(contest.key, rejudge_all=False)
             processed_count += 1
         else:
-            logger.info(f'  Skipping {contest.key}: no pending submissions')
+            logger.info(f'  Skipping {contest.key}: no submissions')
 
     logger.info(f'=== Periodic check completed: processed {processed_count} contests ===')
     return processed_count
