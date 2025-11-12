@@ -94,6 +94,34 @@ class JudgeHandler(ZlibPacketHandler):
         self._submission_cache_id = None
         self._submission_cache = {}
 
+    def _schedule_fso_rescore(self, contest):
+        """
+        Schedule a rescore task for FSO contest with debouncing.
+        If a rescore is already scheduled, revoke it and schedule a new one.
+        This ensures only one rescore runs after all submissions are judged.
+        """
+        from django.core.cache import cache
+        from judge.tasks.contest import rescore_contest
+        from celery.result import AsyncResult
+
+        cache_key = f'rescore_scheduled_{contest.key}'
+        delay_seconds = 30  # Wait 30 seconds before rescoring
+
+        # Check if there's already a scheduled rescore
+        old_task_id = cache.get(cache_key)
+        if old_task_id:
+            # Revoke the old task
+            try:
+                AsyncResult(old_task_id).revoke()
+                logger.info(f'Revoked old rescore task {old_task_id} for contest {contest.key}')
+            except Exception as e:
+                logger.warning(f'Failed to revoke old rescore task: {e}')
+
+        # Schedule new rescore task
+        task = rescore_contest.apply_async((contest.key,), countdown=delay_seconds)
+        cache.set(cache_key, task.id, delay_seconds + 60)  # Cache for delay + 1 minute
+        logger.info(f'Scheduled rescore task {task.id} for contest {contest.key} in {delay_seconds}s')
+
     def on_connect(self):
         self.timeout = 15
         logger.info('Judge connected from: %s', self.client_address)
@@ -464,6 +492,11 @@ class JudgeHandler(ZlibPacketHandler):
         if hasattr(submission, 'contest'):
             participation = submission.contest.participation
             event.post('contest_%d' % participation.contest_id, {'type': 'update'})
+
+            # Auto-schedule rescore for FSO contests after judging
+            contest = participation.contest
+            if contest.format_name == 'final_submission':
+                self._schedule_fso_rescore(contest)
         self._post_update_submission(submission.id, 'grading-end', done=True)
 
     def on_compile_error(self, packet):
