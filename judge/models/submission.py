@@ -218,34 +218,29 @@ class Submission(models.Model):
         return False
 
     def update_contest(self):
-        import logging
-        logger = logging.getLogger('judge.models.submission')
-
         try:
             contest = self.contest
         except AttributeError:
-            logger.debug(f'Submission {self.id} has no contest')
             return
 
         contest_problem = contest.problem
+        participation = contest.participation
+
+        # Calculate points based on case_points/case_total
         contest.points = round(
             self.case_points / self.case_total * contest_problem.points
             if self.case_total > 0 else 0, 3,
         )
 
-        partial = (contest_problem.partial and contest_problem.problem.partial)
-        if not partial and contest.points != contest_problem.points:
-            contest.points = 0
-
-        logger.info(
-            f'Updating ContestSubmission for submission {self.id}: '
-            f'case_points={self.case_points}, case_total={self.case_total}, '
-            f'problem_points={contest_problem.points}, partial={partial}, '
-            f'final_points={contest.points}'
-        )
+        # For FSO format, always use partial scoring (don't set to 0 if not full score)
+        # For other formats, respect the partial setting
+        if participation.contest.format_name != 'final_submission':
+            partial = (contest_problem.partial and contest_problem.problem.partial)
+            if not partial and contest.points != contest_problem.points:
+                contest.points = 0
 
         contest.save()
-        contest.participation.recompute_results()
+        participation.recompute_results()
 
     update_contest.alters_data = True
 
