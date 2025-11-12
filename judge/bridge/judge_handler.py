@@ -94,48 +94,31 @@ class JudgeHandler(ZlibPacketHandler):
         self._submission_cache_id = None
         self._submission_cache = {}
 
-    def _schedule_fso_rescore(self, contest):
+    def _rescore_fso_problem(self, contest, problem_id):
         """
-        Schedule a rescore for FSO contest with debouncing using threading.Timer.
-        If a rescore is already scheduled, cancel it and schedule a new one.
-        This ensures only one rescore runs after all submissions are judged.
+        Rescore all submissions for a specific problem in FSO contest.
+        This mimics the admin panel rescore behavior.
         """
-        from django.core.cache import cache
-        import threading
+        from judge.models import ContestSubmission
 
-        cache_key = f'rescore_timer_{contest.key}'
-        delay_seconds = 30  # Wait 30 seconds before rescoring
+        try:
+            logger.info(f'Rescoring problem {problem_id} in contest {contest.key}')
 
-        # Check if there's already a scheduled rescore
-        old_timer = cache.get(cache_key)
-        if old_timer and isinstance(old_timer, threading.Timer):
-            # Cancel the old timer
-            try:
-                old_timer.cancel()
-                logger.info(f'Cancelled old rescore timer for contest {contest.key}')
-            except Exception as e:
-                logger.warning(f'Failed to cancel old rescore timer: {e}')
+            # Get all submissions for this problem in this contest
+            queryset = ContestSubmission.objects.filter(
+                participation__contest_id=contest.id,
+                problem_id=problem_id,
+            ).select_related('submission', 'participation')
 
-        # Create new timer to rescore after delay
-        def rescore_all_participations():
-            try:
-                logger.info(f'Starting rescore for contest {contest.key}')
-                # Rescore all participations in this contest
-                for participation in contest.users.iterator():
-                    participation.recompute_results()
-                logger.info(f'Completed rescore for contest {contest.key}')
-                # Clear cache
-                cache.delete(cache_key)
-            except Exception as e:
-                logger.error(f'Error rescoring contest {contest.key}: {e}', exc_info=True)
+            count = 0
+            # Rescore each submission (this will update ContestSubmission.points and participation.score)
+            for contest_submission in queryset:
+                contest_submission.submission.update_contest()
+                count += 1
 
-        timer = threading.Timer(delay_seconds, rescore_all_participations)
-        timer.daemon = True
-        timer.start()
-
-        # Store timer in cache (note: this won't survive server restart, but that's OK)
-        cache.set(cache_key, timer, delay_seconds + 60)
-        logger.info(f'Scheduled rescore timer for contest {contest.key} in {delay_seconds}s')
+            logger.info(f'Rescored {count} submissions for problem {problem_id} in contest {contest.key}')
+        except Exception as e:
+            logger.error(f'Error rescoring problem {problem_id} in contest {contest.key}: {e}', exc_info=True)
 
     def on_connect(self):
         self.timeout = 15
@@ -508,10 +491,12 @@ class JudgeHandler(ZlibPacketHandler):
             participation = submission.contest.participation
             event.post('contest_%d' % participation.contest_id, {'type': 'update'})
 
-            # Auto-schedule rescore for FSO contests after judging
+            # Auto-rescore for FSO contests after judging
             contest = participation.contest
             if contest.format_name == 'final_submission':
-                self._schedule_fso_rescore(contest)
+                # Rescore all submissions for this problem (like admin panel)
+                problem_id = submission.contest.problem_id
+                self._rescore_fso_problem(contest, problem_id)
         self._post_update_submission(submission.id, 'grading-end', done=True)
 
     def on_compile_error(self, packet):
