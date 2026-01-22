@@ -447,15 +447,91 @@
         .tab-button:last-child {
             border-bottom: none;
         }
-        
+
         .users-table {
             font-size: 0.85rem;
         }
-        
+
         .control-button {
             margin: 0.5rem;
             display: block;
             text-align: center;
+        }
+    }
+
+    /* Loading Indicator Styles */
+    .loading-indicator {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+        font-size: 1.1rem;
+    }
+
+    .loading-indicator i {
+        margin-right: 0.5rem;
+        color: #c4504c;
+    }
+
+    /* Pagination Styles */
+    .pagination-controls {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .pagination-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .pagination-info {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .pagination-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .pagination-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid #dee2e6;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+
+    .pagination-btn:hover {
+        background: #e9ecef;
+        border-color: #c4504c;
+    }
+
+    .pagination-btn.active {
+        background: #c4504c;
+        color: white;
+        border-color: #c4504c;
+    }
+
+    .pagination-btn i {
+        font-size: 0.8rem;
+    }
+
+    @media (max-width: 768px) {
+        .pagination-wrapper {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .pagination-buttons {
+            justify-content: center;
         }
     }
 </style>
@@ -500,229 +576,45 @@
     <!-- TABS SECTION -->
     <div class="tabs-container">
         <div class="tabs-header">
-            <button class="tab-button active" onclick="showTab('authenticated')">
+            <button class="tab-button active" data-tab="authenticated">
                 <i class="fa fa-user-check"></i>
-                Authenticated ({{ total_active_users or 0 }})
+                Authenticated (<span id="auth-count">{{ total_active_users or 0 }}</span>)
             </button>
-            <button class="tab-button" onclick="showTab('anonymous')">
+            <button class="tab-button" data-tab="anonymous">
                 <i class="fa fa-user-secret"></i>
-                Anonymous ({{ total_anonymous or 0 }})
+                Anonymous (<span id="anon-count">{{ total_anonymous or 0 }}</span>)
             </button>
-            <button class="tab-button" onclick="showTab('bots')">
+            <button class="tab-button" data-tab="bots">
                 <i class="fa fa-robot"></i>
-                Bots ({{ bot_stats.total_bots if bot_stats else 0 }})
+                Bots (<span id="bot-count">{{ bot_stats.total_bots if bot_stats else 0 }}</span>)
             </button>
         </div>
 
         <!-- AUTHENTICATED USERS TAB -->
         <div id="authenticated" class="tab-content active">
-            {% if authenticated_sessions %}
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th><i class="fa fa-user"></i> User</th>
-                        <th><i class="fa fa-globe"></i> IP Address</th>
-                        <th><i class="fa fa-mobile-alt"></i> Device</th>
-                        <th><i class="fa fa-browser"></i> Browser</th>
-                        <th><i class="fa fa-clock"></i> Last Activity</th>
-                        <th><i class="fa fa-cog"></i> Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for session in authenticated_sessions %}
-                    <tr>
-                        <td>
-                            <div class="user-link">
-                                <i class="fa fa-user-circle"></i>
-                                {{ session.user.username if session.user else 'Unknown' }}
-                            </div>
-                        </td>
-                        <td>
-                            <code style="background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px;">
-                                {{ session.ip_address or 'N/A' }}
-                            </code>
-                        </td>
-                        <td>
-                            <div class="device-indicator">
-                                {% if session.device_type == 'mobile' %}
-                                    <i class="fa fa-mobile-alt device-icon"></i> Mobile
-                                {% elif session.device_type == 'tablet' %}
-                                    <i class="fa fa-tablet-alt device-icon"></i> Tablet
-                                {% elif session.device_type == 'desktop' %}
-                                    <i class="fa fa-desktop device-icon"></i> Desktop
-                                {% else %}
-                                    <i class="fa fa-question device-icon"></i> {{ session.device_type or 'Unknown' }}
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td>{{ session.browser or 'Unknown' }}</td>
-                        <td>
-                            {% if session.last_activity %}
-                                <div class="status-badge status-active">
-                                    <i class="fa fa-circle"></i>
-                                    <script>
-                                        document.write(new Date('{{ session.last_activity|date("c") }}').toLocaleTimeString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit'}));
-                                    </script>
-                                </div>
-                                <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
-                                    <script>
-                                        document.write(new Date('{{ session.last_activity|date("c") }}').toLocaleDateString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit'}));
-                                    </script>
-                                </div>
-                            {% else %}
-                                <div class="status-badge status-time">N/A</div>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if session.user %}
-                            <a href="/admin/user-activity/user/{{ session.user.username }}/" class="action-button">
-                                <i class="fa fa-eye"></i> Details
-                            </a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div class="empty-state">
-                <div class="empty-state-icon">
-                    <i class="fa fa-user-slash"></i>
-                </div>
-                <h4>No Authenticated Users Online</h4>
-                <p>All current visitors are browsing anonymously</p>
+            <div class="loading-indicator" id="auth-loading">
+                <i class="fa fa-spinner fa-spin"></i> Loading authenticated users...
             </div>
-            {% endif %}
+            <div id="auth-table-container"></div>
+            <div class="pagination-controls" id="auth-pagination"></div>
         </div>
 
         <!-- ANONYMOUS USERS TAB -->
         <div id="anonymous" class="tab-content">
-            {% if anonymous_sessions %}
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th><i class="fa fa-globe"></i> IP Address</th>
-                        <th><i class="fa fa-mobile-alt"></i> Device</th>
-                        <th><i class="fa fa-browser"></i> Browser</th>
-                        <th><i class="fa fa-clock"></i> Last Activity</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for session in anonymous_sessions %}
-                    <tr>
-                        <td>
-                            <code style="background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px;">
-                                {{ session.ip_address or 'N/A' }}
-                            </code>
-                        </td>
-                        <td>
-                            <div class="device-indicator">
-                                {% if session.device_type == 'mobile' %}
-                                    <i class="fa fa-mobile-alt device-icon"></i> Mobile
-                                {% elif session.device_type == 'tablet' %}
-                                    <i class="fa fa-tablet-alt device-icon"></i> Tablet
-                                {% elif session.device_type == 'desktop' %}
-                                    <i class="fa fa-desktop device-icon"></i> Desktop
-                                {% else %}
-                                    <i class="fa fa-question device-icon"></i> {{ session.device_type or 'Unknown' }}
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td>{{ session.browser or 'Unknown' }}</td>
-                        <td>
-                            {% if session.last_activity %}
-                                <div class="status-badge status-active">
-                                    <i class="fa fa-circle"></i>
-                                    <script>
-                                        document.write(new Date('{{ session.last_activity|date("c") }}').toLocaleTimeString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit'}));
-                                    </script>
-                                </div>
-                                <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
-                                    <script>
-                                        document.write(new Date('{{ session.last_activity|date("c") }}').toLocaleDateString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit'}));
-                                    </script>
-                                </div>
-                            {% else %}
-                                <div class="status-badge status-time">N/A</div>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div class="empty-state">
-                <div class="empty-state-icon">
-                    <i class="fa fa-user-secret"></i>
-                </div>
-                <h4>No Anonymous Users</h4>
-                <p>All current visitors are authenticated</p>
+            <div class="loading-indicator" id="anon-loading">
+                <i class="fa fa-spinner fa-spin"></i> Loading anonymous users...
             </div>
-            {% endif %}
+            <div id="anon-table-container"></div>
+            <div class="pagination-controls" id="anon-pagination"></div>
         </div>
 
         <!-- BOTS TAB -->
         <div id="bots" class="tab-content">
-            {% if bot_sessions %}
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th><i class="fa fa-globe"></i> IP Address</th>
-                        <th><i class="fa fa-robot"></i> User Agent</th>
-                        <th><i class="fa fa-clock"></i> Last Activity</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for session in bot_sessions %}
-                    <tr>
-                        <td>
-                            <code style="background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px;">
-                                {{ session.ip_address or 'N/A' }}
-                            </code>
-                        </td>
-                        <td>
-                            <div style="font-family: monospace; font-size: 0.8rem; color: #666; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">
-                                {% if session.user_agent %}
-                                    {% if session.user_agent|length > 80 %}
-                                        {{ session.user_agent[:80] }}...
-                                    {% else %}
-                                        {{ session.user_agent }}
-                                    {% endif %}
-                                {% else %}
-                                    Unknown Bot
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td>
-                            {% if session.last_activity %}
-                                <div class="status-badge status-active">
-                                    <i class="fa fa-circle"></i>
-                                    <script>
-                                        document.write(new Date('{{ session.last_activity|date("c") }}').toLocaleTimeString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit'}));
-                                    </script>
-                                </div>
-                                <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
-                                    <script>
-                                        document.write(new Date('{{ session.last_activity|date("c") }}').toLocaleDateString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit'}));
-                                    </script>
-                                </div>
-                            {% else %}
-                                <div class="status-badge status-time">N/A</div>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div class="empty-state">
-                <div class="empty-state-icon">
-                    <i class="fa fa-robot"></i>
-                </div>
-                <h4>No Bot Activity</h4>
-                <p>Your site is currently bot-free!</p>
+            <div class="loading-indicator" id="bots-loading">
+                <i class="fa fa-spinner fa-spin"></i> Loading bot sessions...
             </div>
-            {% endif %}
+            <div id="bots-table-container"></div>
+            <div class="pagination-controls" id="bots-pagination"></div>
         </div>
     </div>
 
@@ -752,25 +644,241 @@
 </div>
 
 <script>
-// Tab functionality
+// ========================================
+// LAZY LOADING & PAGINATION - TỐI ƯU DASHBOARD
+// ========================================
+
+// State management
+const state = {
+    authenticated: { page: 1, loaded: false, data: null },
+    anonymous: { page: 1, loaded: false, data: null },
+    bots: { page: 1, loaded: false, data: null }
+};
+
+const PER_PAGE = 50;
+
+// API endpoints
+const API_ENDPOINTS = {
+    authenticated: '/admin/user-activity/api/authenticated-sessions/',
+    anonymous: '/admin/user-activity/api/anonymous-sessions/',
+    bots: '/admin/user-activity/api/bot-sessions/'
+};
+
+// Format datetime helper
+function formatDateTime(isoString) {
+    if (!isoString) return 'N/A';
+    const date = new Date(isoString);
+    const timeStr = date.toLocaleTimeString('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    const dateStr = date.toLocaleDateString('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+    return `<div class="status-badge status-active"><i class="fa fa-circle"></i> ${timeStr}</div>
+            <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">${dateStr}</div>`;
+}
+
+// Get device icon
+function getDeviceIcon(deviceType) {
+    const icons = {
+        'mobile': '<i class="fa fa-mobile-alt device-icon"></i> Mobile',
+        'tablet': '<i class="fa fa-tablet-alt device-icon"></i> Tablet',
+        'desktop': '<i class="fa fa-desktop device-icon"></i> Desktop'
+    };
+    return icons[deviceType] || `<i class="fa fa-question device-icon"></i> ${deviceType || 'Unknown'}`;
+}
+
+// Load sessions data from API
+async function loadSessions(tabName, page = 1) {
+    const loadingEl = document.getElementById(`${tabName === 'authenticated' ? 'auth' : tabName === 'anonymous' ? 'anon' : tabName}-loading`);
+    const containerEl = document.getElementById(`${tabName === 'authenticated' ? 'auth' : tabName === 'anonymous' ? 'anon' : tabName}-table-container`);
+    const paginationEl = document.getElementById(`${tabName === 'authenticated' ? 'auth' : tabName === 'anonymous' ? 'anon' : tabName}-pagination`);
+
+    // Show loading
+    loadingEl.style.display = 'block';
+    containerEl.innerHTML = '';
+
+    try {
+        const response = await fetch(`${API_ENDPOINTS[tabName]}?page=${page}&per_page=${PER_PAGE}`);
+        const data = await response.json();
+
+        // Update state
+        state[tabName].page = page;
+        state[tabName].loaded = true;
+        state[tabName].data = data;
+
+        // Hide loading
+        loadingEl.style.display = 'none';
+
+        // Render table
+        renderTable(tabName, data, containerEl);
+
+        // Render pagination
+        renderPagination(tabName, data, paginationEl);
+
+    } catch (error) {
+        console.error(`Error loading ${tabName} sessions:`, error);
+        loadingEl.style.display = 'none';
+        containerEl.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fa fa-exclamation-triangle"></i></div>
+                <h4>Error loading data</h4>
+                <p>${error.message}</p>
+                <button onclick="loadSessions('${tabName}', ${page})" class="action-button">
+                    <i class="fa fa-refresh"></i> Retry
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Render table based on tab type
+function renderTable(tabName, data, container) {
+    if (!data.sessions || data.sessions.length === 0) {
+        const emptyMessages = {
+            authenticated: { icon: 'fa-user-slash', title: 'No Authenticated Users Online', desc: 'All current visitors are browsing anonymously' },
+            anonymous: { icon: 'fa-user-secret', title: 'No Anonymous Users', desc: 'All current visitors are authenticated' },
+            bots: { icon: 'fa-robot', title: 'No Bot Activity', desc: 'Your site is currently bot-free!' }
+        };
+        const msg = emptyMessages[tabName];
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fa ${msg.icon}"></i></div>
+                <h4>${msg.title}</h4>
+                <p>${msg.desc}</p>
+            </div>
+        `;
+        return;
+    }
+
+    let tableHtml = '<table class="users-table"><thead><tr>';
+
+    // Headers based on tab type
+    if (tabName === 'authenticated') {
+        tableHtml += `
+            <th><i class="fa fa-user"></i> User</th>
+            <th><i class="fa fa-globe"></i> IP Address</th>
+            <th><i class="fa fa-mobile-alt"></i> Device</th>
+            <th><i class="fa fa-browser"></i> Browser</th>
+            <th><i class="fa fa-clock"></i> Last Activity</th>
+            <th><i class="fa fa-cog"></i> Actions</th>
+        `;
+    } else if (tabName === 'anonymous') {
+        tableHtml += `
+            <th><i class="fa fa-globe"></i> IP Address</th>
+            <th><i class="fa fa-mobile-alt"></i> Device</th>
+            <th><i class="fa fa-browser"></i> Browser</th>
+            <th><i class="fa fa-clock"></i> Last Activity</th>
+        `;
+    } else if (tabName === 'bots') {
+        tableHtml += `
+            <th><i class="fa fa-globe"></i> IP Address</th>
+            <th><i class="fa fa-robot"></i> User Agent</th>
+            <th><i class="fa fa-clock"></i> Last Activity</th>
+        `;
+    }
+
+    tableHtml += '</tr></thead><tbody>';
+
+    // Rows
+    data.sessions.forEach(session => {
+        tableHtml += '<tr>';
+
+        if (tabName === 'authenticated') {
+            tableHtml += `
+                <td><div class="user-link"><i class="fa fa-user-circle"></i> ${session.username}</div></td>
+                <td><code style="background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px;">${session.ip_address}</code></td>
+                <td><div class="device-indicator">${getDeviceIcon(session.device_type)}</div></td>
+                <td>${session.browser}</td>
+                <td>${formatDateTime(session.last_activity)}</td>
+                <td><a href="/admin/user-activity/user/${session.username}/" class="action-button"><i class="fa fa-eye"></i> Details</a></td>
+            `;
+        } else if (tabName === 'anonymous') {
+            tableHtml += `
+                <td><code style="background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px;">${session.ip_address}</code></td>
+                <td><div class="device-indicator">${getDeviceIcon(session.device_type)}</div></td>
+                <td>${session.browser}</td>
+                <td>${formatDateTime(session.last_activity)}</td>
+            `;
+        } else if (tabName === 'bots') {
+            tableHtml += `
+                <td><code style="background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px;">${session.ip_address}</code></td>
+                <td><div style="font-family: monospace; font-size: 0.8rem; color: #666; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">${session.user_agent}</div></td>
+                <td>${formatDateTime(session.last_activity)}</td>
+            `;
+        }
+
+        tableHtml += '</tr>';
+    });
+
+    tableHtml += '</tbody></table>';
+    container.innerHTML = tableHtml;
+}
+
+// Render pagination controls
+function renderPagination(tabName, data, container) {
+    if (data.total_pages <= 1) {
+        container.innerHTML = `<div class="pagination-info">Showing all ${data.total_count} records</div>`;
+        return;
+    }
+
+    let html = '<div class="pagination-wrapper">';
+    html += `<span class="pagination-info">Page ${data.current_page} of ${data.total_pages} (${data.total_count} total)</span>`;
+    html += '<div class="pagination-buttons">';
+
+    // Previous button
+    if (data.has_previous) {
+        html += `<button onclick="loadSessions('${tabName}', 1)" class="pagination-btn" title="First"><i class="fa fa-angle-double-left"></i></button>`;
+        html += `<button onclick="loadSessions('${tabName}', ${data.current_page - 1})" class="pagination-btn"><i class="fa fa-angle-left"></i> Previous</button>`;
+    }
+
+    // Page numbers (show 5 pages around current)
+    const startPage = Math.max(1, data.current_page - 2);
+    const endPage = Math.min(data.total_pages, data.current_page + 2);
+
+    for (let i = startPage; i <= endPage; i++) {
+        const activeClass = i === data.current_page ? 'active' : '';
+        html += `<button onclick="loadSessions('${tabName}', ${i})" class="pagination-btn ${activeClass}">${i}</button>`;
+    }
+
+    // Next button
+    if (data.has_next) {
+        html += `<button onclick="loadSessions('${tabName}', ${data.current_page + 1})" class="pagination-btn">Next <i class="fa fa-angle-right"></i></button>`;
+        html += `<button onclick="loadSessions('${tabName}', ${data.total_pages})" class="pagination-btn" title="Last"><i class="fa fa-angle-double-right"></i></button>`;
+    }
+
+    html += '</div></div>';
+    container.innerHTML = html;
+}
+
+// Tab switching with lazy loading
 function showTab(tabName) {
     // Hide all tab contents
-    const tabContents = document.querySelectorAll('.tab-content');
-    tabContents.forEach(content => {
+    document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
     });
-    
+
     // Remove active class from all buttons
-    const tabButtons = document.querySelectorAll('.tab-button');
-    tabButtons.forEach(button => {
+    document.querySelectorAll('.tab-button').forEach(button => {
         button.classList.remove('active');
     });
-    
+
     // Show selected tab
     document.getElementById(tabName).classList.add('active');
-    
+
     // Add active class to clicked button
-    event.target.classList.add('active');
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+    // Load data if not already loaded
+    if (!state[tabName].loaded) {
+        loadSessions(tabName, 1);
+    }
 }
 
 // Auto refresh functionality
@@ -778,8 +886,7 @@ let autoRefreshInterval;
 let isAutoRefreshOn = true;
 
 function updateLastUpdate() {
-    const now = new Date();
-    document.getElementById('lastUpdate').textContent = now.toLocaleTimeString();
+    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
 }
 
 function toggleAutoRefresh() {
@@ -797,7 +904,13 @@ function toggleAutoRefresh() {
 
 function startAutoRefresh() {
     autoRefreshInterval = setInterval(function() {
-        location.reload();
+        // Reload data cho tab đang active thay vì reload page
+        const activeTab = document.querySelector('.tab-button.active');
+        if (activeTab) {
+            const tabName = activeTab.dataset.tab;
+            loadSessions(tabName, state[tabName].page);
+        }
+        updateLastUpdate();
     }, 30000);
 }
 
@@ -805,15 +918,16 @@ function startAutoRefresh() {
 document.addEventListener('DOMContentLoaded', function() {
     updateLastUpdate();
     startAutoRefresh();
-    
+
     // Add click handlers to tab buttons
-    const tabButtons = document.querySelectorAll('.tab-button');
-    tabButtons.forEach((button, index) => {
+    document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', function() {
-            const tabNames = ['authenticated', 'anonymous', 'bots'];
-            showTab(tabNames[index]);
+            showTab(this.dataset.tab);
         });
     });
+
+    // Load authenticated tab by default (first tab)
+    loadSessions('authenticated', 1);
 });
 </script>
 {% endblock %} 

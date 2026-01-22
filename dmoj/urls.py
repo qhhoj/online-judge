@@ -196,6 +196,10 @@ urlpatterns = [
             path('delete-user-logs/<str:username>/', user_activity.delete_user_logs, name='delete_user_logs'),
             path('delete-anonymous-logs/', user_activity.delete_anonymous_logs, name='delete_anonymous_logs'),
             path('api/active-users/', user_activity.active_users_api, name='active_users_api'),
+            # API endpoints cho lazy loading sessions với pagination
+            path('api/authenticated-sessions/', user_activity.authenticated_sessions_api, name='authenticated_sessions_api'),
+            path('api/anonymous-sessions/', user_activity.anonymous_sessions_api, name='anonymous_sessions_api'),
+            path('api/bot-sessions/', user_activity.bot_sessions_api, name='bot_sessions_api'),
         ]),
     ),
 
