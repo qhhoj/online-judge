@@ -16,108 +16,59 @@ from judge.models import UserActivity, UserSession, Profile
 @login_required
 @permission_required('judge.can_see_user_activity', raise_exception=True)
 def active_users_view(request):
-    """View để xem người dùng đang hoạt động - Cải thiện tách bot và human users"""
+    """View để xem người dùng đang hoạt động - TỐI ƯU: Chỉ load counts, không load chi tiết sessions"""
     # Lấy người dùng hoạt động trong 30 phút qua
     cutoff_time = timezone.now() - timedelta(minutes=30)
-    
-    # Lấy tất cả sessions đang hoạt động
+
+    # Base queryset - KHÔNG select_related vì chỉ cần counts
     all_active_sessions = UserSession.objects.filter(
         last_activity__gte=cutoff_time,
         is_active=True
-    ).select_related('user')
-    
-    # PHÂN LOẠI SESSIONS: BOT vs HUMAN
-    bot_sessions = all_active_sessions.filter(device_type='bot')
-    human_sessions = all_active_sessions.exclude(device_type='bot')
-    
-    # Phân loại human sessions
-    authenticated_sessions = human_sessions.filter(user__isnull=False)
-    anonymous_sessions = human_sessions.filter(user__isnull=True)
-    
-    # Bot sessions - phân loại bot auth và bot anonymous
-    bot_authenticated_sessions = bot_sessions.filter(user__isnull=False)
-    bot_anonymous_sessions = bot_sessions.filter(user__isnull=True)
-    
-    # Thống kê người dùng đăng nhập với nhiều phiên (KHÔNG bao gồm bot)
-    users_with_sessions = {}
-    for session in authenticated_sessions:
-        username = session.user.username
-        if username not in users_with_sessions:
-            users_with_sessions[username] = {
-                'user': session.user,
-                'sessions': []
-            }
-        users_with_sessions[username]['sessions'].append(session)
-    
-    # Sắp xếp theo số lượng phiên
-    multi_session_users = sorted(
-        [(k, v) for k, v in users_with_sessions.items() if len(v['sessions']) > 1],
-        key=lambda x: len(x[1]['sessions']),
-        reverse=True
     )
-    
-    # Thống kê theo thiết bị cho HUMAN sessions (không bao gồm bot)
-    device_stats = human_sessions.values('device_type').annotate(count=Count('id'))
-    
-    # Thống kê theo browser cho HUMAN sessions
-    browser_stats = human_sessions.values('browser').annotate(count=Count('id'))
-    
-    # Thống kê theo OS cho HUMAN sessions
-    os_stats = human_sessions.values('os').annotate(count=Count('id'))
-    
-    # Thống kê BOT riêng biệt
-    bot_stats = {
-        'total_bots': bot_sessions.count(),
-        'bot_authenticated': bot_authenticated_sessions.count(),
-        'bot_anonymous': bot_anonymous_sessions.count(),
-        'bot_browser_stats': bot_sessions.values('browser').annotate(count=Count('id')),
-        'bot_user_agents': bot_sessions.values('user_agent').annotate(count=Count('id')).order_by('-count')[:20],
-    }
-    
-    # Thống kê theo IP (tìm các IP có nhiều sessions) - HUMAN only
-    ip_stats = human_sessions.values('ip_address').annotate(
-        count=Count('id'),
-        users=Count('user', distinct=True)
-    ).filter(count__gt=1).order_by('-count')[:10]
-    
-    # Thống kê BOT theo IP
-    bot_ip_stats = bot_sessions.values('ip_address').annotate(
-        count=Count('id'),
-        users=Count('user', distinct=True)
-    ).order_by('-count')[:10]
-    
-    # Thống kê tổng quan
+
+    # PHÂN LOẠI SESSIONS: BOT vs HUMAN (chỉ dùng để count)
+    bot_sessions_qs = all_active_sessions.filter(device_type='bot')
+    human_sessions_qs = all_active_sessions.exclude(device_type='bot')
+
+    # Phân loại human sessions (queryset cho count)
+    authenticated_sessions_qs = human_sessions_qs.filter(user__isnull=False)
+    anonymous_sessions_qs = human_sessions_qs.filter(user__isnull=True)
+
+    # Bot sessions - phân loại bot auth và bot anonymous (cho count)
+    bot_authenticated_count = bot_sessions_qs.filter(user__isnull=False).count()
+    bot_anonymous_count = bot_sessions_qs.filter(user__isnull=True).count()
+
+    # Thống kê tổng quan - CHỈ LẤY COUNTS
     total_users_registered = User.objects.filter(is_active=True).count()
-    total_users_online = authenticated_sessions.values('user').distinct().count()
-    total_anonymous_online = anonymous_sessions.count()
-    
+    total_users_online = authenticated_sessions_qs.values('user').distinct().count()
+    total_anonymous_online = anonymous_sessions_qs.count()
+    total_human_sessions = human_sessions_qs.count()
+    total_bot_sessions = bot_sessions_qs.count()
+    total_all_sessions = all_active_sessions.count()
+
+    # Thống kê BOT - chỉ counts
+    bot_stats = {
+        'total_bots': total_bot_sessions,
+        'bot_authenticated': bot_authenticated_count,
+        'bot_anonymous': bot_anonymous_count,
+    }
+
     context = {
-        # HUMAN USERS
-        'authenticated_sessions': authenticated_sessions,
-        'anonymous_sessions': anonymous_sessions,
+        # HUMAN USERS - CHỈ COUNTS, KHÔNG CÒN SESSIONS DATA
+        # Sessions sẽ được load qua API lazy loading
         'total_active_users': total_users_online,
         'total_anonymous': total_anonymous_online,
-        'total_human_sessions': human_sessions.count(),
+        'total_human_sessions': total_human_sessions,
         'total_users_registered': total_users_registered,
-        'users_with_sessions': users_with_sessions,
-        'multi_session_users': multi_session_users,
-        'device_stats': device_stats,
-        'browser_stats': browser_stats,
-        'os_stats': os_stats,
-        'ip_stats': ip_stats,
-        
-        # BOT STATISTICS - TÁCH RIÊNG
-        'bot_sessions': bot_sessions,
-        'bot_authenticated_sessions': bot_authenticated_sessions,
-        'bot_anonymous_sessions': bot_anonymous_sessions,
+
+        # BOT STATISTICS - CHỈ COUNTS
         'bot_stats': bot_stats,
-        'bot_ip_stats': bot_ip_stats,
-        
+
         # TỔNG QUAN
-        'total_sessions': all_active_sessions.count(),
+        'total_sessions': total_all_sessions,
         'show_bots_separate': True,  # Flag để template biết hiển thị bot riêng
     }
-    
+
     return render(request, 'user_activity/active_users.html', context)
 
 
@@ -548,5 +499,170 @@ def active_users_api(request):
             'bot_authenticated_details': list(bot_users_data.values()),
             'bot_anonymous_details': list(bot_anonymous_data),
         })
-    
-    return JsonResponse(data) 
+
+    return JsonResponse(data)
+
+
+@login_required
+@permission_required('judge.can_see_user_activity', raise_exception=True)
+def authenticated_sessions_api(request):
+    """API endpoint để lazy load authenticated sessions với pagination"""
+    try:
+        page = int(request.GET.get('page', 1))
+        per_page = int(request.GET.get('per_page', 50))
+        # Giới hạn per_page để tránh abuse
+        if per_page > 100:
+            per_page = 100
+        if per_page < 1:
+            per_page = 50
+    except (ValueError, TypeError):
+        page = 1
+        per_page = 50
+
+    cutoff_time = timezone.now() - timedelta(minutes=30)
+
+    # Query authenticated human sessions (exclude bots)
+    sessions = UserSession.objects.filter(
+        last_activity__gte=cutoff_time,
+        is_active=True,
+        user__isnull=False
+    ).exclude(device_type='bot').select_related('user').order_by('-last_activity')
+
+    # Pagination
+    paginator = Paginator(sessions, per_page)
+    try:
+        page_obj = paginator.page(page)
+    except Exception:
+        page_obj = paginator.page(1)
+
+    # Serialize sessions data
+    sessions_data = []
+    for session in page_obj:
+        sessions_data.append({
+            'username': session.user.username if session.user else 'Unknown',
+            'ip_address': session.ip_address or 'N/A',
+            'device_type': session.device_type or 'unknown',
+            'browser': session.browser or 'Unknown',
+            'os': session.os or 'Unknown',
+            'last_activity': session.last_activity.isoformat() if session.last_activity else None,
+        })
+
+    return JsonResponse({
+        'sessions': sessions_data,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+        'current_page': page_obj.number,
+        'total_pages': paginator.num_pages,
+        'total_count': paginator.count,
+    })
+
+
+@login_required
+@permission_required('judge.can_see_user_activity', raise_exception=True)
+def anonymous_sessions_api(request):
+    """API endpoint để lazy load anonymous sessions với pagination"""
+    try:
+        page = int(request.GET.get('page', 1))
+        per_page = int(request.GET.get('per_page', 50))
+        # Giới hạn per_page để tránh abuse
+        if per_page > 100:
+            per_page = 100
+        if per_page < 1:
+            per_page = 50
+    except (ValueError, TypeError):
+        page = 1
+        per_page = 50
+
+    cutoff_time = timezone.now() - timedelta(minutes=30)
+
+    # Query anonymous human sessions (exclude bots)
+    sessions = UserSession.objects.filter(
+        last_activity__gte=cutoff_time,
+        is_active=True,
+        user__isnull=True
+    ).exclude(device_type='bot').order_by('-last_activity')
+
+    # Pagination
+    paginator = Paginator(sessions, per_page)
+    try:
+        page_obj = paginator.page(page)
+    except Exception:
+        page_obj = paginator.page(1)
+
+    # Serialize sessions data
+    sessions_data = []
+    for session in page_obj:
+        sessions_data.append({
+            'ip_address': session.ip_address or 'N/A',
+            'device_type': session.device_type or 'unknown',
+            'browser': session.browser or 'Unknown',
+            'os': session.os or 'Unknown',
+            'last_activity': session.last_activity.isoformat() if session.last_activity else None,
+        })
+
+    return JsonResponse({
+        'sessions': sessions_data,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+        'current_page': page_obj.number,
+        'total_pages': paginator.num_pages,
+        'total_count': paginator.count,
+    })
+
+
+@login_required
+@permission_required('judge.can_see_user_activity', raise_exception=True)
+def bot_sessions_api(request):
+    """API endpoint để lazy load bot sessions với pagination"""
+    try:
+        page = int(request.GET.get('page', 1))
+        per_page = int(request.GET.get('per_page', 50))
+        # Giới hạn per_page để tránh abuse
+        if per_page > 100:
+            per_page = 100
+        if per_page < 1:
+            per_page = 50
+    except (ValueError, TypeError):
+        page = 1
+        per_page = 50
+
+    cutoff_time = timezone.now() - timedelta(minutes=30)
+
+    # Query bot sessions
+    sessions = UserSession.objects.filter(
+        last_activity__gte=cutoff_time,
+        is_active=True,
+        device_type='bot'
+    ).order_by('-last_activity')
+
+    # Pagination
+    paginator = Paginator(sessions, per_page)
+    try:
+        page_obj = paginator.page(page)
+    except Exception:
+        page_obj = paginator.page(1)
+
+    # Serialize sessions data
+    sessions_data = []
+    for session in page_obj:
+        # Truncate user_agent để tránh response quá lớn
+        user_agent = session.user_agent or 'Unknown Bot'
+        if len(user_agent) > 100:
+            user_agent = user_agent[:100] + '...'
+
+        sessions_data.append({
+            'ip_address': session.ip_address or 'N/A',
+            'user_agent': user_agent,
+            'browser': session.browser or 'Unknown',
+            'os': session.os or 'Unknown',
+            'last_activity': session.last_activity.isoformat() if session.last_activity else None,
+        })
+
+    return JsonResponse({
+        'sessions': sessions_data,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+        'current_page': page_obj.number,
+        'total_pages': paginator.num_pages,
+        'total_count': paginator.count,
+    })
