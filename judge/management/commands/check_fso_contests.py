@@ -4,13 +4,13 @@ Can be run via cron job every minute for immediate judging.
 
 Usage:
     python manage.py check_fso_contests
-    
+
 Cron example (run every minute):
     * * * * * cd /path/to/site && python manage.py check_fso_contests >> /var/log/fso_check.log 2>&1
 """
+from django.core.cache import cache
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from django.core.cache import cache
 
 from judge.models import Contest, Submission
 
