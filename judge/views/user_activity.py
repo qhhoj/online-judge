@@ -1,16 +1,17 @@
-import json
 import csv
-from datetime import timedelta, datetime
-from django.contrib.auth.decorators import login_required, permission_required
-from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render, redirect
-from django.utils import timezone
-from django.db.models import Count, Q
-from django.contrib.auth.models import User
-from django.contrib import messages
-from django.core.paginator import Paginator
+import json
+from datetime import datetime, timedelta
 
-from judge.models import UserActivity, UserSession, Profile
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.models import User
+from django.core.paginator import Paginator
+from django.db.models import Count, Q
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render
+from django.utils import timezone
+
+from judge.models import Profile, UserActivity, UserSession
 
 
 @login_required
