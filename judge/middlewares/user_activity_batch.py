@@ -8,6 +8,8 @@ from django.db import transaction
 from django.utils import timezone
 from user_agents import parse
 
+from judge.utils.user_activity_realtime import publish_sessions_batch
+
 
 logger = logging.getLogger(__name__)
 
@@ -204,6 +206,10 @@ class BatchUserActivityMiddleware:
                         )
 
                         logger.info('✅ Flushed %s activities', len(activity_objects))
+
+            # 3. Publish realtime state to shared cache (Redis), non-blocking fallback
+            if sessions_to_update:
+                publish_sessions_batch(sessions_to_update)
 
         except Exception:
             logger.exception('❌ Error flushing buffers')

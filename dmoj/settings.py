@@ -700,6 +700,34 @@ STATICFILES_DIRS = [
 ]
 STATIC_URL = '/static/'
 
+
+def _env_bool(name, default=False):
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
+def _env_int(name, default):
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return default
+
+
+def _env_float(name, default):
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return default
+
+
 # Define a cache
 CACHES = {
     'default': {
@@ -710,6 +738,34 @@ CACHES = {
         },
     },
 }
+
+# Realtime tracking cache (shared across web + celery).
+# Configure through environment variables to keep per-machine setup independent:
+# - USER_ACTIVITY_REALTIME_REDIS_URL=redis://...
+# - USER_ACTIVITY_REALTIME_CACHE_ENABLED=true|false (optional override)
+USER_ACTIVITY_REALTIME_CACHE_ALIAS = 'user_activity_realtime'
+USER_ACTIVITY_REALTIME_CACHE_PREFIX = os.environ.get(
+    'USER_ACTIVITY_REALTIME_CACHE_PREFIX', 'user_activity:realtime',
+)
+USER_ACTIVITY_REALTIME_WINDOW_SECONDS = max(60, _env_int('USER_ACTIVITY_REALTIME_WINDOW_SECONDS', 1800))
+USER_ACTIVITY_REALTIME_SNAPSHOT_TTL_SECONDS = max(5, _env_int('USER_ACTIVITY_REALTIME_SNAPSHOT_TTL_SECONDS', 15))
+USER_ACTIVITY_REALTIME_SNAPSHOT_INTERVAL_SECONDS = max(
+    1.0, _env_float('USER_ACTIVITY_REALTIME_SNAPSHOT_INTERVAL_SECONDS', 5.0),
+)
+USER_ACTIVITY_REALTIME_REDIS_URL = os.environ.get('USER_ACTIVITY_REALTIME_REDIS_URL', '').strip()
+USER_ACTIVITY_REALTIME_CACHE_ENABLED = _env_bool(
+    'USER_ACTIVITY_REALTIME_CACHE_ENABLED', bool(USER_ACTIVITY_REALTIME_REDIS_URL),
+)
+
+if USER_ACTIVITY_REALTIME_REDIS_URL:
+    CACHES[USER_ACTIVITY_REALTIME_CACHE_ALIAS] = {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': USER_ACTIVITY_REALTIME_REDIS_URL,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'IGNORE_EXCEPTIONS': True,
+        },
+    }
 
 # Authentication
 AUTHENTICATION_BACKENDS = (
