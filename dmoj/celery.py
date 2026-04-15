@@ -27,6 +27,10 @@ app.conf.beat_schedule = {
         'task': 'judge.tasks.contest.check_final_submission_contests',
         'schedule': crontab(minute='*'),  # Run every 1 minute
     },
+    'refresh-user-activity-realtime-snapshot': {
+        'task': 'judge.tasks.user_activity_realtime.refresh_user_activity_realtime_snapshot',
+        'schedule': getattr(settings, 'USER_ACTIVITY_REALTIME_SNAPSHOT_INTERVAL_SECONDS', 5.0),
+    },
 }
 
 # Load task modules from all registered Django app configs.

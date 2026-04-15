@@ -549,25 +549,25 @@
     <div class="stats-grid">
         <div class="stat-card primary">
             <div class="stat-icon"><i class="fa fa-users"></i></div>
-            <div class="stat-number">{{ (total_active_users or 0) + (total_anonymous or 0) }}</div>
+            <div class="stat-number" id="human-total">{{ (total_active_users or 0) + (total_anonymous or 0) }}</div>
             <div class="stat-label">Human Users</div>
             <div class="stat-sublabel">Real people online</div>
         </div>
         <div class="stat-card success">
             <div class="stat-icon"><i class="fa fa-user-check"></i></div>
-            <div class="stat-number">{{ total_active_users or 0 }}</div>
+            <div class="stat-number" id="authenticated-total">{{ total_active_users or 0 }}</div>
             <div class="stat-label">Authenticated</div>
             <div class="stat-sublabel">Logged in users</div>
         </div>
         <div class="stat-card info">
             <div class="stat-icon"><i class="fa fa-user-secret"></i></div>
-            <div class="stat-number">{{ total_anonymous or 0 }}</div>
+            <div class="stat-number" id="anonymous-total">{{ total_anonymous or 0 }}</div>
             <div class="stat-label">Anonymous</div>
             <div class="stat-sublabel">Guest visitors</div>
         </div>
         <div class="stat-card warning">
             <div class="stat-icon"><i class="fa fa-robot"></i></div>
-            <div class="stat-number">{{ bot_stats.total_bots if bot_stats else 0 }}</div>
+            <div class="stat-number" id="bot-total">{{ bot_stats.total_bots if bot_stats else 0 }}</div>
             <div class="stat-label">Bots</div>
             <div class="stat-sublabel">Crawlers & spiders</div>
         </div>
@@ -639,7 +639,7 @@
         <i class="fa fa-sync-alt"></i>
         <strong>Auto-Refresh Active:</strong> Page updates every 30 seconds |
         <strong>Last Updated:</strong> <span id="lastUpdate"></span> |
-        <strong>Total Sessions:</strong> {{ total_sessions or 0 }}
+        <strong>Total Sessions:</strong> <span id="total-sessions-indicator">{{ total_sessions or 0 }}</span>
     </div>
 </div>
 
@@ -648,9 +648,15 @@
 // LAZY LOADING & PAGINATION - TỐI ƯU DASHBOARD
 // ========================================
 
+const PRELOADED_SESSIONS = {{ preloaded_sessions_json|safe }};
+
 // State management
 const state = {
-    authenticated: { page: 1, loaded: false, data: null },
+    authenticated: {
+        page: (PRELOADED_SESSIONS.authenticated && PRELOADED_SESSIONS.authenticated.current_page) || 1,
+        loaded: !!PRELOADED_SESSIONS.authenticated,
+        data: PRELOADED_SESSIONS.authenticated || null
+    },
     anonymous: { page: 1, loaded: false, data: null },
     bots: { page: 1, loaded: false, data: null }
 };
@@ -663,6 +669,7 @@ const API_ENDPOINTS = {
     anonymous: '/admin/user-activity/api/anonymous-sessions/',
     bots: '/admin/user-activity/api/bot-sessions/'
 };
+const SUMMARY_ENDPOINT = '/admin/user-activity/api/active-users/';
 
 // Format datetime helper
 function formatDateTime(isoString) {
@@ -889,6 +896,28 @@ function updateLastUpdate() {
     document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
 }
 
+async function refreshSummary() {
+    try {
+        const response = await fetch(SUMMARY_ENDPOINT);
+        const data = await response.json();
+        const authenticated = data.authenticated_users || 0;
+        const anonymous = data.anonymous_users || 0;
+        const bots = data.total_bot_sessions || 0;
+        const totalSessions = data.total_sessions || 0;
+
+        document.getElementById('human-total').textContent = authenticated + anonymous;
+        document.getElementById('authenticated-total').textContent = authenticated;
+        document.getElementById('anonymous-total').textContent = anonymous;
+        document.getElementById('bot-total').textContent = bots;
+        document.getElementById('auth-count').textContent = authenticated;
+        document.getElementById('anon-count').textContent = anonymous;
+        document.getElementById('bot-count').textContent = bots;
+        document.getElementById('total-sessions-indicator').textContent = totalSessions;
+    } catch (error) {
+        console.error('Error refreshing summary:', error);
+    }
+}
+
 function toggleAutoRefresh() {
     const btn = document.getElementById('autoRefreshBtn');
     if (isAutoRefreshOn) {
@@ -904,6 +933,7 @@ function toggleAutoRefresh() {
 
 function startAutoRefresh() {
     autoRefreshInterval = setInterval(function() {
+        refreshSummary();
         // Reload data cho tab đang active thay vì reload page
         const activeTab = document.querySelector('.tab-button.active');
         if (activeTab) {
@@ -917,6 +947,7 @@ function startAutoRefresh() {
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     updateLastUpdate();
+    refreshSummary();
     startAutoRefresh();
 
     // Add click handlers to tab buttons
@@ -926,8 +957,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Load authenticated tab by default (first tab)
-    loadSessions('authenticated', 1);
+    // Load authenticated tab by default (first tab) from server-preloaded cache when available
+    if (state.authenticated.loaded && state.authenticated.data) {
+        const loadingEl = document.getElementById('auth-loading');
+        const containerEl = document.getElementById('auth-table-container');
+        const paginationEl = document.getElementById('auth-pagination');
+        loadingEl.style.display = 'none';
+        renderTable('authenticated', state.authenticated.data, containerEl);
+        renderPagination('authenticated', state.authenticated.data, paginationEl);
+    } else {
+        loadSessions('authenticated', 1);
+    }
 });
 </script>
-{% endblock %} 
+{% endblock %}

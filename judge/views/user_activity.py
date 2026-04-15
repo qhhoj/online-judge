@@ -12,42 +12,58 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 
 from judge.models import Profile, UserActivity, UserSession
+from judge.utils.user_activity_realtime import (
+    TAB_ANONYMOUS,
+    TAB_AUTHENTICATED,
+    TAB_BOTS,
+    get_cached_realtime_snapshot,
+    get_realtime_sessions_page,
+)
 
 
 @login_required
 @permission_required('judge.can_see_user_activity', raise_exception=True)
 def active_users_view(request):
     """View để xem người dùng đang hoạt động - TỐI ƯU: Chỉ load counts, không load chi tiết sessions"""
-    # Lấy người dùng hoạt động trong 30 phút qua
-    cutoff_time = timezone.now() - timedelta(minutes=30)
+    snapshot = get_cached_realtime_snapshot()
 
-    # Base queryset - KHÔNG select_related vì chỉ cần counts
-    all_active_sessions = UserSession.objects.filter(
-        last_activity__gte=cutoff_time,
-        is_active=True
-    )
+    # Preload trang đầu authenticated để render ngay khi mở trang (không cần gọi API lần đầu)
+    preloaded_authenticated = get_realtime_sessions_page(TAB_AUTHENTICATED, page=1, per_page=50)
+    preloaded_sessions = {}
+    if preloaded_authenticated:
+        preloaded_sessions[TAB_AUTHENTICATED] = preloaded_authenticated
 
-    # PHÂN LOẠI SESSIONS: BOT vs HUMAN (chỉ dùng để count)
-    bot_sessions_qs = all_active_sessions.filter(device_type='bot')
-    human_sessions_qs = all_active_sessions.exclude(device_type='bot')
-
-    # Phân loại human sessions (queryset cho count)
-    authenticated_sessions_qs = human_sessions_qs.filter(user__isnull=False)
-    anonymous_sessions_qs = human_sessions_qs.filter(user__isnull=True)
-
-    # Bot sessions - phân loại bot auth và bot anonymous (cho count)
-    bot_authenticated_count = bot_sessions_qs.filter(user__isnull=False).count()
-    bot_anonymous_count = bot_sessions_qs.filter(user__isnull=True).count()
-
-    # Thống kê tổng quan - CHỈ LẤY COUNTS
     total_users_registered = User.objects.filter(is_active=True).count()
-    total_users_online = authenticated_sessions_qs.values('user').distinct().count()
-    total_anonymous_online = anonymous_sessions_qs.count()
-    total_human_sessions = human_sessions_qs.count()
-    total_bot_sessions = bot_sessions_qs.count()
-    total_all_sessions = all_active_sessions.count()
 
-    # Thống kê BOT - chỉ counts
+    if snapshot:
+        total_users_online = snapshot.get('authenticated_users', 0)
+        total_anonymous_online = snapshot.get('anonymous_users', 0)
+        total_human_sessions = snapshot.get('total_human_sessions', 0)
+        total_bot_sessions = snapshot.get('total_bot_sessions', 0)
+        total_all_sessions = snapshot.get('total_sessions', 0)
+        bot_authenticated_count = snapshot.get('bot_authenticated', 0)
+        bot_anonymous_count = snapshot.get('bot_anonymous', 0)
+    else:
+        # Fallback về DB nếu realtime cache chưa sẵn sàng
+        cutoff_time = timezone.now() - timedelta(minutes=30)
+        all_active_sessions = UserSession.objects.filter(
+            last_activity__gte=cutoff_time,
+            is_active=True,
+        )
+
+        bot_sessions_qs = all_active_sessions.filter(device_type='bot')
+        human_sessions_qs = all_active_sessions.exclude(device_type='bot')
+        authenticated_sessions_qs = human_sessions_qs.filter(user__isnull=False)
+        anonymous_sessions_qs = human_sessions_qs.filter(user__isnull=True)
+
+        bot_authenticated_count = bot_sessions_qs.filter(user__isnull=False).count()
+        bot_anonymous_count = bot_sessions_qs.filter(user__isnull=True).count()
+        total_users_online = authenticated_sessions_qs.values('user').distinct().count()
+        total_anonymous_online = anonymous_sessions_qs.count()
+        total_human_sessions = human_sessions_qs.count()
+        total_bot_sessions = bot_sessions_qs.count()
+        total_all_sessions = all_active_sessions.count()
+
     bot_stats = {
         'total_bots': total_bot_sessions,
         'bot_authenticated': bot_authenticated_count,
@@ -55,19 +71,15 @@ def active_users_view(request):
     }
 
     context = {
-        # HUMAN USERS - CHỈ COUNTS, KHÔNG CÒN SESSIONS DATA
-        # Sessions sẽ được load qua API lazy loading
         'total_active_users': total_users_online,
         'total_anonymous': total_anonymous_online,
         'total_human_sessions': total_human_sessions,
         'total_users_registered': total_users_registered,
-
-        # BOT STATISTICS - CHỈ COUNTS
         'bot_stats': bot_stats,
-
-        # TỔNG QUAN
         'total_sessions': total_all_sessions,
-        'show_bots_separate': True,  # Flag để template biết hiển thị bot riêng
+        'show_bots_separate': True,
+        'preloaded_sessions_json': json.dumps(preloaded_sessions),
+        'realtime_snapshot_at': snapshot.get('generated_at') if snapshot else None,
     }
 
     return render(request, 'user_activity/active_users.html', context)
@@ -376,6 +388,11 @@ def delete_anonymous_logs(request):
 @permission_required('judge.can_see_user_activity', raise_exception=True)
 def active_users_api(request):
     """API endpoint để lấy số người đang truy cập (cập nhật realtime) - TÁCH BOT VÀ HUMAN"""
+    if request.GET.get('detailed') != 'true':
+        snapshot = get_cached_realtime_snapshot()
+        if snapshot:
+            return JsonResponse(snapshot)
+
     cutoff_time = timezone.now() - timedelta(minutes=30)
     
     all_sessions = UserSession.objects.filter(
@@ -520,6 +537,10 @@ def authenticated_sessions_api(request):
         page = 1
         per_page = 50
 
+    realtime_page = get_realtime_sessions_page(TAB_AUTHENTICATED, page=page, per_page=per_page)
+    if realtime_page is not None:
+        return JsonResponse(realtime_page)
+
     cutoff_time = timezone.now() - timedelta(minutes=30)
 
     # Query authenticated human sessions (exclude bots)
@@ -574,6 +595,10 @@ def anonymous_sessions_api(request):
         page = 1
         per_page = 50
 
+    realtime_page = get_realtime_sessions_page(TAB_ANONYMOUS, page=page, per_page=per_page)
+    if realtime_page is not None:
+        return JsonResponse(realtime_page)
+
     cutoff_time = timezone.now() - timedelta(minutes=30)
 
     # Query anonymous human sessions (exclude bots)
@@ -626,6 +651,10 @@ def bot_sessions_api(request):
     except (ValueError, TypeError):
         page = 1
         per_page = 50
+
+    realtime_page = get_realtime_sessions_page(TAB_BOTS, page=page, per_page=per_page)
+    if realtime_page is not None:
+        return JsonResponse(realtime_page)
 
     cutoff_time = timezone.now() - timedelta(minutes=30)
 
