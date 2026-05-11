@@ -346,21 +346,87 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
             user=self.request.user,
         )
 
+    def _get_archive_provider_data(self, data):
+        if not self.object.is_mirror or not self.object.mirror_root_id:
+            return data
+        root_data, _ = ProblemData.objects.get_or_create(problem=self.object.mirror_root)
+        return root_data
+
+    def _bootstrap_mirror_config_from_root(self):
+        if not self.object.is_mirror or not self.object.mirror_root_id:
+            return
+
+        mirror_data, _ = ProblemData.objects.get_or_create(problem=self.object)
+        root_data, _ = ProblemData.objects.get_or_create(problem=self.object.mirror_root)
+
+        fields = (
+            'output_prefix',
+            'output_limit',
+            'checker',
+            'grader',
+            'unicode',
+            'nobigmath',
+            'checker_args',
+            'grader_args',
+        )
+        changed_fields = []
+        for field in fields:
+            root_value = getattr(root_data, field)
+            if getattr(mirror_data, field) != root_value:
+                setattr(mirror_data, field, root_value)
+                changed_fields.append(field)
+        if changed_fields:
+            mirror_data.save(update_fields=changed_fields)
+
+    def _copy_cases_if_missing_from_root(self):
+        if not self.object.is_mirror or not self.object.mirror_root_id:
+            return
+        if ProblemTestCase.objects.filter(dataset_id=self.object.id).exists():
+            return
+
+        rows = []
+        for case in self.object.mirror_root.cases.order_by('order'):
+            rows.append(ProblemTestCase(
+                dataset=self.object,
+                order=case.order,
+                type=case.type,
+                input_file=case.input_file,
+                output_file=case.output_file,
+                generator_args=case.generator_args,
+                points=case.points,
+                is_pretest=case.is_pretest,
+                output_prefix=case.output_prefix,
+                output_limit=case.output_limit,
+                checker=case.checker,
+                checker_args=case.checker_args,
+            ))
+        if rows:
+            ProblemTestCase.objects.bulk_create(rows)
+
+    def _save_cases_formset(self, problem, cases_formset):
+        for case in cases_formset.save(commit=False):
+            case.dataset_id = problem.id
+            case.save()
+        for case in cases_formset.deleted_objects:
+            case.delete()
+
     def get_valid_files(self, data, post=False):
+        archive_data = self._get_archive_provider_data(data)
         try:
             if post and 'problem-data-zipfile-clear' in self.request.POST:
                 return []
             elif post and 'problem-data-zipfile' in self.request.FILES:
                 return ZipFile(self.request.FILES['problem-data-zipfile']).namelist()
-            elif data.zipfile:
-                return ZipFile(data.zipfile.path).namelist()
-        except BadZipfile:
+            elif archive_data.zipfile:
+                return ZipFile(archive_data.zipfile.path).namelist()
+        except (BadZipfile, OSError):
             return []
         return []
 
     def get_context_data(self, **kwargs):
         context = super(ProblemDataView, self).get_context_data(**kwargs)
         if 'data_form' not in context:
+            self._copy_cases_if_missing_from_root()
             context['data_form'] = self.get_data_form()
             valid_files = context['valid_files'] = self.get_valid_files(context['data_form'].instance)
             context['data_form'].zip_valid = valid_files is not False
@@ -382,6 +448,7 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
         context['mirror_root'] = self.object.mirror_root
         context['mirror_dependents_count'] = kwargs.get('mirror_dependents_count', 0)
         context['show_mirror_root_warning'] = kwargs.get('show_mirror_root_warning', False)
+        context['uploaded_archive_name'] = kwargs.get('uploaded_archive_name', '')
         return context
 
     def _archive_change_requested(self):
@@ -407,12 +474,14 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
 
     def post(self, request, *args, **kwargs):
         self.object = problem = self.get_object()
+        self._copy_cases_if_missing_from_root()
         mirror_form = self.get_mirror_form(post=True)
         data_form = self.get_data_form(post=True)
         valid_files = self.get_valid_files(data_form.instance, post=True)
         data_form.zip_valid = valid_files is not False
         cases_formset = self.get_case_formset(valid_files, post=True)
         archive_change_requested = self._archive_change_requested()
+        uploaded_archive_name = request.FILES.get('problem-data-zipfile').name if 'problem-data-zipfile' in request.FILES else ''
 
         if archive_change_requested and problem.is_mirror:
             data_form.add_error(None, _(
@@ -426,7 +495,7 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
                 data_form.add_error(
                     None,
                     _('This problem is mirrored by %(count)d other problem(s). '
-                      'Please confirm before replacing the shared root archive.') % {
+                        'Please confirm before replacing the shared root archive.') % {
                         'count': mirror_dependents_count,
                     },
                 )
@@ -451,12 +520,9 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
                 current_data, _ = ProblemData.objects.get_or_create(problem=problem)
                 current_data.zipfile = None
                 current_data.save(update_fields=['zipfile'])
-                sync_mirror_archive_for_problem(
-                    problem,
-                    bootstrap_cases_if_empty=True,
-                    heal_missing_files=True,
-                    force_regenerate=True,
-                )
+                self.object = problem
+                self._bootstrap_mirror_config_from_root()
+                self._copy_cases_if_missing_from_root()
                 return HttpResponseRedirect(request.get_full_path())
 
             if problem.is_mirror:
@@ -468,11 +534,7 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
                 )
                 return HttpResponseRedirect(request.get_full_path())
 
-            for case in cases_formset.save(commit=False):
-                case.dataset_id = problem.id
-                case.save()
-            for case in cases_formset.deleted_objects:
-                case.delete()
+            self._save_cases_formset(problem, cases_formset)
 
             if mirror_changed:
                 problem.refresh_from_db()
@@ -485,6 +547,7 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
                 valid_files=valid_files,
                 mirror_dependents_count=mirror_dependents_count,
                 show_mirror_root_warning=bool(mirror_dependents_count),
+                uploaded_archive_name=uploaded_archive_name,
             ),
         )
 

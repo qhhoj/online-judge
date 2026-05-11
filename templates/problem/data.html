@@ -711,7 +711,7 @@
             {% elif mirror_source %}
                 <strong>{{ mirror_source.code }} - {{ mirror_source.name }}</strong>
             {% endif %}
-            {{ _('. Submissions are judged using the root problem test archive and config.') }}
+            {{ _('. Test archive stays synced from root, while testcase mapping and checker config below can be adjusted for this mirror.') }}
         </div>
     {% endif %}
     {% if show_mirror_root_warning and mirror_dependents_count %}
@@ -731,6 +731,14 @@
                     <input type="checkbox" name="confirm_mirror_root_archive_update" value="1" required>
                     {{ _('I understand this update affects all mirror problems using this root archive.') }}
                 </label>
+                {% if uploaded_archive_name %}
+                    <div style="margin-top: 0.5em;">
+                        <strong>{{ _('Selected archive (fake preview):') }}</strong>
+                        <code>{{ uploaded_archive_name }}</code>
+                        <br>
+                        <span class="helptext">{{ _('Browsers do not keep uploaded files after submit, so please reselect this file before applying again.') }}</span>
+                    </div>
+                {% endif %}
             </div>
         {% endif %}
         {{ cases_formset.management_form }}
@@ -748,81 +756,83 @@
                 </td>
             </tr>
             </tbody>
-            <tbody {% if is_mirror_problem %}style="display: none;"{% endif %}>
+            <tbody>
                 {{ data_form.as_table() }}
             </tbody>
         </table>
-        <div class="alert alert-warning alert-dismissable" id="fill-test-case-noti" style="display: none;">
-            <a class="close">x</a>
-            <b>{{ _('Test cases have been filled automatically!') }}</b>
-            <br>
-            {{ (_('Test cases have been filled automatically and **not saved yet**!'))|markdown('default', strip_paragraphs=True) }}
-            <br>
-            {{ _('Please modify the table below if needed and press the `Apply` button to save!') }}
-        </div>
-        {% if cases_formset._non_form_errors %}
-            {{ cases_formset._non_form_errors }}
-        {% endif %}
-        <table id="case-table" class="table" {% if is_mirror_problem %}style="display: none;"{% endif %}>
-            <thead>
-            <tr>
-                <th><a id="add-case-first-row" href="#"><i class="fa fa-plus"></i></a></th>
-                <th class="order-column"></th>
-                <th class="type-column">{{ _('Type') }}</th>
-                <th>{{ _('Input file') }}</th>
-                <th>{{ _('Output file') }}</th>
-                <th>{{ _('Points') }}</th>
-                <th>{{ _('Pretest?') }}</th>
-                <!-- <th class="generator-args">{{ _('Generator args') }}</th> -->
-                {% if cases_formset.can_delete %}
-                    <th>{{ _('Delete?') }}
-                        <br>
-                        <input type="checkbox" name="delete-all" id="delete-all">
-                    </th>
-                {% endif %}
-            </tr>
-            </thead>
-            <tbody>
-            {% for form in all_case_forms %}
-                {% if form.non_field_errors() %}
-                    <tr>
-                        <td colspan="{{ 9 + cases_formset.can_delete }}">{{ form.non_field_errors() }}</td>
-                    </tr>
-                {% endif %}
-                {% if form.prefix and '__prefix__' in form.prefix %}
-                    </tbody>
-                    <tbody class="extra-row-body" style="display: none">
-                {% endif %}
-                <tr data-type="{{ form['type'].value() }}">
-                    <td><a class="add-case-row-below" href="#"><i class="fa fa-plus"></i></a></td>
-                    <td>{{ form.id }}{{ form.order.errors }}{{ form.order }}</td>
-                    <td class="type-column">{{ form.type.errors }}{{ form.type }}</td>
-                    <td{% if not (form.empty_permitted or form['type'].value() != 'C' or
-                                  form['input_file'].value() in valid_files) %} class="bad-file"{% endif %}>
-                        {{ form.input_file.errors }}{{ form.input_file }}
-                    </td>
-                    <td{% if not (form.empty_permitted or form['type'].value() != 'C' or
-                                  form['output_file'].value() in valid_files) %} class="bad-file"{% endif %}>
-                        {{ form.output_file.errors }}{{ form.output_file }}
-                    </td>
-                    <td>{{ form.points.errors }}{{ form.points }}</td>
-                    <td>{{ form.is_pretest.errors }}{{ form.is_pretest }}</td>
-                    <!-- <td class="generator-args">{{ form.generator_args.errors }}{{ form.generator_args }}
-                        <a href="javascript:void(0)" class="edit-generator-args">
-                            <i class="fa fa-pencil"></i>
-                            {{ _('Edit generator args') }}
-                        </a>
-                    </td> -->
+        {% if not is_mirror_problem %}
+            <div class="alert alert-warning alert-dismissable" id="fill-test-case-noti" style="display: none;">
+                <a class="close">x</a>
+                <b>{{ _('Test cases have been filled automatically!') }}</b>
+                <br>
+                {{ (_('Test cases have been filled automatically and **not saved yet**!'))|markdown('default', strip_paragraphs=True) }}
+                <br>
+                {{ _('Please modify the table below if needed and press the `Apply` button to save!') }}
+            </div>
+            {% if cases_formset._non_form_errors %}
+                {{ cases_formset._non_form_errors }}
+            {% endif %}
+            <table id="case-table" class="table">
+                <thead>
+                <tr>
+                    <th><a id="add-case-first-row" href="#"><i class="fa fa-plus"></i></a></th>
+                    <th class="order-column"></th>
+                    <th class="type-column">{{ _('Type') }}</th>
+                    <th>{{ _('Input file') }}</th>
+                    <th>{{ _('Output file') }}</th>
+                    <th>{{ _('Points') }}</th>
+                    <th>{{ _('Pretest?') }}</th>
+                    <!-- <th class="generator-args">{{ _('Generator args') }}</th> -->
                     {% if cases_formset.can_delete %}
-                        <td>{{ form.DELETE }}</td>
+                        <th>{{ _('Delete?') }}
+                            <br>
+                            <input type="checkbox" name="delete-all" id="delete-all">
+                        </th>
                     {% endif %}
                 </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                {% for form in all_case_forms %}
+                    {% if form.non_field_errors() %}
+                        <tr>
+                            <td colspan="{{ 9 + cases_formset.can_delete }}">{{ form.non_field_errors() }}</td>
+                        </tr>
+                    {% endif %}
+                    {% if form.prefix and '__prefix__' in form.prefix %}
+                        </tbody>
+                        <tbody class="extra-row-body" style="display: none">
+                    {% endif %}
+                    <tr data-type="{{ form['type'].value() }}">
+                        <td><a class="add-case-row-below" href="#"><i class="fa fa-plus"></i></a></td>
+                        <td>{{ form.id }}{{ form.order.errors }}{{ form.order }}</td>
+                        <td class="type-column">{{ form.type.errors }}{{ form.type }}</td>
+                        <td{% if not (form.empty_permitted or form['type'].value() != 'C' or
+                                      form['input_file'].value() in valid_files) %} class="bad-file"{% endif %}>
+                            {{ form.input_file.errors }}{{ form.input_file }}
+                        </td>
+                        <td{% if not (form.empty_permitted or form['type'].value() != 'C' or
+                                      form['output_file'].value() in valid_files) %} class="bad-file"{% endif %}>
+                            {{ form.output_file.errors }}{{ form.output_file }}
+                        </td>
+                        <td>{{ form.points.errors }}{{ form.points }}</td>
+                        <td>{{ form.is_pretest.errors }}{{ form.is_pretest }}</td>
+                        <!-- <td class="generator-args">{{ form.generator_args.errors }}{{ form.generator_args }}
+                            <a href="javascript:void(0)" class="edit-generator-args">
+                                <i class="fa fa-pencil"></i>
+                                {{ _('Edit generator args') }}
+                            </a>
+                        </td> -->
+                        {% if cases_formset.can_delete %}
+                            <td>{{ form.DELETE }}</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
         <input type="submit" value="{{ _('Apply!') }}" class="button" id="submit-button">
         {% if not is_mirror_problem %}
-        <a id="add-case-row" href="#" style="display: None;"><i class="fa fa-plus"></i> {{ _('Add new case') }}</a>
+            <a id="add-case-row" href="#" style="display: None;"><i class="fa fa-plus"></i> {{ _('Add new case') }}</a>
         {% endif %}
     </form>
     <div style="display: none" class="generator-args-editor"><textarea></textarea><a class="button">{{ _('Save') }}</a></div>
