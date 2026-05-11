@@ -58,25 +58,47 @@ def problem_update(sender, instance, **kwargs):
     if hasattr(instance, '_updating_stats_only'):
         return
 
+    related_problem_ids = set(getattr(instance, '_mirror_cache_related_ids', set()) or set())
+    related_problem_ids.add(instance.id)
+
     cache.delete_many([
-        make_template_fragment_key('submission_problem', (instance.id,)),
-        make_template_fragment_key('problem_feed', (instance.id,)),
-        'problem_tls:%s' % instance.id, 'problem_mls:%s' % instance.id,
+        make_template_fragment_key('submission_problem', (problem_id,))
+        for problem_id in related_problem_ids
+    ] + [
+        make_template_fragment_key('problem_feed', (problem_id,))
+        for problem_id in related_problem_ids
+    ] + [
+        'problem_tls:%s' % problem_id for problem_id in related_problem_ids
+    ] + [
+        'problem_mls:%s' % problem_id for problem_id in related_problem_ids
     ])
     cache.delete_many([
-        make_template_fragment_key('problem_html', (instance.id, engine, lang))
-        for lang, _ in settings.LANGUAGES for engine in EFFECTIVE_MATH_ENGINES
+        make_template_fragment_key('problem_html', (problem_id, engine, lang))
+        for problem_id in related_problem_ids
+        for lang, _ in settings.LANGUAGES
+        for engine in EFFECTIVE_MATH_ENGINES
     ])
     cache.delete_many([
-        make_template_fragment_key('problem_authors', (instance.id, lang))
+        make_template_fragment_key('problem_authors', (problem_id, lang))
+        for problem_id in related_problem_ids
         for lang, _ in settings.LANGUAGES
     ])
-    cache.delete_many(['generated-meta-problem:%s:%d' % (lang, instance.id) for lang, _ in settings.LANGUAGES])
+    cache.delete_many([
+        'generated-meta-problem:%s:%d' % (lang, problem_id)
+        for problem_id in related_problem_ids
+        for lang, _ in settings.LANGUAGES
+    ])
 
-    for lang, _ in settings.LANGUAGES:
-        cached_pdf_filename = get_pdf_path('%s.%s.pdf' % (instance.code, lang))
-        if cached_pdf_filename is not None:
-            unlink_if_exists(cached_pdf_filename)
+    for problem_id in related_problem_ids:
+        problem_code = instance.code
+        if problem_id != instance.id:
+            problem_code = Problem.objects.filter(pk=problem_id).values_list('code', flat=True).first()
+        if not problem_code:
+            continue
+        for lang, _ in settings.LANGUAGES:
+            cached_pdf_filename = get_pdf_path('%s.%s.pdf' % (problem_code, lang))
+            if cached_pdf_filename is not None:
+                unlink_if_exists(cached_pdf_filename)
 
 
 @receiver(post_save, sender=Profile)

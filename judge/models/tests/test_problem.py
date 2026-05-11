@@ -4,8 +4,10 @@ from django.test import (
     TestCase,
     override_settings,
 )
+from django.urls import reverse
 from django.utils import timezone
 
+from judge.forms import ProblemEditForm
 from judge.models import (
     ContestParticipation,
     Language,
@@ -26,6 +28,10 @@ from judge.models.tests.util import (
     create_problem_type,
     create_solution,
     create_user,
+)
+from judge.utils.problem_mirror import (
+    get_mirrorable_source_queryset,
+    validate_mirror_source_for_target,
 )
 
 
@@ -466,6 +472,209 @@ class ProblemTestCase(CommonDataMixin, TestCase):
                         Problem.get_editable_problems(user).distinct().values_list('code', flat=True),
                         problem_codes,
                     )
+
+    def test_mirror_chain_cache_and_rebuild(self):
+        root = create_problem(code='mirror_root_public', is_public=True)
+        first = create_problem(code='mirror_first_public', is_public=True, mirror_of=root)
+        second = create_problem(code='mirror_second_public', is_public=True, mirror_of=first)
+
+        first.refresh_from_db()
+        second.refresh_from_db()
+        self.assertEqual(first.mirror_root_id, root.id)
+        self.assertEqual(second.mirror_root_id, root.id)
+
+        first.mirror_of = None
+        first.save()
+
+        second.refresh_from_db()
+        self.assertEqual(second.mirror_root_id, first.id)
+
+    def test_mirror_cycle_is_rejected(self):
+        root = create_problem(code='mirror_cycle_root', is_public=True)
+        first = create_problem(code='mirror_cycle_first', is_public=True, mirror_of=root)
+        with self.assertRaises(ValidationError):
+            root.mirror_of = first
+            root.save()
+
+    def test_mirror_permission_policy(self):
+        public_source = create_problem(code='mirror_policy_public', is_public=True)
+        same_org_source = create_problem(
+            code='mirror_policy_same_org',
+            is_public=True,
+            is_organization_private=True,
+            organizations=('problem organization',),
+        )
+        other_org = create_organization(name='other mirror org', admins=('staff_problem_edit_own',))
+        other_org_source = create_problem(
+            code='mirror_policy_other_org',
+            is_public=True,
+            is_organization_private=True,
+            organizations=('other mirror org',),
+        )
+
+        validate_mirror_source_for_target(
+            user=self.users['normal'],
+            source=public_source,
+            target_org=self.problem_organization,
+        )
+        with self.assertRaises(ValidationError):
+            validate_mirror_source_for_target(
+                user=self.users['staff_problem_edit_own'],
+                source=public_source,
+                target_org=self.problem_organization,
+            )
+
+        validate_mirror_source_for_target(
+            user=self.users['normal'],
+            source=same_org_source,
+            target_org=self.problem_organization,
+        )
+        with self.assertRaises(ValidationError):
+            validate_mirror_source_for_target(
+                user=self.users['staff_problem_edit_own'],
+                source=same_org_source,
+                target_org=self.problem_organization,
+            )
+
+        with self.assertRaises(ValidationError):
+            validate_mirror_source_for_target(
+                user=self.users['normal'],
+                source=other_org_source,
+                target_org=self.problem_organization,
+            )
+
+    def test_mirror_source_queryset_requires_org_admin(self):
+        public_source = create_problem(code='mirror_list_public', is_public=True)
+        private_same_org = create_problem(
+            code='mirror_list_same_org',
+            is_public=True,
+            is_organization_private=True,
+            organizations=('problem organization',),
+        )
+
+        admin_qs = get_mirrorable_source_queryset(
+            self.users['normal'],
+            target_org=self.problem_organization,
+        )
+        self.assertIn(public_source.id, admin_qs.values_list('id', flat=True))
+        self.assertIn(private_same_org.id, admin_qs.values_list('id', flat=True))
+
+        non_admin_qs = get_mirrorable_source_queryset(
+            self.users['staff_problem_edit_own'],
+            target_org=self.problem_organization,
+        )
+        self.assertFalse(non_admin_qs.exists())
+
+    def _problem_edit_payload(self, problem, mirror_of=None):
+        payload = {
+            'is_public': 'on' if problem.is_public else '',
+            'code': problem.code,
+            'name': problem.name,
+            'time_limit': str(problem.time_limit),
+            'memory_limit': str(problem.memory_limit),
+            'points': str(problem.points),
+            'source': problem.source or '',
+            'group': str(problem.group_id),
+            'submission_source_visibility_mode': problem.submission_source_visibility_mode,
+            'testcase_visibility_mode': problem.testcase_visibility_mode,
+            'description': problem.description or '',
+            'types': [str(pk) for pk in problem.types.values_list('id', flat=True)],
+            'testers': [str(pk) for pk in problem.testers.values_list('id', flat=True)],
+            'mirror_of': str(mirror_of.pk) if mirror_of else '',
+        }
+        if problem.partial:
+            payload['partial'] = 'on'
+        return payload
+
+    def test_problem_edit_form_rejects_mirror_for_non_org_admin(self):
+        mirror_source = create_problem(code='mirror_form_public_source', is_public=True)
+        org_problem = create_problem(
+            code='problemorganization_mfna',
+            is_public=True,
+            is_organization_private=True,
+            organizations=('problem organization',),
+            types=('type',),
+        )
+
+        payload = self._problem_edit_payload(org_problem, mirror_of=mirror_source)
+        form = ProblemEditForm(
+            data=payload,
+            instance=org_problem,
+            user=self.users['staff_problem_edit_own'],
+            org_pk=self.problem_organization.pk,
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('mirror_of', form.errors)
+
+    def test_problem_edit_form_allows_mirror_for_org_admin(self):
+        mirror_source = create_problem(code='mirror_form_public_source_admin', is_public=True)
+        org_problem = create_problem(
+            code='problemorganization_mfa',
+            is_public=True,
+            is_organization_private=True,
+            organizations=('problem organization',),
+            types=('type',),
+        )
+
+        payload = self._problem_edit_payload(org_problem, mirror_of=mirror_source)
+        form = ProblemEditForm(
+            data=payload,
+            instance=org_problem,
+            user=self.users['normal'],
+            org_pk=self.problem_organization.pk,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def _problem_data_payload(self):
+        return {
+            'mirror-mirror_of': '',
+            'problem-data-checker': 'standard',
+            'problem-data-checker_args': '',
+            'problem-data-checker_type': 'default',
+            'problem-data-grader': 'standard',
+            'problem-data-grader_args': '',
+            'problem-data-io_method': 'standard',
+            'problem-data-io_input_file': '',
+            'problem-data-io_output_file': '',
+            'problem-data-output_limit': '',
+            'cases-TOTAL_FORMS': '0',
+            'cases-INITIAL_FORMS': '0',
+            'cases-MIN_NUM_FORMS': '0',
+            'cases-MAX_NUM_FORMS': '1',
+        }
+
+    def test_problem_data_page_shows_mirror_selector(self):
+        problem = create_problem(
+            code='mirror_selector_page',
+            is_public=True,
+            authors=('staff_problem_edit_own',),
+            types=('type',),
+        )
+
+        self.client.force_login(self.users['staff_problem_edit_all'])
+        response = self.client.get(reverse('problem_data', args=[problem.code]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id_mirror-mirror_of')
+        self.assertContains(response, 'name="mirror-mirror_of"')
+
+    def test_problem_data_rejects_archive_update_on_mirror_problem(self):
+        root = create_problem(code='mirror_warning_root', is_public=True, types=('type',))
+        mirror = create_problem(
+            code='mirror_warning_child',
+            is_public=True,
+            authors=('staff_problem_edit_all',),
+            mirror_of=root,
+            types=('type',),
+        )
+        mirror.refresh_from_db()
+
+        self.client.force_login(self.users['staff_problem_edit_all'])
+        payload = self._problem_data_payload()
+        payload['mirror-mirror_of'] = str(root.id)
+        payload['problem-data-zipfile-clear'] = 'on'
+        response = self.client.post(reverse('problem_data', args=[mirror.code]), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Mirror problems cannot upload archives directly')
 
 
 @override_settings(LANGUAGE_CODE='en-US', LANGUAGES=(('en', 'English'),))

@@ -198,6 +198,30 @@
         </div>
     {% endif %}
 
+    {% if is_mirror_problem and can_edit_problem %}
+        <hr>
+        <div class="problem-info-entry">
+            <i class="fa fa-copy fa-fw"></i>
+            <span class="pi-name">{{ _('Mirrors test archive from:') }}</span>
+            <span class="pi-value">
+                {% if mirror_root %}
+                    {{ mirror_root.code }} - {{ mirror_root.name }}
+                {% elif mirror_source %}
+                    {{ mirror_source.code }} - {{ mirror_source.name }}
+                {% endif %}
+            </span>
+        </div>
+    {% endif %}
+
+    {% if can_view_mirror_usage %}
+        <hr>
+        <div class="problem-info-entry">
+            <i class="fa fa-sitemap fa-fw"></i>
+            <span class="pi-name">{{ _('Mirrored by:') }}</span>
+            <span class="pi-value">{{ mirrored_by|length }}</span>
+        </div>
+    {% endif %}
+
     <hr style="padding-top: 0.3em">
 
     <div class="problem-info-entry">

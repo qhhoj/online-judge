@@ -56,6 +56,11 @@ from judge.models import (  # noqa: I101
     Tag,
     WebAuthnCredential,
 )
+from judge.utils.problem_mirror import (
+    get_mirrorable_source_queryset,
+    get_problem_single_organization,
+    validate_mirror_source_for_target,
+)
 from judge.utils.subscription import newsletter_id
 from judge.widgets import (
     HeavySelect2MultipleWidget,
@@ -233,6 +238,8 @@ class ProblemEditForm(ModelForm):
         self.org_pk = org_pk = kwargs.pop('org_pk', None)
         self.user = kwargs.pop('user', None)
         super(ProblemEditForm, self).__init__(*args, **kwargs)
+        target_org = Organization.objects.filter(pk=org_pk).first() if org_pk else None
+        target_problem = self.instance if (self.instance and self.instance.pk) else None
 
         # Only allow to public/private problem in organization
         if org_pk is None:
@@ -245,6 +252,22 @@ class ProblemEditForm(ModelForm):
                 'organization_profile_select2',
                 args=(org_pk,),
             )
+
+        mirror_data_url = reverse('mirror_problem_select2')
+        if target_problem is not None:
+            mirror_data_url += '?target=%d' % target_problem.pk
+            if org_pk is not None:
+                mirror_data_url += '&org_pk=%d' % org_pk
+        elif org_pk is not None:
+            mirror_data_url += '?org_pk=%d' % org_pk
+
+        self.fields['mirror_of'].queryset = get_mirrorable_source_queryset(
+            self.user,
+            target_problem=target_problem,
+            target_org=target_org,
+        )
+        self.fields['mirror_of'].widget.data_view = None
+        self.fields['mirror_of'].widget.data_url = mirror_data_url
 
         self.fields['testers'].help_text = \
             str(self.fields['testers'].help_text) + ' ' + \
@@ -308,17 +331,44 @@ class ProblemEditForm(ModelForm):
             )
         return self.cleaned_data['time_limit']
 
+    def clean(self):
+        cleaned_data = super().clean()
+        mirror_of = cleaned_data.get('mirror_of')
+        if mirror_of is not None:
+            target_org = Organization.objects.filter(pk=self.org_pk).first() if self.org_pk else None
+            target_problem = self.instance if (self.instance and self.instance.pk) else None
+            if target_org is None and target_problem is not None and target_problem.is_organization_private:
+                target_org = get_problem_single_organization(target_problem)
+                if target_org is None:
+                    self.add_error(
+                        'mirror_of',
+                        _('Organization-private problems must belong to exactly one organization to use mirroring.'),
+                    )
+            if 'mirror_of' not in self.errors:
+                try:
+                    validate_mirror_source_for_target(
+                        user=self.user,
+                        source=mirror_of,
+                        target_problem=target_problem,
+                        target_org=target_org,
+                    )
+                except ValidationError as e:
+                    self.add_error('mirror_of', e)
+
+        return cleaned_data
+
     class Meta:
         model = Problem
         fields = [
             'is_public', 'code', 'name', 'time_limit', 'memory_limit', 'points', 'partial',
-            'statement_file', 'problem_material_file', 'source', 'types', 'group',
+            'statement_file', 'problem_material_file', 'source', 'mirror_of', 'types', 'group',
             'submission_source_visibility_mode',
             'testcase_visibility_mode', 'description', 'testers',
         ]
         widgets = {
             'types': Select2MultipleWidget,
             'group': Select2Widget,
+            'mirror_of': HeavySelect2Widget(data_view='mirror_problem_select2', attrs={'style': 'width: 100%'}),
             'submission_source_visibility_mode': Select2Widget,
             'testcase_visibility_mode': Select2Widget,
             'description': MartorWidget(attrs={'data-markdownfy-url': reverse_lazy('problem_preview')}),
