@@ -1,4 +1,8 @@
+import io
+import zipfile
+
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import (
     SimpleTestCase,
     TestCase,
@@ -675,6 +679,52 @@ class ProblemTestCase(CommonDataMixin, TestCase):
         response = self.client.post(reverse('problem_data', args=[mirror.code]), data=payload)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Mirror problems cannot upload archives directly')
+
+    def test_problem_data_page_hides_case_editor_but_keeps_config_for_mirror(self):
+        root = create_problem(code='mirror_editor_root', is_public=True, types=('type',))
+        mirror = create_problem(
+            code='mirror_editor_child',
+            is_public=True,
+            authors=('staff_problem_edit_all',),
+            mirror_of=root,
+            types=('type',),
+        )
+        mirror.refresh_from_db()
+
+        self.client.force_login(self.users['staff_problem_edit_all'])
+        response = self.client.get(reverse('problem_data', args=[mirror.code]))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'id="case-table" class="table"', html=False)
+        self.assertContains(response, 'id="id_problem-data-grader"')
+
+    def test_problem_data_warning_shows_uploaded_archive_fake_name(self):
+        root = create_problem(
+            code='mirror_warning_fake_file_root',
+            is_public=True,
+            authors=('staff_problem_edit_all',),
+            types=('type',),
+        )
+        create_problem(
+            code='mirror_warning_fake_file_child',
+            is_public=True,
+            authors=('staff_problem_edit_all',),
+            mirror_of=root,
+            types=('type',),
+        )
+
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, 'w') as archive:
+            archive.writestr('1.in', '1\n')
+            archive.writestr('1.out', '1\n')
+        stream.seek(0)
+
+        self.client.force_login(self.users['staff_problem_edit_all'])
+        payload = self._problem_data_payload()
+        payload['problem-data-zipfile'] = SimpleUploadedFile('root-tests.zip', stream.read(), content_type='application/zip')
+        response = self.client.post(reverse('problem_data', args=[root.code]), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Selected archive (fake preview):')
+        self.assertContains(response, 'root-tests.zip')
 
 
 @override_settings(LANGUAGE_CODE='en-US', LANGUAGES=(('en', 'English'),))
