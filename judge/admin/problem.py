@@ -59,6 +59,7 @@ class ProblemForm(ModelForm):
                 data_view='organization_select2',
                 attrs={'style': 'width: 100%'},
             ),
+            'mirror_of': AdminHeavySelect2Widget(data_view='problem_select2', attrs={'style': 'width: 100%'}),
             'types': AdminSelect2MultipleWidget,
             'group': AdminSelect2Widget,
             'description': AdminMartorWidget(attrs={'data-markdownfy-url': reverse_lazy('problem_preview')}),
@@ -148,7 +149,7 @@ class ProblemAdmin(NoBatchDeleteMixin, VersionAdmin):
                     'curators', 'testers', 'is_organization_private', 'organizations',  # noqa: E501
                     'submission_source_visibility_mode', 'testcase_visibility_mode',
                     'testcase_result_visibility_mode', 'allow_view_feedback',
-                    'is_full_markup', 'pdf_url', 'source', 'description', 'license',
+                    'is_full_markup', 'pdf_url', 'source', 'mirror_of', 'mirror_root', 'description', 'license',
                 ),
             },
         ),
@@ -193,6 +194,7 @@ class ProblemAdmin(NoBatchDeleteMixin, VersionAdmin):
             fields += ('is_full_markup',)
             if obj and obj.is_full_markup:
                 fields += ('description',)
+        fields += ('mirror_root',)
         return fields
 
     @admin.display(description=_('authors'))

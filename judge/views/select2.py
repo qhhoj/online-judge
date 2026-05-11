@@ -21,6 +21,7 @@ from judge.models import (
     Tag,
     TagGroup,
 )
+from judge.utils.problem_mirror import get_mirrorable_source_queryset
 
 
 def _get_user_queryset(term):
@@ -143,6 +144,25 @@ class ProblemSelect2View(Select2View):
     def get_queryset(self):
         return Problem.get_visible_problems(self.request.user) \
                       .filter(Q(code__icontains=self.term) | Q(name__icontains=self.term))
+
+
+class MirrorProblemSelect2View(Select2View):
+    def get_queryset(self):
+        target_problem = None
+        target_problem_id = self.request.GET.get('target')
+        if target_problem_id and target_problem_id.isdigit():
+            target_problem = Problem.objects.filter(pk=int(target_problem_id)).first()
+
+        target_org = None
+        target_org_id = self.request.GET.get('org_pk')
+        if target_org_id and target_org_id.isdigit():
+            target_org = Organization.objects.filter(pk=int(target_org_id)).first()
+
+        return get_mirrorable_source_queryset(
+            self.request.user,
+            target_problem=target_problem,
+            target_org=target_org,
+        ).filter(Q(code__icontains=self.term) | Q(name__icontains=self.term))
 
 
 class ContestSelect2View(Select2View):

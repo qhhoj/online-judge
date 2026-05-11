@@ -147,11 +147,16 @@ def judge_submission(submission, rejudge=False, batch_rejudge=False, judge_id=No
         if participation.live or participation.spectate:
             banned_judges = list(participation.contest.banned_judges.values_list('name', flat=True))
 
+    judge_problem_code = submission.problem.code
+    if submission.problem.mirror_root_id is not None:
+        # Mirror submissions are judged using the root problem test archive/config.
+        judge_problem_code = submission.problem.mirror_root.code
+
     try:
         response = judge_request({
             'name': 'submission-request',
             'submission-id': submission.id,
-            'problem-id': submission.problem.code,
+            'problem-id': judge_problem_code,
             'language': submission.language.key,
             'source': submission.source.source,
             'judge-id': judge_id,

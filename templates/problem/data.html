@@ -2,6 +2,7 @@
 
 {% block js_media %}
     {{data_form.media.js}}
+    {{ mirror_form.media.js }}
     {% include "leave-warning.html" %}
     <script type="text/javascript" src="{{ static('libs/jquery-sortable.js') }}"></script>
     <script type="text/javascript" src="{{ static('libs/featherlight/featherlight.min.js') }}"></script>
@@ -702,11 +703,54 @@
             <li>{{ data_form.instance.feedback }}</li>
         </ul>
     {% endif %}
+    {% if is_mirror_problem %}
+        <div class="alert alert-warning">
+            {{ _('This problem mirrors test data from') }}
+            {% if mirror_root %}
+                <strong>{{ mirror_root.code }} - {{ mirror_root.name }}</strong>
+            {% elif mirror_source %}
+                <strong>{{ mirror_source.code }} - {{ mirror_source.name }}</strong>
+            {% endif %}
+            {{ _('. Submissions are judged using the root problem test archive and config.') }}
+        </div>
+    {% endif %}
+    {% if show_mirror_root_warning and mirror_dependents_count %}
+        <div class="alert alert-warning">
+            <strong>
+                {{ _('Warning: this root archive is used by') }} {{ mirror_dependents_count }} {{ _('mirror problem(s).') }}
+            </strong>
+            <br>
+            {{ _('You must confirm before updating the shared archive.') }}
+        </div>
+    {% endif %}
     <form action="" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
+        {% if show_mirror_root_warning and mirror_dependents_count %}
+            <div class="alert alert-warning">
+                <label style="display: inline-block;">
+                    <input type="checkbox" name="confirm_mirror_root_archive_update" value="1" required>
+                    {{ _('I understand this update affects all mirror problems using this root archive.') }}
+                </label>
+            </div>
+        {% endif %}
         {{ cases_formset.management_form }}
         <table class="table">
-            {{ data_form.as_table() }}
+            <tbody>
+            <tr>
+                <th>{{ _('Mirror test archive source') }}</th>
+                <td>
+                    {{ mirror_form.mirror_of }}
+                    {% if mirror_form.mirror_of.help_text %}
+                        <br>
+                        <span class="helptext">{{ mirror_form.mirror_of.help_text }}</span>
+                    {% endif %}
+                    {{ mirror_form.mirror_of.errors }}
+                </td>
+            </tr>
+            </tbody>
+            <tbody {% if is_mirror_problem %}style="display: none;"{% endif %}>
+                {{ data_form.as_table() }}
+            </tbody>
         </table>
         <div class="alert alert-warning alert-dismissable" id="fill-test-case-noti" style="display: none;">
             <a class="close">x</a>
@@ -719,7 +763,7 @@
         {% if cases_formset._non_form_errors %}
             {{ cases_formset._non_form_errors }}
         {% endif %}
-        <table id="case-table" class="table">
+        <table id="case-table" class="table" {% if is_mirror_problem %}style="display: none;"{% endif %}>
             <thead>
             <tr>
                 <th><a id="add-case-first-row" href="#"><i class="fa fa-plus"></i></a></th>
@@ -777,7 +821,9 @@
             </tbody>
         </table>
         <input type="submit" value="{{ _('Apply!') }}" class="button" id="submit-button">
+        {% if not is_mirror_problem %}
         <a id="add-case-row" href="#" style="display: None;"><i class="fa fa-plus"></i> {{ _('Add new case') }}</a>
+        {% endif %}
     </form>
     <div style="display: none" class="generator-args-editor"><textarea></textarea><a class="button">{{ _('Save') }}</a></div>
 {% endblock %}

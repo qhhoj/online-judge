@@ -330,6 +330,24 @@ class Problem(models.Model):
         help_text=_('If private, only these organizations may see the problem.'),
     )
     is_organization_private = models.BooleanField(verbose_name=_('private to organizations'), default=False)
+    mirror_of = models.ForeignKey(
+        'self',
+        verbose_name=_('mirror test data from'),
+        null=True,
+        blank=True,
+        related_name='direct_mirrors',
+        on_delete=SET_NULL,
+        help_text=_('Use another problem\'s test archive while keeping this problem\'s own config/init.yml.'),
+    )
+    mirror_root = models.ForeignKey(
+        'self',
+        verbose_name=_('mirror root problem'),
+        null=True,
+        blank=True,
+        editable=False,
+        related_name='all_mirrors',
+        on_delete=SET_NULL,
+    )
 
     suggester = models.ForeignKey(Profile, blank=True, null=True, related_name='suggested_problems', on_delete=SET_NULL)
 
@@ -345,6 +363,8 @@ class Problem(models.Model):
         self._translated_name_cache = {}
         self._i18n_name = None
         self.__original_code = self.code
+        self.__original_mirror_of_id = self.__dict__.get('mirror_of_id')
+        self.__original_mirror_root_id = self.__dict__.get('mirror_root_id')
         # Since `points` may get defer()
         # We only set original points it is not deferred
         if 'points' in self.__dict__:
@@ -568,7 +588,8 @@ class Problem(models.Model):
 
     @property
     def usable_languages(self):
-        return self.allowed_languages.filter(judges__in=self.judges.filter(online=True)).distinct()
+        target = self.mirror_root if self.is_mirror and self.mirror_root else self
+        return self.allowed_languages.filter(judges__in=target.judges.filter(online=True)).distinct()
 
     def translated_name(self, language):
         if language in self._translated_name_cache:
@@ -668,6 +689,9 @@ class Problem(models.Model):
 
     @cached_property
     def io_method(self):
+        if self.is_mirror and self.mirror_root_id:
+            return self.mirror_root.io_method
+
         if self.is_manually_managed or not hasattr(self, 'data_files'):
             return {'method': 'unknown'}
 
@@ -690,8 +714,18 @@ class Problem(models.Model):
 
         return {'method': 'standard'}
 
+    @property
+    def is_mirror(self):
+        return self.mirror_of_id is not None
+
     def save(self, *args, **kwargs):
         is_clone = kwargs.pop('is_clone', False)
+        if self.mirror_of_id:
+            from judge.utils.problem_mirror import resolve_mirror_root_id
+            self.mirror_root_id = resolve_mirror_root_id(self.mirror_of_id, current_problem_id=self.pk)
+        else:
+            self.mirror_root = None
+
         # if short_circuit = true the judge will stop judging
         # as soon as the submission failed a test case
         self.short_circuit = not self.partial
@@ -725,6 +759,22 @@ class Problem(models.Model):
             self._rescore()
             # same reason as update __original_code
             self.__original_points = self.points
+
+        mirror_relation_changed = (
+            self.__original_mirror_of_id != self.mirror_of_id or
+            self.__original_mirror_root_id != self.mirror_root_id
+        )
+        if mirror_relation_changed:
+            self._mirror_cache_related_ids = {
+                self.id,
+                self.__original_mirror_root_id,
+                self.mirror_root_id,
+            }
+            self._mirror_cache_related_ids = {id for id in self._mirror_cache_related_ids if id}
+            from judge.utils.problem_mirror import rebuild_mirror_descendants
+            rebuild_mirror_descendants(self.id)
+            self.__original_mirror_of_id = self.mirror_of_id
+            self.__original_mirror_root_id = self.mirror_root_id
 
     save.alters_data = True
 
