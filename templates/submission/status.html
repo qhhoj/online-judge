@@ -147,21 +147,66 @@
     <hr class="half-hr">
     <br>
 
-    <div id="test-cases">{% include "submission/status-testcases.html" %}</div>
+    {% if external_submission %}
+        <div class="content-description" style="border: 1px solid #ddd; border-radius: 6px; padding: 16px; margin-bottom: 16px; background: #f9f9f9;">
+            <h4 style="margin-top: 0; margin-bottom: 12px;">
+                <i class="fa fa-globe"></i> {{ _('External Judge Result') }}
+            </h4>
+            {% if external_submission.pcd_status_canonical %}
+                <div style="margin-bottom: 8px;">
+                    <strong>{{ _('Verdict') }}:</strong>
+                    <span class="status">{{ external_submission.pcd_status_canonical }}</span>
+                </div>
+            {% endif %}
+            {% if external_submission.pcd_score_text %}
+                <div style="margin-bottom: 8px;">
+                    <strong>{{ _('Score') }}:</strong> {{ external_submission.pcd_score_text }}
+                </div>
+            {% endif %}
+            {% if external_submission.pcd_runtime_ms is not none %}
+                <div style="margin-bottom: 8px;">
+                    <strong>{{ _('Time') }}:</strong> {{ external_submission.pcd_runtime_ms }} ms
+                </div>
+            {% endif %}
+            {% if external_submission.pcd_memory_kb is not none %}
+                <div style="margin-bottom: 8px;">
+                    <strong>{{ _('Memory') }}:</strong> {{ external_submission.pcd_memory_kb }} KB
+                </div>
+            {% endif %}
+            {% if perms.judge.edit_own_problem or request.user.is_superuser or submission.problem.is_editable_by(request.user) %}
+                {% if submission.problem.has_external_problem %}
+                    <div style="margin-bottom: 8px; color: #666; font-size: 12px;">
+                        <strong>{{ _('OJ') }}:</strong> {{ submission.problem.external_problem.oj }}
+                    </div>
+                {% endif %}
+                {% if external_submission.pcd_remote_url %}
+                    <div style="font-size: 12px;">
+                        <a href="{{ external_submission.pcd_remote_url }}" target="_blank" rel="noopener" style="color: #337ab7;">
+                            <i class="fa fa-external-link"></i> {{ _('View on original OJ') }}
+                        </a>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    {% else %}
+        <div id="test-cases">{% include "submission/status-testcases.html" %}</div>
+    {% endif %}
 
     {% if not submission.is_graded %}
-        {% if (request.user == submission.user.user and not request.official_contest_mode) or perms.judge.abort_any_submission %}
-            <div id="abort-button">
-                <br>
-                <hr class="half-hr">
-                <br>
-                <form action="{{ url('submission_abort', submission.id) }}" method="post"
-                      title="{{ _('Press Ctrl-Enter or Command-Enter to abort.') }}">
-                    {% csrf_token %}
-                    <input style="float:left" type="submit" value="{{ _('Abort') }}" class="button">
-                    <br><br>
-                </form>
-            </div>
+        {% if not external_submission %}
+            {% if (request.user == submission.user.user and not request.official_contest_mode) or perms.judge.abort_any_submission %}
+                <div id="abort-button">
+                    <br>
+                    <hr class="half-hr">
+                    <br>
+                    <form action="{{ url('submission_abort', submission.id) }}" method="post"
+                          title="{{ _('Press Ctrl-Enter or Command-Enter to abort.') }}">
+                        {% csrf_token %}
+                        <input style="float:left" type="submit" value="{{ _('Abort') }}" class="button">
+                        <br><br>
+                    </form>
+                </div>
+            {% endif %}
         {% endif %}
     {% endif %}
 {% endblock %}

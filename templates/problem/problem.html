@@ -96,6 +96,12 @@
             {% endif %}
         {% endif %}
         <h2 style="display: inline-block">{{ title }}</h2>
+        {% if problem.has_external_problem %}
+            <span class="organization-tag">
+                <i class="fa fa-external-link"></i>
+                {{ _('External') }}: {{ problem.external_problem.oj }}
+            </span>
+        {% endif %}
         {% if problem.is_organization_private %}
             <span class="organization-tags">
                 {% for org in problem.organizations.all() %}

@@ -6,6 +6,7 @@ from datetime import timedelta
 from operator import itemgetter
 from random import randrange
 
+from django import forms
 from django.conf import settings
 from django.contrib.auth.mixins import (
     LoginRequiredMixin,
@@ -691,6 +692,89 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
     template_name = 'problem/submit.html'
     form_class = ProblemSubmitForm
 
+    def get_external_language_mappings(self):
+        if not self.object.has_external_problem:
+            return []
+        try:
+            mappings = self.object.external_problem.language_mappings or []
+        except Exception:
+            return []
+        return [
+            mapping for mapping in mappings
+            if mapping.get('vjudge_id') or mapping.get('vjudge_language_id') or mapping.get('language')
+        ]
+
+    def get_external_language_mapping(self, token):
+        try:
+            index = int(token)
+        except (TypeError, ValueError):
+            return None
+        mappings = self.get_external_language_mappings()
+        if index < 0 or index >= len(mappings):
+            return None
+        return mappings[index]
+
+    def _language_for_keys(self, keys):
+        for key in keys:
+            if key:
+                language = Language.objects.filter(key__iexact=key).first()
+                if language is not None:
+                    return language
+        return None
+
+    def get_external_mapping_language(self, mapping):
+        language = self._language_for_keys([mapping.get('qhhoj_key')])
+        if language is not None:
+            return language
+
+        name = '%s %s' % (
+            mapping.get('vjudge_name') or '',
+            mapping.get('vjudge_id') or mapping.get('vjudge_language_id') or mapping.get('language') or '',
+        )
+        normalized_name = name.lower()
+        if 'python' in normalized_name or 'pypy' in normalized_name:
+            language = self._language_for_keys(['PY3VJ', 'PYPY3', 'PY3'])
+        elif 'c++' in normalized_name or 'g++' in normalized_name or 'cpp' in normalized_name:
+            language = self._language_for_keys(['CPP26', 'CPP23', 'CPP20', 'CPP17', 'CPP14', 'CPP11'])
+        elif re.search(r'\bc\b', normalized_name):
+            language = self._language_for_keys(['C11', 'C99', 'C', 'CPP17'])
+        else:
+            language = None
+        if language is not None:
+            return language
+
+        default_language = self.default_language
+        if default_language is not None:
+            return default_language
+        return Language.objects.filter(include_in_problem=True).first() or Language.get_default_language()
+
+    def get_external_language_options(self):
+        options = []
+        for index, mapping in enumerate(self.get_external_language_mappings()):
+            language = self.get_external_mapping_language(mapping)
+            vjudge_id = mapping.get('vjudge_id') or mapping.get('vjudge_language_id') or mapping.get('language')
+            vjudge_name = mapping.get('vjudge_name') or vjudge_id
+            qhhoj_key = mapping.get('qhhoj_key') or vjudge_name
+            options.append({
+                'token': str(index),
+                'mapping': mapping,
+                'language': language,
+                'vjudge_id': vjudge_id,
+                'vjudge_name': vjudge_name,
+                'label': qhhoj_key,
+            })
+        return options
+
+    def get_default_external_language_token(self):
+        options = self.get_external_language_options()
+        if not options:
+            return ''
+        for option in options:
+            qhhoj_key = option['mapping'].get('qhhoj_key')
+            if qhhoj_key and qhhoj_key.lower() == self.default_language.key.lower():
+                return option['token']
+        return options[0]['token']
+
     @cached_property
     def contest_problem(self):
         if self.request.profile.current_contest is None:
@@ -741,8 +825,18 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
         kwargs = super().get_form_kwargs()
         kwargs['instance'] = Submission(user=self.request.profile, problem=self.object)
 
+        if self.object.has_external_problem and kwargs.get('data') is not None:
+            data = kwargs['data'].copy()
+            token = data.get('external_language') or self.get_default_external_language_token()
+            mapping = self.get_external_language_mapping(token)
+            if mapping is not None:
+                data['language'] = str(self.get_external_mapping_language(mapping).id)
+            kwargs['data'] = data
+
         target = self.object.mirror_root if self.object.is_mirror and self.object.mirror_root else self.object
-        if self.object.is_editable_by(self.request.user):
+        if self.object.has_external_problem:
+            kwargs['judge_choices'] = ()
+        elif self.object.is_editable_by(self.request.user):
             kwargs['judge_choices'] = tuple(
                 Judge.objects.filter(online=True, problems=target).values_list('name', 'name'),
             )
@@ -754,14 +848,39 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
 
-        form.fields['language'].queryset = (
-            self.object.usable_languages.order_by('name', 'key')
-            .prefetch_related(Prefetch('runtimeversion_set', RuntimeVersion.objects.order_by('priority')))
-        )
+        if self.object.has_external_problem:
+            options = self.get_external_language_options()
+            token = form.data.get('external_language') if form.is_bound else self.get_default_external_language_token()
+            if self.get_external_language_mapping(token) is None:
+                token = self.get_default_external_language_token()
+            selected_mapping = self.get_external_language_mapping(token)
+            selected_language = self.get_external_mapping_language(selected_mapping) if selected_mapping else None
+            language_ids = {option['language'].id for option in options if option.get('language')}
+            form.fields['language'].queryset = (
+                Language.objects.filter(id__in=language_ids).order_by('name', 'key')
+                .prefetch_related(Prefetch('runtimeversion_set', RuntimeVersion.objects.order_by('priority')))
+            )
+            form.fields['external_language'] = forms.ChoiceField(
+                choices=[(option['token'], option['label']) for option in options],
+                required=True,
+                label=_('Language'),
+            )
+            form.fields['external_language'].initial = token
+            if selected_language is not None:
+                form.initial['language'] = selected_language
+        else:
+            selected_language = None
+            form.fields['language'].queryset = (
+                self.object.usable_languages.order_by('name', 'key')
+                .prefetch_related(Prefetch('runtimeversion_set', RuntimeVersion.objects.order_by('priority')))
+            )
 
         form_data = getattr(form, 'cleaned_data', form.initial)
-        if 'language' in form_data:
-            form.fields['source'].widget.mode = form_data['language'].ace
+        language = selected_language or form_data.get('language')
+        if isinstance(language, int) or isinstance(language, str):
+            language = Language.objects.filter(id=language).first()
+        if language is not None:
+            form.fields['source'].widget.mode = language.ace
         form.fields['source'].widget.theme = self.request.profile.resolved_ace_theme
 
         return form
@@ -785,7 +904,27 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
                                   .exclude(status__in=['D', 'IE', 'CE', 'AB']).count() >= settings.DMOJ_SUBMISSION_LIMIT
             ):
                 return HttpResponse(format_html('<h1>{0}</h1>', _('You submitted too many submissions.')), status=429)
-        if not self.object.allowed_languages.filter(id=form.cleaned_data['language'].id).exists():
+        if self.object.has_external_problem:
+            if not self.object.is_external:
+                return generic_message(
+                    self.request,
+                    _('External judge unavailable'),
+                    _('Bài này tạm thời không nhận submission'),
+                    status=503,
+                )
+            external_mapping = self.get_external_language_mapping(form.cleaned_data.get('external_language'))
+            if external_mapping is None:
+                return generic_message(
+                    self.request,
+                    _('Unsupported language'),
+                    _('Ngôn ngữ %(language)s chưa được hỗ trợ cho bài này') % {
+                        'language': form.cleaned_data['language'].name,
+                    },
+                    status=400,
+                )
+        else:
+            external_mapping = None
+        if not self.object.has_external_problem and not self.object.allowed_languages.filter(id=form.cleaned_data['language'].id).exists():
             raise PermissionDenied()
         if not self.request.user.is_superuser and self.object.banned_users.filter(id=self.request.profile.id).exists():
             return generic_message(
@@ -833,6 +972,8 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
 
         # Save a query.
         self.new_submission.source = source
+        if external_mapping is not None:
+            self.new_submission._external_language_mapping = external_mapping
         self.new_submission.judge(force_judge=True, judge_id=form.cleaned_data['judge'])
 
         # In contest mode, we should log the ip
@@ -852,7 +993,18 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['langs'] = Language.objects.all()
-        context['no_judges'] = not context['form'].fields['language'].queryset
+        if self.object.has_external_problem:
+            context['external_language_options'] = self.get_external_language_options()
+            context['selected_external_language_token'] = (
+                context['form'].data.get('external_language')
+                if context['form'].is_bound else self.get_default_external_language_token()
+            )
+            context['no_judges'] = not context['external_language_options']
+        else:
+            context['external_language_options'] = []
+            context['selected_external_language_token'] = ''
+            context['no_judges'] = not context['form'].fields['language'].queryset
+        context['external_problem'] = getattr(self.object, 'external_problem', None) if self.object.has_external_problem else None
         context['submission_limit'] = self.contest_problem and self.contest_problem.max_submissions
         context['submissions_left'] = self.remaining_submission_count
         context['ACE_URL'] = settings.ACE_URL

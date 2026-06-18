@@ -63,6 +63,7 @@ from judge.views.problem_data import (
     ProblemSubmissionDiff,
     problem_data_file,
     problem_init_view,
+    verify_external_problem,
 )
 from judge.views.register import (
     ActivationView,
@@ -245,6 +246,7 @@ urlpatterns = [
 
             path('/test_data', ProblemDataView.as_view(), name='problem_data'),
             path('/test_data/init', problem_init_view, name='problem_data_init'),
+            path('/test_data/verify_external', verify_external_problem, name='problem_data_verify_external'),
             path('/test_data/diff', ProblemSubmissionDiff.as_view(), name='problem_submission_diff'),
             path('/data/<path:path>', problem_data_file, name='problem_data_file'),
 

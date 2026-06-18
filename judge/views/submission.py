@@ -93,7 +93,10 @@ def submission_related(queryset):
             'locked_after', 'problem__submission_source_visibility_mode', 'problem__testcase_result_visibility_mode',
             'user__username_display_override', 'user__display_badge__name', 'user__display_badge__mini',
     ) \
-        .prefetch_related('contest_object__authors', 'contest_object__curators')
+        .prefetch_related(
+            'contest_object__authors', 'contest_object__curators',
+            'external_submission', 'problem__external_problem',
+        )
 
 
 class SubmissionPermissionDenied(PermissionDenied):
@@ -299,11 +302,15 @@ class SubmissionStatus(SubmissionDetailBase):
     template_name = 'submission/status.html'
 
     def get_queryset(self):
-        return super().get_queryset().select_related('contest', 'contest_object', 'contest__problem')
+        return super().get_queryset().select_related(
+            'contest', 'contest_object', 'contest__problem',
+            'external_submission', 'problem__external_problem',
+        )
 
     def get_context_data(self, **kwargs):
         context = super(SubmissionStatus, self).get_context_data(**kwargs)
         submission = self.object
+        context['external_submission'] = getattr(submission, 'external_submission', None)
 
         context['batches'], statuses, test_case_count = group_test_cases(submission.test_cases.all())
 
