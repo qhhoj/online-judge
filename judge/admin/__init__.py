@@ -9,6 +9,7 @@ from judge.admin.contest import (
     ContestParticipationAdmin,
     ContestTagAdmin,
 )
+import judge.admin.external_judge  # noqa: F401
 from judge.admin.interface import (
     BlogPostAdmin,
     FlatPageAdmin,

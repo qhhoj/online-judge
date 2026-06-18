@@ -60,6 +60,11 @@ VNOJ_ENABLE_API = False
 
 VNOJ_OFFICIAL_CONTEST_MODE = False
 
+# External judge integration. The encryption key must be a 32-byte URL-safe
+# base64 key generated for cryptography.fernet.Fernet.
+EXTERNAL_JUDGE_ENCRYPTION_KEY = os.environ.get('EXTERNAL_JUDGE_ENCRYPTION_KEY')
+EXTERNAL_JUDGE_ALLOW_HTTP = DEBUG
+
 # Contribution points function
 # Both should be int
 VNOJ_CP_COMMENT = 1   # Each comment vote equals 1 CP
