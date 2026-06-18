@@ -116,6 +116,18 @@ class ProblemDataCompiler(object):
         self.generator = data.generator
 
     def make_init(self):
+        if self.problem.is_external:
+            ext = self.problem.external_problem
+            return {
+                'virtual_judge': {
+                    'enabled': True,
+                    'config_name': ext.config.name,
+                    'oj': ext.oj,
+                    'problem_id': ext.external_problem_id,
+                    'languages': ext.language_mappings or [],
+                },
+            }
+
         # The judge server has an ability to find the testcase
         # even if we don't specify it.
         # That is a good behavior, however, the zip file

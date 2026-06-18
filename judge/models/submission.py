@@ -135,6 +135,42 @@ class Submission(models.Model):
         return self.memory * 1024 if self.memory is not None else 0
 
     @property
+    def external_language_mapping(self):
+        try:
+            ext_sub = self.external_submission
+        except ObjectDoesNotExist:
+            return None
+        raw_response = getattr(ext_sub, 'raw_response', None)
+        if not isinstance(raw_response, dict):
+            return None
+        mapping = raw_response.get('_qhhoj_selected_external_language')
+        return mapping if isinstance(mapping, dict) else None
+
+    @property
+    def display_language_name(self):
+        mapping = self.external_language_mapping
+        if mapping:
+            return (
+                mapping.get('qhhoj_key') or
+                mapping.get('vjudge_name') or
+                mapping.get('vjudge_id') or
+                str(self.language)
+            )
+        return str(self.language)
+
+    @property
+    def display_language_short_name(self):
+        mapping = self.external_language_mapping
+        if mapping:
+            return (
+                mapping.get('qhhoj_key') or
+                mapping.get('vjudge_id') or
+                mapping.get('vjudge_name') or
+                self.language.short_display_name
+            )
+        return self.language.short_display_name
+
+    @property
     def short_status(self):
         return self.result or self.status
 
