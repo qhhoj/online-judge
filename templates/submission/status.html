@@ -148,9 +148,14 @@
     <br>
 
     {% if external_submission %}
+        {% set can_view_external_meta = request.user.is_superuser or submission.problem.is_editable_by(request.user) %}
         <div class="content-description" style="border: 1px solid #ddd; border-radius: 6px; padding: 16px; margin-bottom: 16px; background: #f9f9f9;">
             <h4 style="margin-top: 0; margin-bottom: 12px;">
-                <i class="fa fa-globe"></i> {{ _('External Judge Result') }}
+                {% if can_view_external_meta %}
+                    <i class="fa fa-globe"></i> {{ _('External Judge Result') }}
+                {% else %}
+                    {{ _('Result') }}
+                {% endif %}
             </h4>
             {% if external_submission.pcd_status_canonical %}
                 <div style="margin-bottom: 8px;">
@@ -173,7 +178,7 @@
                     <strong>{{ _('Memory') }}:</strong> {{ external_submission.pcd_memory_kb }} KB
                 </div>
             {% endif %}
-            {% if perms.judge.edit_own_problem or request.user.is_superuser or submission.problem.is_editable_by(request.user) %}
+            {% if can_view_external_meta %}
                 {% if submission.problem.has_external_problem %}
                     <div style="margin-bottom: 8px; color: #666; font-size: 12px;">
                         <strong>{{ _('OJ') }}:</strong> {{ submission.problem.external_problem.oj }}

@@ -1005,6 +1005,10 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
             context['selected_external_language_token'] = ''
             context['no_judges'] = not context['form'].fields['language'].queryset
         context['external_problem'] = getattr(self.object, 'external_problem', None) if self.object.has_external_problem else None
+        context['can_view_external_meta'] = bool(
+            self.object.has_external_problem
+            and (self.request.user.is_superuser or self.object.is_editable_by(self.request.user))
+        )
         context['submission_limit'] = self.contest_problem and self.contest_problem.max_submissions
         context['submissions_left'] = self.remaining_submission_count
         context['ACE_URL'] = settings.ACE_URL

@@ -247,7 +247,7 @@
 {% block body %}
     <br>
     {% if not no_judges %}
-        {% if external_problem %}
+        {% if external_problem and can_view_external_meta %}
             <div class="alert alert-info">
                 {{ _('Bài này được chấm bởi') }} <strong>{{ external_problem.oj }}</strong>
                 {{ _('thông qua external judge.') }}
