@@ -138,6 +138,10 @@ def judge_submission(submission, rejudge=False, batch_rejudge=False, judge_id=No
 
     SubmissionTestCase.objects.filter(submission_id=submission.id).delete()
 
+    if submission.problem.has_external_problem:
+        from judge.external_judge import schedule_external_submission
+        return schedule_external_submission(submission, rejudge=rejudge, batch_rejudge=batch_rejudge)
+
     banned_judges = []
     if hasattr(submission, 'contest'):
         # This is not an actual contest, this is a ContestSubmission

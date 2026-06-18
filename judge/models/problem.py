@@ -5,7 +5,7 @@ from operator import attrgetter
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.validators import (
     MaxValueValidator,
     MinValueValidator,
@@ -384,6 +384,22 @@ class Problem(models.Model):
 
     def languages_list(self):
         return self.allowed_languages.values_list('common_name', flat=True).distinct().order_by('common_name')
+
+    @cached_property
+    def has_external_problem(self):
+        try:
+            external_problem = self.external_problem
+        except ObjectDoesNotExist:
+            return False
+        return external_problem.is_active
+
+    @cached_property
+    def is_external(self):
+        try:
+            external_problem = self.external_problem
+        except ObjectDoesNotExist:
+            return False
+        return external_problem.is_available
 
     def is_editor(self, profile):
         return (self.authors.filter(id=profile.id) | self.curators.filter(id=profile.id)).exists()

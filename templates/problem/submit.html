@@ -47,6 +47,7 @@
                 function formatSelection(state) {
                     if (!state.id) return state.text; // optgroup
                     var data = makeDisplayData($("option[data-id=" + state.id + "]"));
+                    if (!data) return $('<span>').append($('<b>').text(state.text));
                     return $('<span>').append($('<b>').text(state.text), ' (', data, ')');
                 }
 
@@ -246,7 +247,14 @@
 {% block body %}
     <br>
     {% if not no_judges %}
-        {% if default_lang not in form.fields.language.queryset %}
+        {% if external_problem %}
+            <div class="alert alert-info">
+                {{ _('Bài này được chấm bởi') }} <strong>{{ external_problem.oj }}</strong>
+                {{ _('thông qua external judge.') }}
+            </div>
+        {% endif %}
+
+        {% if not external_problem and default_lang not in form.fields.language.queryset %}
             <div class="alert alert-warning alert-dismissable">
                 <a class="close">x</a>
                 <b>{{ _('Warning!') }}</b>
@@ -297,16 +305,32 @@
             <hr>
             {% if not no_judges %}
                 <div id="language">
-                    {{ form.language.errors }}
+                    {% if external_problem %}
+                        {{ form.external_language.errors }}
+                    {% else %}
+                        {{ form.language.errors }}
+                    {% endif %}
                     <div id="language-select">
-                        <select id="id_language" name="language">
-                            {% for lang in form.fields.language.queryset %}
-                                <option value="{{ lang.id }}" data-id="{{ lang.id }}" data-name="{{ lang.name }}"
-                                        data-info="{{ lang.info }}" data-ace="{{ lang.ace }}" data-fileonly="{{ lang.file_only }}"
-                                        data-ext="{{ lang.extension }}" data-file-size="{{ lang.file_size_limit }}"
-                                        data-judge-info="{{ runtime_versions(lang.runtime_versions()) }}"
-                                        {% if lang.id == default_lang.id %}selected{% endif %}>{{ lang.name }}</option>
-                            {% endfor %}
+                        <select id="id_language" name="{% if external_problem %}external_language{% else %}language{% endif %}">
+                            {% if external_problem %}
+                                {% for option in external_language_options %}
+                                    {% with lang=option.language %}
+                                        <option value="{{ option.token }}" data-id="{{ option.token }}" data-name="{{ option.label }}"
+                                                data-info="" data-ace="{{ lang.ace }}" data-fileonly="{{ lang.file_only }}"
+                                                data-ext="{{ lang.extension }}" data-file-size="{{ lang.file_size_limit }}"
+                                                data-judge-info=""
+                                                {% if option.token == selected_external_language_token %}selected{% endif %}>{{ option.label }}</option>
+                                    {% endwith %}
+                                {% endfor %}
+                            {% else %}
+                                {% for lang in form.fields.language.queryset %}
+                                    <option value="{{ lang.id }}" data-id="{{ lang.id }}" data-name="{{ lang.name }}"
+                                            data-info="{{ lang.info }}" data-ace="{{ lang.ace }}" data-fileonly="{{ lang.file_only }}"
+                                            data-ext="{{ lang.extension }}" data-file-size="{{ lang.file_size_limit }}"
+                                            data-judge-info="{{ runtime_versions(lang.runtime_versions()) }}"
+                                            {% if lang.id == default_lang.id %}selected{% endif %}>{{ lang.name }}</option>
+                                {% endfor %}
+                            {% endif %}
                         </select>
                     </div>
                 </div>

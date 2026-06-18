@@ -1,0 +1,74 @@
+<fieldset class="module aligned" id="virtual-judge-section">
+    <h3><i class="fa fa-globe"></i> {{ _('Virtual Judge') }}</h3>
+    {% if external_form.non_field_errors() %}
+        <div class="alert alert-danger">
+            {{ external_form.non_field_errors() }}
+        </div>
+    {% endif %}
+    {% if is_external_problem and external_problem %}
+        <div class="alert alert-info" style="margin-bottom: 12px;">
+            <strong><i class="fa fa-check-circle"></i> {{ _('Active') }}</strong> &mdash;
+            {{ external_problem.oj }} / {{ external_problem.external_problem_id }}
+            {% if external_problem.metadata_cache and external_problem.metadata_cache.title %}
+                &mdash; <em>{{ external_problem.metadata_cache.title }}</em>
+            {% endif %}
+            <br><small>{{ _('Languages mapped') }}: {{ external_problem.language_mappings|length }}</small>
+        </div>
+    {% endif %}
+    {% if not is_external_problem and (valid_files or problem.cases.exists()) %}
+        <div class="alert alert-warning" style="margin-bottom: 12px;">
+            <i class="fa fa-exclamation-triangle"></i>
+            {{ _('Enabling Virtual Judge will ignore local test data. Existing files and cases are kept but not used.') }}
+        </div>
+    {% endif %}
+    <table class="table" style="margin-bottom: 0;">
+        <tbody>
+        <tr>
+            <th style="width: 180px;">{{ external_form.enabled.label }}</th>
+            <td>{{ external_form.enabled }} {{ external_form.enabled.errors }}</td>
+        </tr>
+        <tr>
+            <th>{{ external_form.config.label }}</th>
+            <td>{{ external_form.config }} {{ external_form.config.errors }}</td>
+        </tr>
+        <tr>
+            <th>{{ _('OJ') }}</th>
+            <td>
+                {{ external_form.oj }}
+                {{ external_form.oj.errors }}
+                <span class="helptext">{{ _('e.g. CodeForces, QOJ, OJUZ, CSES, AtCoder') }}</span>
+            </td>
+        </tr>
+        <tr>
+            <th>{{ _('Problem ID') }}</th>
+            <td>
+                {{ external_form.external_problem_id }}
+                {{ external_form.external_problem_id.errors }}
+                <button type="button" class="button" id="external-verify-button" style="margin-left: 8px;">
+                    <i class="fa fa-search"></i> {{ _('Verify') }}
+                </button>
+                <span id="external-verify-status" class="helptext" style="margin-left: 8px;"></span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div id="external-language-section" style="margin-top: 12px; padding: 0 12px;">
+        <h4 style="margin-bottom: 8px;">{{ _('Language Mappings') }}</h4>
+        <p class="helptext" style="margin-bottom: 8px;">
+            {{ _('Map VJudge languages to existing QHHOJ language keys. Type the QHHOJ language key (e.g. CPP17, PY3) in the input field. Leave empty to disable a language.') }}
+        </p>
+        {{ external_form.language_mappings }}
+        {{ external_form.metadata_cache }}
+        {{ external_form.language_mappings.errors }}
+        <table class="table" id="external-language-mapping-table" style="width: 100%; font-size: 13px;">
+            <thead>
+            <tr>
+                <th style="width: 50%;">{{ _('VJudge Language') }}</th>
+                <th style="width: 50%;">{{ _('QHHOJ Language Key') }}</th>
+            </tr>
+            </thead>
+            <tbody id="external-language-mapping-body"></tbody>
+        </table>
+    </div>
+</fieldset>

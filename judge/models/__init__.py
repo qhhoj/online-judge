@@ -21,6 +21,11 @@ from judge.models.contest import (
     ContestTag,
     Rating,
 )
+from judge.models.external_judge import (
+    ExternalJudgeConfig,
+    ExternalProblem,
+    ExternalSubmission,
+)
 from judge.models.interface import (
     BlogPost,
     BlogVote,

@@ -10,7 +10,7 @@
                     {{ date }}
                 {% endif %}
                 <br>
-                <span>{{ submission.language }}</span>
+                <span>{{ submission.display_language_name }}</span>
                 {% if can_edit %}
                     [<a href="{{ url('admin:judge_submission_change', submission.id) }}">{{ _('Admin') }}</a>]
                 {% endif %}

@@ -3,6 +3,7 @@
 {% block js_media %}
     {{data_form.media.js}}
     {{ mirror_form.media.js }}
+    {{ external_form.media.js }}
     {% include "leave-warning.html" %}
     <script type="text/javascript" src="{{ static('libs/jquery-sortable.js') }}"></script>
     <script type="text/javascript" src="{{ static('libs/featherlight/featherlight.min.js') }}"></script>
@@ -585,12 +586,109 @@
                 reader.readAsArrayBuffer(fileInput);
             })
             $('form').dirty('setAsClean');
+
+            (function virtual_judge_setup() {
+                var $verify = $('#external-verify-button');
+                var $status = $('#external-verify-status');
+                var $mappings = $('#id_external-language_mappings');
+
+                function renderMappings(mappings) {
+                    var $body = $('#external-language-mapping-body').empty();
+                    if (!mappings.length) {
+                        $body.append($('<tr>').append($('<td>', {
+                            colspan: 2,
+                            'class': 'helptext',
+                            text: "{{ _('Click Verify to load available languages from VJudge.') }}"
+                        })));
+                        return;
+                    }
+                    mappings.forEach(function (mapping, index) {
+                        var $input = $('<input>', {
+                            type: 'text',
+                            'class': 'external-qhhoj-key-input',
+                            'data-index': index,
+                            value: mapping.qhhoj_key || '',
+                            placeholder: "{{ _('e.g. CPP17') }}",
+                            style: 'width: 140px; font-family: monospace; padding: 3px 6px;'
+                        });
+                        $body.append($('<tr>')
+                            .append($('<td>').text(mapping.vjudge_name + ' (' + mapping.vjudge_id + ')'))
+                            .append($('<td>').append($input)));
+                    });
+                }
+
+                function readMappings() {
+                    try {
+                        return JSON.parse($mappings.val() || '[]');
+                    } catch (e) {
+                        return [];
+                    }
+                }
+
+                function writeMappings(mappings) {
+                    $mappings.val(JSON.stringify(mappings));
+                }
+
+                function setStatus(iconClass, iconColor, message) {
+                    $status.empty();
+                    if (iconClass) {
+                        var $icon = $('<i>', {'class': iconClass});
+                        if (iconColor) {
+                            $icon.css('color', iconColor);
+                        }
+                        $status.append($icon).append(document.createTextNode(' '));
+                    }
+                    $status.append(document.createTextNode(message));
+                }
+
+                $('#external-language-mapping-body').on('input change', '.external-qhhoj-key-input', function () {
+                    var mappings = readMappings();
+                    var index = parseInt($(this).data('index'), 10);
+                    if (mappings[index]) {
+                        mappings[index].qhhoj_key = $(this).val().trim();
+                    }
+                    writeMappings(mappings);
+                });
+
+                $verify.click(function () {
+                    setStatus('fa fa-spinner fa-spin', null, "{{ _('Verifying...') }}");
+                    $.post('{{ url('problem_data_verify_external', problem.code) }}', {
+                        csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val(),
+                        config: $('#id_external-config').val(),
+                        oj: $('#id_external-oj').val(),
+                        external_problem_id: $('#id_external-external_problem_id').val()
+                    }).done(function (response) {
+                        var mappings = response.languages.map(function (language) {
+                            return {
+                                qhhoj_key: language.suggested_qhhoj_key || '',
+                                vjudge_id: language.id,
+                                vjudge_name: language.name
+                            };
+                        });
+                        if (response.title) {
+                            setStatus('fa fa-check', 'green', response.title);
+                        } else {
+                            setStatus(null, null, "{{ _('Verified.') }}");
+                        }
+                        $mappings.val(JSON.stringify(mappings));
+                        $('#id_external-metadata_cache').val(JSON.stringify(response.metadata || {}));
+                        renderMappings(mappings);
+                    }).fail(function (xhr) {
+                        var response = xhr.responseJSON || {};
+                        setStatus('fa fa-times', 'red', response.error || "{{ _('Could not verify external problem.') }}");
+                    });
+                    return false;
+                });
+
+                renderMappings(readMappings());
+            })();
         }).change();
     </script>
 {% endblock %}
 
 {% block media %}
     {{data_form.media.css}}
+    {{ external_form.media.css }}
     <link rel="stylesheet" href="{{ static('vnoj/jquery-ui/jquery-ui.min.css') }}">
     <style>
         #case-table .select2 {
@@ -742,6 +840,7 @@
             </div>
         {% endif %}
         {{ cases_formset.management_form }}
+        {% include "problem/data_virtual_judge.html" %}
         <table class="table">
             <tbody>
             <tr>
@@ -760,7 +859,7 @@
                 {{ data_form.as_table() }}
             </tbody>
         </table>
-        {% if not is_mirror_problem %}
+        {% if not is_mirror_problem and not is_external_problem %}
             <div class="alert alert-warning alert-dismissable" id="fill-test-case-noti" style="display: none;">
                 <a class="close">x</a>
                 <b>{{ _('Test cases have been filled automatically!') }}</b>
@@ -831,7 +930,7 @@
             </table>
         {% endif %}
         <input type="submit" value="{{ _('Apply!') }}" class="button" id="submit-button">
-        {% if not is_mirror_problem %}
+        {% if not is_mirror_problem and not is_external_problem %}
             <a id="add-case-row" href="#" style="display: None;"><i class="fa fa-plus"></i> {{ _('Add new case') }}</a>
         {% endif %}
     </form>

@@ -513,11 +513,11 @@ class ProblemSubmitForm(ModelForm):
     def check_submission(self):
         source = self.cleaned_data.get('source', '')
         content = self.files.get('submission_file', None)
-        language = self.cleaned_data.get('language', None)
-        lang_obj = Language.objects.get(name=language)
+        lang_obj = self.cleaned_data.get('language', None)
+        language = lang_obj.name if lang_obj is not None else ''
 
         if (source != '' and content is not None) or (source == '' and content is None) or \
-                (source != '' and lang_obj.file_only) or (content == '' and not lang_obj.file_only):
+                lang_obj is None or (source != '' and lang_obj.file_only) or (content == '' and not lang_obj.file_only):
             raise forms.ValidationError(_('Source code/file is missing or redundant. Please try again'))
 
         if content:

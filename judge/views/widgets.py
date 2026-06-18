@@ -57,7 +57,11 @@ def reject_submission(request):
     if not submission.problem.is_rejectable_by(request.user):
         return HttpResponseForbidden()
 
-    submission.reject()
+    if hasattr(submission, 'external_submission') or submission.problem.has_external_problem:
+        from judge.external_judge import reject_external_submission
+        reject_external_submission(submission)
+    else:
+        submission.reject()
 
     redirect = request.POST.get('path', None)
 
