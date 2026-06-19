@@ -15,7 +15,7 @@
     <div class="state">
         <span title="{{ submission.long_status }}" class="status">{{ submission.short_status }}</span> |
         <span class="language">{{ submission.display_language_short_name }}</span>
-        {% if submission.problem.has_external_problem and (request.user.is_superuser or submission.problem.is_editable_by(request.user)) %}
+        {% if submission.problem.has_external_problem and can_edit %}
             | <span class="status">{{ _('External') }}</span>
         {% endif %}
     </div>
