@@ -635,6 +635,7 @@ class ProblemTestCase(CommonDataMixin, TestCase):
 
     def _problem_data_payload(self):
         return {
+            'mirror-test_source': 'local',
             'mirror-mirror_of': '',
             'external-language_mappings': '[]',
             'external-metadata_cache': '{}',
@@ -671,6 +672,7 @@ class ProblemTestCase(CommonDataMixin, TestCase):
         self.client.force_login(self.users['staff_problem_edit_all'])
         response = self.client.get(reverse('problem_data', args=[problem.code]))
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="mirror-test_source"', count=3)
         self.assertContains(response, 'id_mirror-mirror_of')
         self.assertContains(response, 'name="mirror-mirror_of"')
 
@@ -687,6 +689,7 @@ class ProblemTestCase(CommonDataMixin, TestCase):
 
         self.client.force_login(self.users['staff_problem_edit_all'])
         payload = self._problem_data_payload()
+        payload['mirror-test_source'] = 'mirror'
         payload['mirror-mirror_of'] = str(root.id)
         payload['problem-data-zipfile-clear'] = 'on'
         response = self.client.post(reverse('problem_data', args=[mirror.code]), data=payload)
@@ -739,7 +742,7 @@ class ProblemTestCase(CommonDataMixin, TestCase):
         self.assertFalse(external.is_active)
         self.assertTrue(problem.data_files.zipfile)
 
-    def test_problem_data_rejects_mirror_and_virtual_judge_together(self):
+    def test_problem_data_external_source_clears_stale_mirror_selection(self):
         root = create_problem(code='mirror_external_root', is_public=True, types=('type',))
         problem = create_problem(
             code='mirror_external_child',
@@ -757,8 +760,8 @@ class ProblemTestCase(CommonDataMixin, TestCase):
         self.client.force_login(self.users['staff_problem_edit_all'])
         payload = self._problem_data_payload()
         payload.update({
+            'mirror-test_source': 'external',
             'mirror-mirror_of': str(root.id),
-            'external-enabled': 'on',
             'external-config': str(config.id),
             'external-oj': 'Example',
             'external-external_problem_id': '1000',
@@ -770,11 +773,10 @@ class ProblemTestCase(CommonDataMixin, TestCase):
         })
         response = self.client.post(reverse('problem_data', args=[problem.code]), data=payload)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'cannot be enabled at the same time', count=2)
+        self.assertEqual(response.status_code, 302)
         problem.refresh_from_db()
         self.assertIsNone(problem.mirror_of_id)
-        self.assertFalse(ExternalProblem.objects.filter(problem=problem).exists())
+        self.assertTrue(ExternalProblem.objects.filter(problem=problem, is_active=True).exists())
 
     def test_problem_data_page_hides_local_case_editor_but_keeps_config_for_mirror(self):
         root = create_problem(code='mirror_editor_root', is_public=True, types=('type',))

@@ -592,48 +592,41 @@
                 var $status = $('#external-verify-status');
                 var $mappings = $('#id_external-language_mappings');
                 var $enabled = $('#id_external-enabled');
-                var $mirror = $('#id_mirror-mirror_of');
-                var $archiveRow = $('#id_problem-data-zipfile').closest('tr');
+                var $sourceInputs = $('input[name="mirror-test_source"]');
+                var $mirrorRow = $('#mirror-source-row');
+                var $externalSection = $('#virtual-judge-section');
+                var $archiveInput = $('#id_problem-data-zipfile');
+                var $archiveClear = $('#problem-data-zipfile-clear_id');
+                var $archiveRow = $archiveInput.closest('tr');
                 var $localTestcaseSection = $('#local-testcase-section');
                 var $modeMessage = $('#test-source-mode-message');
 
                 function updateTestSourceMode() {
-                    var externalEnabled = $enabled.is(':checked');
-                    var mirrorSelected = !!$mirror.val();
-                    var localEnabled = !externalEnabled && !mirrorSelected;
+                    var mode = $sourceInputs.filter(':checked').val() || 'local';
+                    var localEnabled = mode === 'local';
+                    var mirrorEnabled = mode === 'mirror';
+                    var externalEnabled = mode === 'external';
 
+                    $sourceInputs.each(function () {
+                        $(this).closest('label').toggleClass('is-selected', this.checked);
+                    });
                     $archiveRow.toggle(localEnabled);
                     $localTestcaseSection.toggle(localEnabled);
-
-                    if (externalEnabled && mirrorSelected) {
-                        $modeMessage
-                            .removeClass('alert-info')
-                            .addClass('alert-danger')
-                            .text("{{ _('Mirror test data and Virtual Judge cannot be enabled at the same time.') }}");
-                    } else {
-                        $modeMessage
-                            .removeClass('alert-danger')
-                            .addClass('alert-info')
-                            .text(localEnabled
-                                ? "{{ _('Local test data is active. Upload or keep this problem\'s own archive.') }}"
-                                : externalEnabled
-                                    ? "{{ _('Virtual Judge is active. Local archives are kept but are not used.') }}"
-                                    : "{{ _('Mirror test data is active. The archive comes from the selected source problem.') }}");
+                    $mirrorRow.toggle(mirrorEnabled);
+                    $externalSection.toggle(externalEnabled);
+                    $enabled.prop('checked', externalEnabled);
+                    if (!localEnabled) {
+                        $archiveInput.val('');
+                        $archiveClear.prop('checked', false);
                     }
+                    $modeMessage.text(localEnabled
+                        ? "{{ _('Upload or keep this problem\'s own test archive.') }}"
+                        : mirrorEnabled
+                            ? "{{ _('Use the test archive from the selected source problem.') }}"
+                            : "{{ _('Send submissions to the configured Virtual Judge.') }}");
                 }
 
-                $enabled.on('change', function () {
-                    if (this.checked && $mirror.val()) {
-                        $mirror.val(null).trigger('change.select2');
-                    }
-                    updateTestSourceMode();
-                });
-                $mirror.on('change', function () {
-                    if ($mirror.val() && $enabled.is(':checked')) {
-                        $enabled.prop('checked', false);
-                    }
-                    updateTestSourceMode();
-                });
+                $sourceInputs.on('change', updateTestSourceMode);
 
                 function renderMappings(mappings) {
                     var $body = $('#external-language-mapping-body').empty();
@@ -737,6 +730,32 @@
     <style>
         #case-table .select2 {
             text-align: initial;
+        }
+
+        .test-source-selector ul {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            list-style: none;
+            margin: 8px 0 12px;
+            padding: 0;
+        }
+
+        .test-source-selector li label {
+            align-items: center;
+            border: 1px solid #bbb;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            gap: 8px;
+            min-height: 44px;
+            padding: 0 14px;
+        }
+
+        .test-source-selector li label.is-selected {
+            border-color: #3b7ddd;
+            box-shadow: 0 0 0 1px #3b7ddd;
+            font-weight: 600;
         }
 
         .order-column {
@@ -884,10 +903,16 @@
             </div>
         {% endif %}
         {{ cases_formset.management_form }}
+        <fieldset class="module aligned test-source-selector">
+            <legend>{{ mirror_form.test_source.label }}</legend>
+            {{ mirror_form.test_source }}
+            {{ mirror_form.test_source.errors }}
+            <div class="alert alert-info" id="test-source-mode-message" aria-live="polite"></div>
+        </fieldset>
         {% include "problem/data_virtual_judge.html" %}
         <table class="table">
             <tbody>
-            <tr>
+            <tr id="mirror-source-row"{% if test_source_mode != 'mirror' %} style="display: none;"{% endif %}>
                 <th>{{ _('Mirror test archive source') }}</th>
                 <td>
                     {{ mirror_form.mirror_of }}
