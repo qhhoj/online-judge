@@ -1,4 +1,5 @@
 import io
+import json
 import zipfile
 
 from django.core.exceptions import ValidationError
@@ -14,6 +15,8 @@ from django.utils import timezone
 from judge.forms import ProblemEditForm
 from judge.models import (
     ContestParticipation,
+    ExternalJudgeConfig,
+    ExternalProblem,
     Language,
     LanguageLimit,
     Problem,
@@ -633,6 +636,8 @@ class ProblemTestCase(CommonDataMixin, TestCase):
     def _problem_data_payload(self):
         return {
             'mirror-mirror_of': '',
+            'external-language_mappings': '[]',
+            'external-metadata_cache': '{}',
             'problem-data-checker': 'standard',
             'problem-data-checker_args': '',
             'problem-data-checker_type': 'default',
@@ -647,6 +652,13 @@ class ProblemTestCase(CommonDataMixin, TestCase):
             'cases-MIN_NUM_FORMS': '0',
             'cases-MAX_NUM_FORMS': '1',
         }
+
+    def _test_archive(self, name='tests.zip'):
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, 'w') as archive:
+            archive.writestr('1.in', '1\n')
+            archive.writestr('1.out', '1\n')
+        return SimpleUploadedFile(name, stream.getvalue(), content_type='application/zip')
 
     def test_problem_data_page_shows_mirror_selector(self):
         problem = create_problem(
@@ -681,7 +693,90 @@ class ProblemTestCase(CommonDataMixin, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'cannot upload archives directly')
 
-    def test_problem_data_page_hides_case_editor_but_keeps_config_for_mirror(self):
+    def test_problem_data_switches_from_mirror_to_local_with_archive(self):
+        root = create_problem(code='mirror_to_local_root', is_public=True, types=('type',))
+        mirror = create_problem(
+            code='mirror_to_local_child',
+            is_public=True,
+            authors=('staff_problem_edit_all',),
+            mirror_of=root,
+            types=('type',),
+        )
+
+        self.client.force_login(self.users['staff_problem_edit_all'])
+        payload = self._problem_data_payload()
+        payload['problem-data-zipfile'] = self._test_archive('local-tests.zip')
+        response = self.client.post(reverse('problem_data', args=[mirror.code]), data=payload)
+
+        self.assertEqual(response.status_code, 302)
+        mirror.refresh_from_db()
+        self.assertIsNone(mirror.mirror_of_id)
+        self.assertTrue(mirror.data_files.zipfile)
+
+    def test_problem_data_switches_from_virtual_judge_to_local_with_archive(self):
+        problem = create_problem(
+            code='external_to_local',
+            is_public=True,
+            authors=('staff_problem_edit_all',),
+            types=('type',),
+        )
+        external = ExternalProblem.objects.create(
+            problem=problem,
+            config=None,
+            oj='Example',
+            external_problem_id='1000',
+            is_active=True,
+        )
+
+        self.client.force_login(self.users['staff_problem_edit_all'])
+        payload = self._problem_data_payload()
+        payload['problem-data-zipfile'] = self._test_archive('local-tests.zip')
+        response = self.client.post(reverse('problem_data', args=[problem.code]), data=payload)
+
+        self.assertEqual(response.status_code, 302)
+        external.refresh_from_db()
+        problem.refresh_from_db()
+        self.assertFalse(external.is_active)
+        self.assertTrue(problem.data_files.zipfile)
+
+    def test_problem_data_rejects_mirror_and_virtual_judge_together(self):
+        root = create_problem(code='mirror_external_root', is_public=True, types=('type',))
+        problem = create_problem(
+            code='mirror_external_child',
+            is_public=True,
+            authors=('staff_problem_edit_all',),
+            types=('type',),
+        )
+        config = ExternalJudgeConfig.objects.create(
+            name='test-vjudge',
+            base_url='https://vjudge.example.com',
+            encrypted_api_token='encrypted',
+        )
+        language_key = Language.objects.order_by('key').values_list('key', flat=True).first()
+
+        self.client.force_login(self.users['staff_problem_edit_all'])
+        payload = self._problem_data_payload()
+        payload.update({
+            'mirror-mirror_of': str(root.id),
+            'external-enabled': 'on',
+            'external-config': str(config.id),
+            'external-oj': 'Example',
+            'external-external_problem_id': '1000',
+            'external-language_mappings': json.dumps([{
+                'qhhoj_key': language_key,
+                'vjudge_id': '1',
+                'vjudge_name': 'Example Language',
+            }]),
+        })
+        response = self.client.post(reverse('problem_data', args=[problem.code]), data=payload)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'cannot be enabled at the same time', count=2)
+        problem.refresh_from_db()
+        self.assertIsNone(problem.mirror_of_id)
+        self.assertFalse(ExternalProblem.objects.filter(problem=problem).exists())
+
+    def test_problem_data_page_hides_local_case_editor_but_keeps_config_for_mirror(self):
         root = create_problem(code='mirror_editor_root', is_public=True, types=('type',))
         mirror = create_problem(
             code='mirror_editor_child',
@@ -695,7 +790,11 @@ class ProblemTestCase(CommonDataMixin, TestCase):
         self.client.force_login(self.users['staff_problem_edit_all'])
         response = self.client.get(reverse('problem_data', args=[mirror.code]))
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'id="case-table" class="table"', html=False)
+        self.assertContains(
+            response,
+            'id="local-testcase-section" style="display: none;"',
+            html=False,
+        )
         self.assertContains(response, 'id="id_problem-data-grader"')
 
     def test_problem_data_warning_shows_uploaded_archive_fake_name(self):
