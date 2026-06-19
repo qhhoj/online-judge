@@ -26,10 +26,6 @@ class PublicRankingLinkTestCase(CommonDataMixin, TestCase):
         )
         cls.outsider = create_user(username='public_ranking_outsider')
 
-    def setUp(self):
-        super().setUp()
-        self.client.defaults['HTTP_HOST'] = 'localhost'
-
     def make_contest(self, key, **kwargs):
         defaults = {
             'authors': (self.manager.username,),
