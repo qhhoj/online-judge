@@ -1350,7 +1350,7 @@ class ContestPublicRankingLinkManageMixin(LoginRequiredMixin, View):
 class ContestPublicRankingLinkCreate(ContestPublicRankingLinkManageMixin):
     def post(self, request, *args, **kwargs):
         contest = self.get_contest()
-        _, created = ContestPublicRankingLink.get_or_create_for(contest)
+        link, created = ContestPublicRankingLink.get_or_create_for(contest)
         if created:
             messages.success(request, _('Public ranking link created.'))
         else:

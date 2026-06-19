@@ -464,9 +464,44 @@
         {% endif %}
     </script>
     {% include "contest/media-js.html" %}
+    {% if is_public_ranking_link %}
+        <script type="text/javascript">
+            $(function () {
+                $('#banner .time-remaining').each(function () {
+                    count_down($(this));
+                });
+            });
+        </script>
+    {% endif %}
 {% endblock %}
 
 {% block before_users_table %}
+    {% if is_public_ranking_link %}
+        <div id="banner">
+            <a href="https://www.timeanddate.com/worldclock/fixedtime.html?msg={{ contest.name|urlquote('') }}&amp;iso=
+                    {{- (contest.start_time if contest.start_time >= now else contest.end_time)|utc|date('Y-m-d\TH:i:s') }}" class="date">
+                {%- if contest.start_time > now -%}
+                    {{- _('Starting in %(countdown)s.', countdown=as_countdown(contest.time_before_start)) -}}
+                {%- elif contest.end_time < now -%}
+                    {{- _('Contest is over.') -}}
+                {%- else -%}
+                    {{- _('Contest ends in %(countdown)s.', countdown=as_countdown(contest.time_before_end)) -}}
+                {%- endif -%}
+            </a>
+            <div id="time">
+                {% with start_time=contest.start_time|date(_("F j, Y, G:i T")) %}
+                    {% if contest.time_limit %}
+                        {% set end_time=contest.end_time|date(_("F j, Y, G:i T")) %}
+                        {% set time_limit=contest.time_limit|timedelta('localized-no-seconds') %}
+                        {{ _('%(time_limit)s window between %(start_time)s and %(end_time)s', start_time=bold(start_time), end_time=bold(end_time), time_limit=bold(time_limit)) }}
+                    {% else %}
+                        {% set length=contest.contest_window_length|timedelta('localized-no-seconds') %}
+                        {{ _('%(length)s long starting on %(start_time)s', start_time=bold(start_time), length=bold(length)) }}
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    {% endif %}
     <div style="margin-bottom: 1.25em">
         {% if tab == 'participation' %}
             {% if contest.can_see_full_scoreboard(request.user) %}
