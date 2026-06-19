@@ -633,8 +633,12 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
         context['uploaded_archive_name'] = kwargs.get('uploaded_archive_name', '')
         return context
 
-    def _archive_change_requested(self):
-        return 'problem-data-zipfile' in self.request.FILES or 'problem-data-zipfile-clear' in self.request.POST
+    @staticmethod
+    def _archive_change_requested(data_form):
+        # Let ClearableFileInput interpret the request instead of checking for
+        # the mere presence of its clear key. Some clients submit the key with
+        # a false value, which must not be treated as an archive deletion.
+        return 'zipfile' in data_form.changed_data
 
     def check_valid(self, mirror_form, external_form, data_form, cases_formset):
         mirror_valid = mirror_form.is_valid()
@@ -682,7 +686,7 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
         valid_files = self.get_valid_files(data_form.instance, post=True)
         data_form.zip_valid = valid_files is not False
         cases_formset = self.get_case_formset(valid_files, post=True)
-        archive_change_requested = self._archive_change_requested()
+        archive_change_requested = self._archive_change_requested(data_form)
         uploaded_archive_name = (
             request.FILES.get('problem-data-zipfile').name
             if 'problem-data-zipfile' in request.FILES else ''

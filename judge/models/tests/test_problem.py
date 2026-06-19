@@ -672,7 +672,7 @@ class ProblemTestCase(CommonDataMixin, TestCase):
         self.client.force_login(self.users['staff_problem_edit_all'])
         response = self.client.get(reverse('problem_data', args=[problem.code]))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'name="mirror-test_source"', count=3)
+        self.assertContains(response, 'type="radio" name="mirror-test_source"', count=3)
         self.assertContains(response, 'id_mirror-mirror_of')
         self.assertContains(response, 'name="mirror-mirror_of"')
 
@@ -695,6 +695,73 @@ class ProblemTestCase(CommonDataMixin, TestCase):
         response = self.client.post(reverse('problem_data', args=[mirror.code]), data=payload)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'cannot upload archives directly')
+
+    def test_problem_data_ignores_false_archive_clear_on_mirror_problem(self):
+        root = create_problem(code='mirror_false_clear_root', is_public=True, types=('type',))
+        mirror = create_problem(
+            code='mirror_false_clear_child',
+            is_public=True,
+            authors=('staff_problem_edit_all',),
+            mirror_of=root,
+            types=('type',),
+        )
+
+        self.client.force_login(self.users['staff_problem_edit_all'])
+        payload = self._problem_data_payload()
+        payload.update({
+            'mirror-test_source': 'mirror',
+            'mirror-mirror_of': str(root.id),
+            'problem-data-zipfile-clear': 'false',
+        })
+        response = self.client.post(reverse('problem_data', args=[mirror.code]), data=payload)
+
+        self.assertEqual(response.status_code, 302)
+        mirror.refresh_from_db()
+        self.assertEqual(mirror.mirror_of_id, root.id)
+
+    def test_problem_data_ignores_false_archive_clear_on_virtual_judge_problem(self):
+        problem = create_problem(
+            code='external_false_clear',
+            is_public=True,
+            authors=('staff_problem_edit_all',),
+            types=('type',),
+        )
+        config = ExternalJudgeConfig.objects.create(
+            name='false-clear-vjudge',
+            base_url='https://vjudge.example.com',
+            encrypted_api_token='encrypted',
+        )
+        language_key = Language.objects.order_by('key').values_list('key', flat=True).first()
+        language_mappings = [{
+            'qhhoj_key': language_key,
+            'vjudge_id': '1',
+            'vjudge_name': 'Example Language',
+        }]
+        external = ExternalProblem.objects.create(
+            problem=problem,
+            config=config,
+            oj='Example',
+            external_problem_id='1000',
+            language_mappings=language_mappings,
+            metadata_cache={},
+            is_active=True,
+        )
+
+        self.client.force_login(self.users['staff_problem_edit_all'])
+        payload = self._problem_data_payload()
+        payload.update({
+            'mirror-test_source': 'external',
+            'problem-data-zipfile-clear': 'false',
+            'external-config': str(config.id),
+            'external-oj': external.oj,
+            'external-external_problem_id': external.external_problem_id,
+            'external-language_mappings': json.dumps(language_mappings),
+        })
+        response = self.client.post(reverse('problem_data', args=[problem.code]), data=payload)
+
+        self.assertEqual(response.status_code, 302)
+        external.refresh_from_db()
+        self.assertTrue(external.is_active)
 
     def test_problem_data_switches_from_mirror_to_local_with_archive(self):
         root = create_problem(code='mirror_to_local_root', is_public=True, types=('type',))
