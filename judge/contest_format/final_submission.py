@@ -1,6 +1,4 @@
-from datetime import timedelta
-
-from django.db.models import Max
+from django.core.exceptions import ValidationError
 from django.template.defaultfilters import floatformat
 from django.urls import reverse
 from django.utils.html import format_html
@@ -10,7 +8,6 @@ from django.utils.translation import gettext_lazy
 
 from judge.contest_format.default import DefaultContestFormat
 from judge.contest_format.registry import register_contest_format
-from judge.utils.timedelta import nice_repr
 
 
 @register_contest_format('final_submission')
@@ -159,4 +156,3 @@ class FinalSubmissionContestFormat(DefaultContestFormat):
         yield _('- auto_judge: true (default) = Automatically judge when contest ends')
         yield _('- auto_judge: false = Require manual judge trigger from admin panel')
         yield _('Example: {"auto_judge": false}')
-

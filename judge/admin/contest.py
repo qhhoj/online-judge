@@ -280,12 +280,6 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
             readonly += ['problem_label_script']
         return readonly
 
-    def get_queryset(self, request):
-        """
-        Override get_queryset - no annotation needed, will compute in display method.
-        """
-        return super().get_queryset(request)
-
     @admin.display(description=_('Pending Submissions'))
     def pending_submissions_display(self, obj):
         """
@@ -296,7 +290,6 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
             return '-'
 
         # Query pending submissions count directly
-        from judge.models.contest import ContestSubmission
         count = Submission.objects.filter(
             contest__participation__contest=obj,
             status='PD',
@@ -627,7 +620,6 @@ class ContestAdmin(SortableAdminBase, NoBatchDeleteMixin, VersionAdmin):
 
             # Add pending submissions count for Final Submission Only contests
             if contest.format_name == 'final_submission':
-                from judge.models.contest import ContestSubmission
                 pending_count = Submission.objects.filter(
                     contest__participation__contest=contest,
                     status='PD',
