@@ -17,6 +17,7 @@ from judge.models.contest import (
     ContestMoss,
     ContestParticipation,
     ContestProblem,
+    ContestPublicRankingLink,
     ContestSubmission,
     ContestTag,
     Rating,

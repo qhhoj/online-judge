@@ -1,0 +1,114 @@
+{% if contest.is_editable_by(request.user) %}
+    <section class="public-ranking-panel form-area">
+        <center><h3>{{ _('Public Ranking') }}</h3></center>
+        {% if public_ranking_link %}
+            {% set public_ranking_url = request.build_absolute_uri(public_ranking_link.get_absolute_url()) %}
+            <div class="public-ranking-url-row">
+                <label for="public-ranking-url">{{ _('Public ranking URL') }}</label>
+                <input id="public-ranking-url" type="text" readonly value="{{ public_ranking_url }}">
+                <button class="button public-ranking-copy" type="button"
+                        data-copy-target="#public-ranking-url"
+                        aria-label="{{ _('Copy URL to clipboard') }}">
+                    <i class="fa fa-clipboard"></i> {{ _('Copy') }}
+                </button>
+            </div>
+            <form method="post" action="{{ url('contest_public_ranking_update', contest.key) }}"
+                  class="public-ranking-form">
+                {% csrf_token %}
+                <table class="django-as-table">
+                    <tr>
+                        <th><label for="public-ranking-status">{{ _('Status') }}</label></th>
+                        <td>
+                            <select id="public-ranking-status" name="status">
+                                <option value="public" {% if public_ranking_link.status == 'public' %}selected{% endif %}>
+                                    {{ _('Public') }}
+                                </option>
+                                <option value="private" {% if public_ranking_link.status == 'private' %}selected{% endif %}>
+                                    {{ _('Private') }}
+                                </option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="public-ranking-expiry-mode">{{ _('Expiry') }}</label></th>
+                        <td>
+                            <select id="public-ranking-expiry-mode" name="expiry_mode"
+                                    class="public-ranking-expiry-mode">
+                                <option value="U" {% if public_ranking_link.expiry_mode == 'U' %}selected{% endif %}>
+                                    {{ _('Never expires') }}
+                                </option>
+                                <option value="M" {% if public_ranking_link.expiry_mode == 'M' %}selected{% endif %}>
+                                    {{ _('After minutes') }}
+                                </option>
+                                <option value="D" {% if public_ranking_link.expiry_mode == 'D' %}selected{% endif %}>
+                                    {{ _('After days') }}
+                                </option>
+                                <option value="A" {% if public_ranking_link.expiry_mode == 'A' %}selected{% endif %}>
+                                    {{ _('At date/time') }}
+                                </option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr class="public-ranking-expiry-amount-row"
+                        {% if public_ranking_link.expiry_mode not in ('M', 'D') %}style="display: none;"{% endif %}>
+                        <th><label for="public-ranking-expiry-amount">{{ _('Amount') }}</label></th>
+                        <td>
+                            <input id="public-ranking-expiry-amount" name="expiry_amount" type="number" min="1"
+                                   value="{{ public_ranking_link.expiry_amount or 1 }}"
+                                   {% if public_ranking_link.expiry_mode not in ('M', 'D') %}disabled{% endif %}>
+                        </td>
+                    </tr>
+                    <tr class="public-ranking-expiry-datetime-row"
+                        {% if public_ranking_link.expiry_mode != 'A' %}style="display: none;"{% endif %}>
+                        <th><label for="public-ranking-expires-at">{{ _('Expiry date/time') }}</label></th>
+                        <td>
+                            <input id="public-ranking-expires-at" name="expires_at" type="text"
+                                   class="datetimefield public-ranking-expires-at"
+                                   value="{% if public_ranking_link.expiry_mode == 'A' and public_ranking_link.expires_at %}{{ public_ranking_link.expires_at|date('Y-m-d H:i:s') }}{% endif %}"
+                                   {% if public_ranking_link.expiry_mode != 'A' %}disabled{% endif %}>
+                            <button class="button public-ranking-use-contest-end" type="button"
+                                    data-contest-end-time="{{ contest.end_time|date('Y-m-d H:i:s') }}">
+                                <i class="fa fa-clock-o"></i> {{ _('Use contest end time') }}
+                            </button>
+                        </td>
+                    </tr>
+                    {% if public_ranking_link.expires_at %}
+                        <tr>
+                            <th>{{ _('Expires at') }}</th>
+                            <td>
+                                <time class="public-ranking-local-datetime"
+                                      datetime="{{ public_ranking_link.expires_at|date('c') }}">
+                                    {{ public_ranking_link.expires_at|date('H:i:s d/m/Y T') }}
+                                </time>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>{{ _('Time remaining') }}</th>
+                            <td>
+                                <span class="public-ranking-countdown"
+                                      data-expires-at="{{ public_ranking_link.expires_at|date('c') }}">
+                                    {{ public_ranking_link.expires_at|date('H:i:s d/m/Y T') }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </table>
+                <button class="button" type="submit">{{ _('Update') }}</button>
+            </form>
+            <form method="post" action="{{ url('contest_public_ranking_regenerate', contest.key) }}"
+                  class="public-ranking-regenerate-form">
+                {% csrf_token %}
+                <button class="button public-ranking-regenerate" type="submit">
+                    <i class="fa fa-refresh"></i> {{ _('Regenerate link') }}
+                </button>
+                <span class="helptext">{{ _('Old public ranking URLs will stop working.') }}</span>
+            </form>
+        {% else %}
+            <p>{{ _('Create a shareable public ranking URL for this contest.') }}</p>
+            <form method="post" action="{{ url('contest_public_ranking_create', contest.key) }}">
+                {% csrf_token %}
+                <button class="button" type="submit">{{ _('Create public ranking') }}</button>
+            </form>
+        {% endif %}
+    </section>
+{% endif %}

@@ -1,7 +1,10 @@
 import hashlib
 import hmac
+import secrets
+import string
 from datetime import (
     date,
+    datetime,
     timedelta,
 )
 from datetime import timezone as dt_timezone
@@ -14,6 +17,7 @@ from django.core.validators import (
     RegexValidator,
 )
 from django.db import (
+    IntegrityError,
     models,
     transaction,
 )
@@ -43,7 +47,7 @@ from judge.utils.unicode import utf8bytes
 
 __all__ = [
     'Contest', 'ContestTag', 'ContestAnnouncement', 'ContestParticipation', 'ContestProblem',
-    'ContestSubmission', 'Rating',
+    'ContestSubmission', 'Rating', 'ContestPublicRankingLink',
 ]
 
 # MOSS language constants for mosspy
@@ -1043,3 +1047,194 @@ class ContestMoss(models.Model):
         unique_together = ('contest', 'problem', 'language')
         verbose_name = _('contest moss result')
         verbose_name_plural = _('contest moss results')
+
+
+class ContestPublicRankingLink(models.Model):
+    EXPIRY_UNLIMITED = 'U'
+    EXPIRY_MINUTES = 'M'
+    EXPIRY_DAYS = 'D'
+    EXPIRY_DATETIME = 'A'
+    EXPIRY_MODES = (
+        (EXPIRY_UNLIMITED, _('Never expires')),
+        (EXPIRY_MINUTES, _('Expires after minutes')),
+        (EXPIRY_DAYS, _('Expires after days')),
+        (EXPIRY_DATETIME, _('Expires at date/time')),
+    )
+    STATUS_PUBLIC = 'public'
+    STATUS_PRIVATE = 'private'
+    STATUS_CHOICES = (
+        (STATUS_PUBLIC, _('Public')),
+        (STATUS_PRIVATE, _('Private')),
+    )
+
+    TOKEN_LENGTH = 18
+    TOKEN_ALPHABET = string.ascii_letters + string.digits  # [A-Za-z0-9]
+
+    contest = models.OneToOneField(
+        Contest, verbose_name=_('contest'), on_delete=CASCADE,
+        related_name='public_ranking_link',
+    )
+    token = models.CharField(max_length=TOKEN_LENGTH, verbose_name=_('token'), unique=True, db_index=True)
+    status = models.CharField(
+        max_length=8, verbose_name=_('status'), choices=STATUS_CHOICES,
+        default=STATUS_PUBLIC,
+    )
+    expiry_mode = models.CharField(
+        max_length=1, verbose_name=_('expiry mode'), choices=EXPIRY_MODES,
+        default=EXPIRY_UNLIMITED,
+    )
+    expiry_amount = models.PositiveIntegerField(verbose_name=_('expiry amount'), null=True, blank=True)
+    expires_at = models.DateTimeField(verbose_name=_('expires at'), null=True, blank=True)
+    regenerated_at = models.DateTimeField(verbose_name=_('regenerated at'), default=timezone.now)
+
+    @staticmethod
+    def generate_token():
+        return ''.join(
+            secrets.choice(ContestPublicRankingLink.TOKEN_ALPHABET)
+            for _ in range(ContestPublicRankingLink.TOKEN_LENGTH)
+        )
+
+    @classmethod
+    def _unique_token(cls):
+        for _ in range(10):
+            token = cls.generate_token()
+            if not cls.objects.filter(token=token).exists():
+                return token
+        raise RuntimeError('Unable to generate a unique public ranking token')
+
+    @classmethod
+    def create_for(cls, contest):
+        link, _ = cls.get_or_create_for(contest)
+        return link
+
+    @classmethod
+    def get_or_create_for(cls, contest):
+        existing = cls.objects.filter(contest=contest).first()
+        if existing is not None:
+            return existing, False
+        for _ in range(10):
+            try:
+                with transaction.atomic():
+                    link = cls.objects.create(
+                        contest=contest,
+                        token=cls._unique_token(),
+                        status=cls.STATUS_PUBLIC,
+                        expiry_mode=cls.EXPIRY_UNLIMITED,
+                        expiry_amount=None,
+                        expires_at=None,
+                        regenerated_at=timezone.now(),
+                    )
+                return link, True
+            except IntegrityError:
+                # Either a concurrent request already created the link for this
+                # contest (OneToOne constraint) or we hit a token collision.
+                existing = cls.objects.filter(contest=contest).first()
+                if existing is not None:
+                    return existing, False
+                # Token collision only: retry with a fresh token.
+        raise RuntimeError('Unable to create a public ranking link with a unique token')
+
+    def set_status(self, status):
+        if status not in (self.STATUS_PUBLIC, self.STATUS_PRIVATE):
+            raise ValidationError(_('Invalid public ranking status.'))
+        self.status = status
+        self.save(update_fields=['status'])
+
+    def regenerate(self):
+        old_token = self.token
+        old_regenerated_at = self.regenerated_at
+        old_expires_at = self.expires_at
+        for _ in range(10):
+            new_regenerated_at = timezone.now()
+            self.token = self._unique_token()
+            self.regenerated_at = new_regenerated_at
+            self.expires_at = self.compute_expires_at(regenerated_at=new_regenerated_at)
+            try:
+                with transaction.atomic():
+                    self.save(update_fields=['token', 'regenerated_at', 'expires_at'])
+                return
+            except IntegrityError:
+                self.token = old_token
+                self.regenerated_at = old_regenerated_at
+                self.expires_at = old_expires_at
+        raise RuntimeError('Unable to regenerate a unique public ranking token')
+
+    @classmethod
+    def _parse_expiry_amount(cls, amount):
+        if isinstance(amount, str):
+            amount = amount.strip()
+            if not amount:
+                raise ValidationError(_('Expiry amount must be a positive integer.'))
+            try:
+                amount = int(amount, 10)
+            except ValueError:
+                raise ValidationError(_('Expiry amount must be a positive integer.'))
+        if not isinstance(amount, int) or isinstance(amount, bool) or amount <= 0:
+            raise ValidationError(_('Expiry amount must be a positive integer.'))
+        return amount
+
+    @classmethod
+    def _parse_expiry_datetime(cls, expires_at):
+        if not isinstance(expires_at, datetime):
+            raise ValidationError(_('Expiry date/time must be valid.'))
+        if timezone.is_naive(expires_at):
+            expires_at = timezone.make_aware(expires_at, timezone.get_current_timezone())
+        return expires_at
+
+    @classmethod
+    def _normalize_expiry(cls, mode, amount, expires_at=None):
+        if mode == cls.EXPIRY_UNLIMITED:
+            return mode, None, None
+        if mode in (cls.EXPIRY_MINUTES, cls.EXPIRY_DAYS):
+            return mode, cls._parse_expiry_amount(amount), None
+        if mode == cls.EXPIRY_DATETIME:
+            return mode, None, cls._parse_expiry_datetime(expires_at)
+        raise ValidationError(_('Invalid expiry mode.'))
+
+    def compute_expires_at(self, mode=None, amount=None, regenerated_at=None, expires_at=None):
+        mode = self.expiry_mode if mode is None else mode
+        amount = self.expiry_amount if amount is None else amount
+        expires_at = self.expires_at if expires_at is None else expires_at
+        mode, amount, expires_at = self._normalize_expiry(mode, amount, expires_at)
+        if mode == self.EXPIRY_UNLIMITED:
+            return None
+        if mode == self.EXPIRY_DATETIME:
+            return expires_at
+        regenerated_at = regenerated_at or self.regenerated_at or timezone.now()
+        if mode == self.EXPIRY_MINUTES:
+            return regenerated_at + timedelta(minutes=amount)
+        if mode == self.EXPIRY_DAYS:
+            return regenerated_at + timedelta(days=amount)
+
+    def configure_expiry(self, mode, amount=None, expires_at=None):
+        mode, amount, expires_at = self._normalize_expiry(mode, amount, expires_at)
+        expires_at = self.compute_expires_at(mode=mode, amount=amount, expires_at=expires_at)
+        self.expiry_mode = mode
+        self.expiry_amount = amount
+        self.expires_at = expires_at
+        self.save(update_fields=['expiry_mode', 'expiry_amount', 'expires_at'])
+
+    def apply_settings(self, status, mode, amount=None, expires_at=None):
+        # Validate everything up front so a failure never leaves a half-applied
+        # state, then persist status + expiry together in a single atomic save.
+        if status not in (self.STATUS_PUBLIC, self.STATUS_PRIVATE):
+            raise ValidationError(_('Invalid public ranking status.'))
+        mode, amount, expires_at = self._normalize_expiry(mode, amount, expires_at)
+        computed_expires_at = self.compute_expires_at(mode=mode, amount=amount, expires_at=expires_at)
+        with transaction.atomic():
+            self.status = status
+            self.expiry_mode = mode
+            self.expiry_amount = amount
+            self.expires_at = computed_expires_at
+            self.save(update_fields=['status', 'expiry_mode', 'expiry_amount', 'expires_at'])
+
+    @property
+    def is_valid(self):
+        return self.status == self.STATUS_PUBLIC and (self.expires_at is None or timezone.now() <= self.expires_at)
+
+    def get_absolute_url(self):
+        return reverse('public_ranking', args=(self.token,))
+
+    class Meta:
+        verbose_name = _('contest public ranking link')
+        verbose_name_plural = _('contest public ranking links')
