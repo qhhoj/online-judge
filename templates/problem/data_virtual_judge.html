@@ -1,8 +1,6 @@
-<fieldset class="module aligned" id="virtual-judge-section">
+<fieldset class="module aligned" id="virtual-judge-section"{% if test_source_mode != 'external' %} style="display: none;"{% endif %}>
     <h3><i class="fa fa-globe"></i> {{ _('Virtual Judge') }}</h3>
-    <div class="alert alert-info" id="test-source-mode-message" style="margin-bottom: 12px;">
-        {{ _('When Virtual Judge is disabled and no mirror source is selected, this problem uses its own uploaded test data.') }}
-    </div>
+    <div style="display: none;">{{ external_form.enabled }}</div>
     {% if external_form.non_field_errors() %}
         <div class="alert alert-danger">
             {{ external_form.non_field_errors() }}
@@ -24,12 +22,9 @@
             {{ _('Enabling Virtual Judge will ignore local test data. Existing files and cases are kept but not used.') }}
         </div>
     {% endif %}
+    <div id="external-judge-settings">
     <table class="table" style="margin-bottom: 0;">
         <tbody>
-        <tr>
-            <th style="width: 180px;">{{ external_form.enabled.label }}</th>
-            <td>{{ external_form.enabled }} {{ external_form.enabled.errors }}</td>
-        </tr>
         <tr>
             <th>{{ external_form.config.label }}</th>
             <td>{{ external_form.config }} {{ external_form.config.errors }}</td>
@@ -73,5 +68,6 @@
             </thead>
             <tbody id="external-language-mapping-body"></tbody>
         </table>
+    </div>
     </div>
 </fieldset>

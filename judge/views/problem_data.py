@@ -20,6 +20,7 @@ from django.forms import (
     ModelChoiceField,
     ModelForm,
     NumberInput,
+    RadioSelect,
     Select,
     Textarea,
     formset_factory,
@@ -211,6 +212,7 @@ class ExternalJudgeForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.problem = kwargs.pop('problem')
+        self.enabled_override = kwargs.pop('enabled_override', None)
         super(ExternalJudgeForm, self).__init__(*args, **kwargs)
         self.fields['oj'].required = False
         self.fields['external_problem_id'].required = False
@@ -221,7 +223,12 @@ class ExternalJudgeForm(ModelForm):
 
     def clean(self):
         cleaned_data = super(ExternalJudgeForm, self).clean()
-        enabled = cleaned_data.get('enabled')
+        enabled = (
+            self.enabled_override
+            if self.enabled_override is not None
+            else cleaned_data.get('enabled')
+        )
+        cleaned_data['enabled'] = enabled
         if enabled:
             for field in ('config', 'oj', 'external_problem_id'):
                 if not cleaned_data.get(field):
@@ -295,6 +302,21 @@ class ExternalJudgeForm(ModelForm):
 
 
 class ProblemMirrorForm(ModelForm):
+    TEST_SOURCE_LOCAL = 'local'
+    TEST_SOURCE_MIRROR = 'mirror'
+    TEST_SOURCE_EXTERNAL = 'external'
+    TEST_SOURCE_CHOICES = (
+        (TEST_SOURCE_LOCAL, gettext_lazy('Uploaded test data')),
+        (TEST_SOURCE_MIRROR, gettext_lazy('Mirror another problem')),
+        (TEST_SOURCE_EXTERNAL, gettext_lazy('Virtual Judge')),
+    )
+
+    test_source = ChoiceField(
+        choices=TEST_SOURCE_CHOICES,
+        label=gettext_lazy('Test source'),
+        widget=RadioSelect,
+    )
+
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         super().__init__(*args, **kwargs)
@@ -303,6 +325,13 @@ class ProblemMirrorForm(ModelForm):
         self.fields['mirror_of'].required = False
         self.fields['mirror_of'].empty_label = 'None'
         self.fields['mirror_of'].label_from_instance = lambda obj: '%s - %s' % (obj.code, obj.name)
+        if not self.is_bound:
+            if target_problem and target_problem.has_external_problem:
+                self.initial['test_source'] = self.TEST_SOURCE_EXTERNAL
+            elif target_problem and target_problem.is_mirror:
+                self.initial['test_source'] = self.TEST_SOURCE_MIRROR
+            else:
+                self.initial['test_source'] = self.TEST_SOURCE_LOCAL
 
         if target_problem and target_problem.is_mirror:
             self.fields['mirror_of'].queryset = Problem.objects.filter(id=target_problem.mirror_of_id)
@@ -324,6 +353,8 @@ class ProblemMirrorForm(ModelForm):
             self.fields['mirror_of'].choices = choices
 
     def clean_mirror_of(self):
+        if self.data.get(self.add_prefix('test_source')) != self.TEST_SOURCE_MIRROR:
+            return None
         mirror_of = self.cleaned_data.get('mirror_of')
         target_problem = self.instance if (self.instance and self.instance.pk) else None
         target_org = get_problem_single_organization(target_problem) if target_problem is not None else None
@@ -335,9 +366,20 @@ class ProblemMirrorForm(ModelForm):
         )
         return mirror_of
 
+    def clean(self):
+        cleaned_data = super().clean()
+        test_source = cleaned_data.get('test_source')
+        mirror_of = cleaned_data.get('mirror_of')
+        if test_source == self.TEST_SOURCE_MIRROR:
+            if mirror_of is None:
+                self.add_error('mirror_of', _('Select a source problem for Mirror test data.'))
+        else:
+            cleaned_data['mirror_of'] = None
+        return cleaned_data
+
     class Meta:
         model = Problem
-        fields = ('mirror_of',)
+        fields = ('test_source', 'mirror_of')
         widgets = {
             'mirror_of': Select2Widget(attrs={
                 'style': 'width: 100%',
@@ -459,7 +501,7 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
             user=self.request.user,
         )
 
-    def get_external_form(self, post=False):
+    def get_external_form(self, post=False, enabled_override=None):
         try:
             instance = self.object.external_problem
         except ExternalProblem.DoesNotExist:
@@ -469,6 +511,7 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
             prefix='external',
             instance=instance,
             problem=self.object,
+            enabled_override=enabled_override,
         )
 
     def _get_archive_provider_data(self, data):
@@ -573,19 +616,15 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
         context['is_mirror_problem'] = self.object.is_mirror
         context['is_external_problem'] = self.object.has_external_problem
         mirror_form = context['mirror_form']
-        external_form = context['external_form']
-        if mirror_form.is_bound and external_form.is_bound:
-            mirror_selected = bool(mirror_form['mirror_of'].value())
-            external_enabled = bool(external_form['enabled'].value())
+        if mirror_form.is_bound:
+            context['test_source_mode'] = (
+                mirror_form['test_source'].value() or ProblemMirrorForm.TEST_SOURCE_LOCAL
+            )
         else:
-            mirror_selected = self.object.is_mirror
-            external_enabled = self.object.has_external_problem
-        if external_enabled:
-            context['test_source_mode'] = 'external'
-        elif mirror_selected:
-            context['test_source_mode'] = 'mirror'
-        else:
-            context['test_source_mode'] = 'local'
+            context['test_source_mode'] = mirror_form.initial.get(
+                'test_source',
+                ProblemMirrorForm.TEST_SOURCE_LOCAL,
+            )
         context['external_problem'] = getattr(self.object, 'external_problem', None)
         context['mirror_source'] = self.object.mirror_of
         context['mirror_root'] = self.object.mirror_root
@@ -604,15 +643,13 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
         if not mirror_valid or not external_valid or not data_valid:
             return False
 
-        mirror_source = mirror_form.cleaned_data.get('mirror_of')
+        test_source = mirror_form.cleaned_data.get('test_source')
         external_enabled = external_form.cleaned_data.get('enabled')
-        if mirror_source and external_enabled:
-            error = _('Mirror test data and Virtual Judge cannot be enabled at the same time.')
-            mirror_form.add_error('mirror_of', error)
-            external_form.add_error('enabled', error)
+        if external_enabled != (test_source == ProblemMirrorForm.TEST_SOURCE_EXTERNAL):
+            mirror_form.add_error('test_source', _('The selected test source could not be applied.'))
             return False
 
-        if mirror_source or external_enabled:
+        if test_source != ProblemMirrorForm.TEST_SOURCE_LOCAL:
             return True
         if not cases_formset.is_valid():
             return False
@@ -629,9 +666,18 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
 
     def post(self, request, *args, **kwargs):
         self.object = problem = self.get_object()
+        previous_mirror_of_id = problem.mirror_of_id
         self._copy_cases_if_missing_from_root()
         mirror_form = self.get_mirror_form(post=True)
-        external_form = self.get_external_form(post=True)
+        mirror_valid = mirror_form.is_valid()
+        desired_source = (
+            mirror_form.cleaned_data.get('test_source')
+            if mirror_valid else None
+        )
+        external_form = self.get_external_form(
+            post=True,
+            enabled_override=desired_source == ProblemMirrorForm.TEST_SOURCE_EXTERNAL,
+        )
         data_form = self.get_data_form(post=True)
         valid_files = self.get_valid_files(data_form.instance, post=True)
         data_form.zip_valid = valid_files is not False
@@ -642,18 +688,13 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
             if 'problem-data-zipfile' in request.FILES else ''
         )
 
-        mirror_valid = mirror_form.is_valid()
-        external_valid = external_form.is_valid()
-        desired_mirror = mirror_form.cleaned_data.get('mirror_of') if mirror_valid else None
-        desired_external = external_form.cleaned_data.get('enabled') if external_valid else False
-
-        if archive_change_requested and (desired_mirror or desired_external):
+        if archive_change_requested and mirror_valid and desired_source != ProblemMirrorForm.TEST_SOURCE_LOCAL:
             data_form.add_error(None, _(
                 'Mirror or Virtual Judge problems cannot upload archives directly.',
             ))
 
         mirror_dependents_count = 0
-        if archive_change_requested and not desired_mirror and not desired_external:
+        if archive_change_requested and desired_source == ProblemMirrorForm.TEST_SOURCE_LOCAL:
             mirror_dependents_count = Problem.objects.filter(mirror_root_id=problem.id).exclude(pk=problem.id).count()
             if mirror_dependents_count and request.POST.get('confirm_mirror_root_archive_update') != '1':
                 data_form.add_error(
@@ -665,7 +706,6 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
                 )
 
         if self.check_valid(mirror_form, external_form, data_form, cases_formset):
-            previous_mirror_of_id = problem.mirror_of_id
             problem = mirror_form.save()
             mirror_changed = previous_mirror_of_id != problem.mirror_of_id
 
