@@ -358,7 +358,7 @@
                 // Check all hidden "Clear" checkboxes
                 // so the corresponding files are cleaned up automatically by django-cleanup
                 $(':checkbox').filter(function() { return this.id.endsWith('clear_id') }).each(function () {
-                    if ($(this).parent().is(':hidden')) {
+                    if (this.id !== 'problem-data-zipfile-clear_id' && $(this).parent().is(':hidden')) {
                         $(this).attr('checked', true);
                     }
                 });
@@ -591,6 +591,49 @@
                 var $verify = $('#external-verify-button');
                 var $status = $('#external-verify-status');
                 var $mappings = $('#id_external-language_mappings');
+                var $enabled = $('#id_external-enabled');
+                var $mirror = $('#id_mirror-mirror_of');
+                var $archiveRow = $('#id_problem-data-zipfile').closest('tr');
+                var $localTestcaseSection = $('#local-testcase-section');
+                var $modeMessage = $('#test-source-mode-message');
+
+                function updateTestSourceMode() {
+                    var externalEnabled = $enabled.is(':checked');
+                    var mirrorSelected = !!$mirror.val();
+                    var localEnabled = !externalEnabled && !mirrorSelected;
+
+                    $archiveRow.toggle(localEnabled);
+                    $localTestcaseSection.toggle(localEnabled);
+
+                    if (externalEnabled && mirrorSelected) {
+                        $modeMessage
+                            .removeClass('alert-info')
+                            .addClass('alert-danger')
+                            .text("{{ _('Mirror test data and Virtual Judge cannot be enabled at the same time.') }}");
+                    } else {
+                        $modeMessage
+                            .removeClass('alert-danger')
+                            .addClass('alert-info')
+                            .text(localEnabled
+                                ? "{{ _('Local test data is active. Upload or keep this problem\'s own archive.') }}"
+                                : externalEnabled
+                                    ? "{{ _('Virtual Judge is active. Local archives are kept but are not used.') }}"
+                                    : "{{ _('Mirror test data is active. The archive comes from the selected source problem.') }}");
+                    }
+                }
+
+                $enabled.on('change', function () {
+                    if (this.checked && $mirror.val()) {
+                        $mirror.val(null).trigger('change.select2');
+                    }
+                    updateTestSourceMode();
+                });
+                $mirror.on('change', function () {
+                    if ($mirror.val() && $enabled.is(':checked')) {
+                        $enabled.prop('checked', false);
+                    }
+                    updateTestSourceMode();
+                });
 
                 function renderMappings(mappings) {
                     var $body = $('#external-language-mapping-body').empty();
@@ -681,6 +724,7 @@
                 });
 
                 renderMappings(readMappings());
+                updateTestSourceMode();
             })();
         }).change();
     </script>
@@ -859,7 +903,7 @@
                 {{ data_form.as_table() }}
             </tbody>
         </table>
-        {% if not is_mirror_problem and not is_external_problem %}
+        <div id="local-testcase-section"{% if test_source_mode != 'local' %} style="display: none;"{% endif %}>
             <div class="alert alert-warning alert-dismissable" id="fill-test-case-noti" style="display: none;">
                 <a class="close">x</a>
                 <b>{{ _('Test cases have been filled automatically!') }}</b>
@@ -928,11 +972,9 @@
                 {% endfor %}
                 </tbody>
             </table>
-        {% endif %}
-        <input type="submit" value="{{ _('Apply!') }}" class="button" id="submit-button">
-        {% if not is_mirror_problem and not is_external_problem %}
             <a id="add-case-row" href="#" style="display: None;"><i class="fa fa-plus"></i> {{ _('Add new case') }}</a>
-        {% endif %}
+        </div>
+        <input type="submit" value="{{ _('Apply!') }}" class="button" id="submit-button">
     </form>
     <div style="display: none" class="generator-args-editor"><textarea></textarea><a class="button">{{ _('Save') }}</a></div>
 {% endblock %}

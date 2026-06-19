@@ -1,5 +1,8 @@
 <fieldset class="module aligned" id="virtual-judge-section">
     <h3><i class="fa fa-globe"></i> {{ _('Virtual Judge') }}</h3>
+    <div class="alert alert-info" id="test-source-mode-message" style="margin-bottom: 12px;">
+        {{ _('When Virtual Judge is disabled and no mirror source is selected, this problem uses its own uploaded test data.') }}
+    </div>
     {% if external_form.non_field_errors() %}
         <div class="alert alert-danger">
             {{ external_form.non_field_errors() }}

@@ -439,14 +439,11 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
 
     def get_data_form(self, post=False):
         data_instance, _ = ProblemData.objects.get_or_create(problem=self.object)
-        form = ProblemDataForm(
+        return ProblemDataForm(
             data=self.request.POST if post else None, prefix='problem-data',
             files=self.request.FILES if post else None,
             instance=data_instance,
         )
-        if self.object.is_mirror or self.object.has_external_problem:
-            form.fields.pop('zipfile', None)
-        return form
 
     def get_case_formset(self, files, post=False):
         return ProblemCaseFormSet(
@@ -575,6 +572,20 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
             context['testcase_soft_limit'] = settings.VNOJ_TESTCASE_SOFT_LIMIT
         context['is_mirror_problem'] = self.object.is_mirror
         context['is_external_problem'] = self.object.has_external_problem
+        mirror_form = context['mirror_form']
+        external_form = context['external_form']
+        if mirror_form.is_bound and external_form.is_bound:
+            mirror_selected = bool(mirror_form['mirror_of'].value())
+            external_enabled = bool(external_form['enabled'].value())
+        else:
+            mirror_selected = self.object.is_mirror
+            external_enabled = self.object.has_external_problem
+        if external_enabled:
+            context['test_source_mode'] = 'external'
+        elif mirror_selected:
+            context['test_source_mode'] = 'mirror'
+        else:
+            context['test_source_mode'] = 'local'
         context['external_problem'] = getattr(self.object, 'external_problem', None)
         context['mirror_source'] = self.object.mirror_of
         context['mirror_root'] = self.object.mirror_root
@@ -587,9 +598,21 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
         return 'problem-data-zipfile' in self.request.FILES or 'problem-data-zipfile-clear' in self.request.POST
 
     def check_valid(self, mirror_form, external_form, data_form, cases_formset):
-        if not mirror_form.is_valid() or not external_form.is_valid() or not data_form.is_valid():
+        mirror_valid = mirror_form.is_valid()
+        external_valid = external_form.is_valid()
+        data_valid = data_form.is_valid()
+        if not mirror_valid or not external_valid or not data_valid:
             return False
-        if self.object.is_mirror or external_form.cleaned_data.get('enabled'):
+
+        mirror_source = mirror_form.cleaned_data.get('mirror_of')
+        external_enabled = external_form.cleaned_data.get('enabled')
+        if mirror_source and external_enabled:
+            error = _('Mirror test data and Virtual Judge cannot be enabled at the same time.')
+            mirror_form.add_error('mirror_of', error)
+            external_form.add_error('enabled', error)
+            return False
+
+        if mirror_source or external_enabled:
             return True
         if not cases_formset.is_valid():
             return False
@@ -619,13 +642,18 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
             if 'problem-data-zipfile' in request.FILES else ''
         )
 
-        if archive_change_requested and (problem.is_mirror or problem.has_external_problem):
+        mirror_valid = mirror_form.is_valid()
+        external_valid = external_form.is_valid()
+        desired_mirror = mirror_form.cleaned_data.get('mirror_of') if mirror_valid else None
+        desired_external = external_form.cleaned_data.get('enabled') if external_valid else False
+
+        if archive_change_requested and (desired_mirror or desired_external):
             data_form.add_error(None, _(
                 'Mirror or Virtual Judge problems cannot upload archives directly.',
             ))
 
         mirror_dependents_count = 0
-        if archive_change_requested and not problem.is_mirror:
+        if archive_change_requested and not desired_mirror and not desired_external:
             mirror_dependents_count = Problem.objects.filter(mirror_root_id=problem.id).exclude(pk=problem.id).count()
             if mirror_dependents_count and request.POST.get('confirm_mirror_root_archive_update') != '1':
                 data_form.add_error(
@@ -651,10 +679,14 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
                 delattr(problem, 'is_external')
 
             if external_problem and external_problem.is_active:
+                if previous_mirror_of_id and not problem.mirror_of_id:
+                    ProblemTestCase.objects.filter(dataset=problem).delete()
+                    data.zipfile = None
+                    data.save(update_fields=['zipfile'])
                 ProblemDataCompiler.generate(problem, data, problem.cases.none(), [])
                 return HttpResponseRedirect(request.get_full_path())
 
-            if previous_mirror_of_id and not problem.mirror_of_id:
+            if previous_mirror_of_id and not problem.mirror_of_id and not archive_change_requested:
                 ProblemTestCase.objects.filter(dataset=problem).delete()
                 current_data, _created = ProblemData.objects.get_or_create(problem=problem)
                 current_data.zipfile = None
