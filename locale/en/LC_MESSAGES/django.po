@@ -2856,15 +2856,15 @@ msgstr ""
 #: judge/models/submission.py:22 judge/models/submission.py:56
 #: judge/models/tests/test_submission.py:104 judge/utils/problems.py:74
 msgid "Accepted"
-msgstr "Answer Contradicted"
+msgstr "Cannot be wrong"
 
 #: judge/models/submission.py:23 judge/models/submission.py:57
 msgid "Wrong Answer"
-msgstr ""
+msgstr "Cannot be right"
 
 #: judge/models/submission.py:24 judge/models/submission.py:59
 msgid "Time Limit Exceeded"
-msgstr "Time Limit Enough"
+msgstr "Not enough time to heal"
 
 #: judge/models/submission.py:25 judge/models/submission.py:60
 msgid "Memory Limit Exceeded"
