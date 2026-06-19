@@ -96,7 +96,7 @@
             {% endif %}
         {% endif %}
         <h2 style="display: inline-block">{{ title }}</h2>
-        {% if problem.has_external_problem %}
+        {% if problem.has_external_problem and (request.user.is_superuser or problem.is_editable_by(request.user)) %}
             <span class="organization-tag">
                 <i class="fa fa-external-link"></i>
                 {{ _('External') }}: {{ problem.external_problem.oj }}
