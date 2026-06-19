@@ -81,6 +81,139 @@
             });
         })
     </script>
+    <script type="text/javascript">
+        $(function () {
+            function togglePublicRankingExpiryFields() {
+                var $mode = $('.public-ranking-expiry-mode');
+                var $amountRow = $('.public-ranking-expiry-amount-row');
+                var $amount = $amountRow.find('input');
+                var $datetimeRow = $('.public-ranking-expiry-datetime-row');
+                var $datetime = $datetimeRow.find('input');
+                var isRelative = $mode.val() === 'M' || $mode.val() === 'D';
+                var isDateTime = $mode.val() === 'A';
+
+                $amount.prop('disabled', !isRelative);
+                $amountRow.toggle(isRelative);
+                $datetime.prop('disabled', !isDateTime);
+                $datetimeRow.toggle(isDateTime);
+            }
+
+            $(document).on('change', '.public-ranking-expiry-mode', togglePublicRankingExpiryFields);
+            togglePublicRankingExpiryFields();
+
+            function padDatePart(value) {
+                return String(value).padStart(2, '0');
+            }
+
+            function formatBrowserTimezoneOffset(date) {
+                var offset = -date.getTimezoneOffset();
+                var sign = offset >= 0 ? '+' : '-';
+                var absoluteOffset = Math.abs(offset);
+                var hours = Math.floor(absoluteOffset / 60);
+                var minutes = absoluteOffset % 60;
+                return 'UTC' + sign + hours + (minutes ? ':' + padDatePart(minutes) : '');
+            }
+
+            $('.public-ranking-local-datetime').each(function () {
+                var $time = $(this);
+                var date = new Date($time.attr('datetime'));
+                if (isNaN(date.getTime())) {
+                    return;
+                }
+                $time.text(
+                    padDatePart(date.getHours()) + ':' +
+                    padDatePart(date.getMinutes()) + ':' +
+                    padDatePart(date.getSeconds()) + ' ' +
+                    padDatePart(date.getDate()) + '/' +
+                    padDatePart(date.getMonth() + 1) + '/' +
+                    date.getFullYear() + ' (' +
+                    formatBrowserTimezoneOffset(date) + ')'
+                );
+                $time.attr('title', date.toLocaleString(undefined, {
+                    dateStyle: 'full',
+                    timeStyle: 'long',
+                }));
+            });
+
+            function formatCountdown(milliseconds) {
+                var totalSeconds = Math.floor(milliseconds / 1000);
+                var days = Math.floor(totalSeconds / 86400);
+                var hours = Math.floor((totalSeconds % 86400) / 3600);
+                var minutes = Math.floor((totalSeconds % 3600) / 60);
+                var seconds = totalSeconds % 60;
+                var clock = padDatePart(hours) + ':' + padDatePart(minutes) + ':' + padDatePart(seconds);
+                if (days > 0) {
+                    return days + ' {{ _("day(s)") }} ' + clock;
+                }
+                return clock;
+            }
+
+            function updatePublicRankingCountdowns() {
+                var now = Date.now();
+                $('.public-ranking-countdown').each(function () {
+                    var $countdown = $(this);
+                    var expiresAt = new Date($countdown.attr('data-expires-at'));
+                    if (isNaN(expiresAt.getTime())) {
+                        return;
+                    }
+                    var diff = expiresAt.getTime() - now;
+                    if (diff <= 0) {
+                        $countdown.text('{{ _("Expired") }}').addClass('public-ranking-countdown-expired');
+                    } else {
+                        $countdown.text(formatCountdown(diff)).removeClass('public-ranking-countdown-expired');
+                    }
+                });
+            }
+
+            if ($('.public-ranking-countdown').length) {
+                updatePublicRankingCountdowns();
+                setInterval(updatePublicRankingCountdowns, 1000);
+            }
+
+            $(document).on('click', '.public-ranking-use-contest-end', function () {
+                var contestEndTime = $(this).data('contest-end-time');
+                var input = document.getElementById('public-ranking-expires-at');
+                if (!input) {
+                    return;
+                }
+                if (input._flatpickr) {
+                    input._flatpickr.setDate(contestEndTime, true, 'Y-m-d H:i:S');
+                } else {
+                    input.value = contestEndTime;
+                }
+            });
+
+            $(document).on('click', '.public-ranking-copy', function () {
+                var target = $(this).data('copy-target');
+                var $input = $(target);
+                var text = $input.val();
+                var $button = $(this);
+                var originalHtml = $button.html();
+
+                function markCopied() {
+                    $button.html('<i class="fa fa-check"></i> {{ _("Copied") }}');
+                    $button.attr('aria-label', '{{ _("Copied to clipboard") }}');
+                    setTimeout(function () {
+                        $button.html(originalHtml);
+                        $button.attr('aria-label', '{{ _("Copy URL to clipboard") }}');
+                    }, 1500);
+                }
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(markCopied);
+                } else {
+                    $input.focus();
+                    $input.select();
+                    document.execCommand('copy');
+                    markCopied();
+                }
+            });
+
+            $(document).on('submit', '.public-ranking-regenerate-form', function () {
+                return confirm('{{ _("Regenerate this public ranking link? Old URLs will stop working.") }}');
+            });
+        });
+    </script>
     {{ form.media.js }}
 {% endblock %}
 
@@ -161,5 +294,8 @@
             {% endif %}
         </button></div>
     </form>
+    {% if request.resolver_match.url_name == 'contest_edit' %}
+        {% include "contest/public-ranking-panel.html" %}
+    {% endif %}
 </div>
 {% endblock %}

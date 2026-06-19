@@ -1,26 +1,30 @@
 {% extends "tabs-base.html" %}
 
 {% block tabs %}
-    {{ make_tab('detail', 'fa-info-circle', url('contest_view', contest.key), _('Info')) }}
-    {% if contest.can_see_full_submission_list(request.user) %}
+    {% if not is_public_ranking_link %}
+        {{ make_tab('detail', 'fa-info-circle', url('contest_view', contest.key), _('Info')) }}
+    {% endif %}
+    {% if not is_public_ranking_link and contest.can_see_full_submission_list(request.user) %}
         {{ make_tab('stats', 'fa-pie-chart', url('contest_stats', contest.key), _('Statistics')) }}
     {% endif %}
 
-    {% if contest.start_time <= now or perms.judge.see_private_contest %}
-        {% if contest.can_see_own_scoreboard(request.user) %}
-            {{ make_tab('ranking', 'fa-bar-chart', url('contest_ranking', contest.key), _('Rankings')) }}
-            {% if contest.csv_ranking %}
+    {% if is_public_ranking_link or contest.start_time <= now or perms.judge.see_private_contest %}
+        {% if is_public_ranking_link or contest.can_see_own_scoreboard(request.user) %}
+            {{ make_tab('ranking', 'fa-bar-chart', None if is_public_ranking_link else url('contest_ranking', contest.key), _('Rankings')) }}
+            {% if not is_public_ranking_link and contest.csv_ranking %}
                 {{ make_tab('official_ranking', 'fa-bar-chart', url('contest_official_ranking', contest.key), _('Official Rankings')) }}
             {% endif %}
-            {% if request.user.is_authenticated %}
+            {% if not is_public_ranking_link and request.user.is_authenticated %}
                 {{ make_tab('participation', 'fa-users', url('contest_participation_own', contest.key), _('Participation')) }}
             {% endif %}
         {% else %}
             {{ make_tab('ranking', 'fa-bar-chart', None, _('Hidden Rankings')) }}
         {% endif %}
-        {{ make_tab('submissions', 'fa-bar-chart', url('contest_all_submissions', contest.key), _('Submissions')) }}
+        {% if not is_public_ranking_link %}
+            {{ make_tab('submissions', 'fa-bar-chart', url('contest_all_submissions', contest.key), _('Submissions')) }}
+        {% endif %}
     {% endif %}
-    {% if can_edit %}
+    {% if not is_public_ranking_link and can_edit %}
         {% if contest.format_name == 'final_submission' %}
             {{ make_tab('judge', 'fa-balance-scale', url('contest_judge', contest.key), _('Judge')) }}
         {% endif %}
@@ -29,11 +33,11 @@
         {% endif %}
         {{ make_tab('edit', 'fa-edit', url('contest_edit', contest.key), _('Edit')) }}
     {% endif %}
-    {% if perms.judge.clone_contest and can_edit %}
+    {% if not is_public_ranking_link and perms.judge.clone_contest and can_edit %}
         {{ make_tab('clone', 'fa-copy', url('contest_clone', contest.key), _('Clone')) }}
     {% endif %}
 
-    {% if request.user.is_authenticated %}
+    {% if not is_public_ranking_link and request.user.is_authenticated %}
         {% if contest.can_join or contest.require_registration or is_editor or is_tester %}
             {% if contest.ended %}
                 {# Allow users to leave the virtual contest #}
@@ -91,7 +95,7 @@
                 {% endif %}
             {% endif %}
         {% endif %}
-    {% elif (contest.can_join and not contest.require_registration) or contest.can_register %}
+    {% elif not is_public_ranking_link and ((contest.can_join and not contest.require_registration) or contest.can_register) %}
         <form action="{{ url('auth_login') }}" method="get"
               class="contest-join-pseudotab unselectable button">
             <input type="hidden" name="next" value="{{ LOGIN_RETURN_PATH|urlencode }}">

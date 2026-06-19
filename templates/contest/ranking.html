@@ -493,7 +493,7 @@
             <input id="show-personal-info-checkbox" type="checkbox" style="vertical-align: bottom">
             <label for="show-personal-info-checkbox" style="vertical-align: bottom">{{ _('Show full name/organization') }}</label>
         {% endif %}
-        {% if tab == 'ranking' %}
+        {% if tab == 'ranking' and not is_public_ranking_link %}
             <input id="show-virtual-participations-checkbox" type="checkbox" style="vertical-align: bottom">
             <label for="show-virtual-participations-checkbox" style="vertical-align: bottom">{{ _('Show virtual participations') }}</label>
             {% if not is_ICPC_format %}

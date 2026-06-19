@@ -381,6 +381,10 @@ urlpatterns = [
     path('contests/<int:year>/<int:month>/', contests.ContestCalendar.as_view(), name='contest_calendar'),
     path('contests/new', contests.CreateContest.as_view(), name='contest_new'),
     re_path(
+        r'^public-ranking/(?P<token>[A-Za-z0-9]{18})$', contests.PublicRankingView.as_view(),
+        name='public_ranking',
+    ),
+    re_path(
         r'^contests/tag/(?P<name>[a-z-]+)', include([
             path('', contests.ContestTagDetail.as_view(), name='contest_tag'),
             path('/ajax', contests.ContestTagDetailAjax.as_view(), name='contest_tag_ajax'),
@@ -400,6 +404,18 @@ urlpatterns = [
             path('/clone', contests.ContestClone.as_view(), name='contest_clone'),
             path('/ranking/', contests.ContestRanking.as_view(), name='contest_ranking'),
             path('/public_ranking/', contests.ContestPublicRanking.as_view(), name='contest_public_ranking'),
+            path(
+                '/public-ranking/create', contests.ContestPublicRankingLinkCreate.as_view(),
+                name='contest_public_ranking_create',
+            ),
+            path(
+                '/public-ranking/update', contests.ContestPublicRankingLinkUpdate.as_view(),
+                name='contest_public_ranking_update',
+            ),
+            path(
+                '/public-ranking/regenerate', contests.ContestPublicRankingLinkRegenerate.as_view(),
+                name='contest_public_ranking_regenerate',
+            ),
             path('/official_ranking/', contests.ContestOfficialRanking.as_view(), name='contest_official_ranking'),
             path('/register', contests.ContestRegister.as_view(), name='contest_register'),
             path('/join', contests.ContestJoin.as_view(), name='contest_join'),
