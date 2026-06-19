@@ -34,7 +34,9 @@ def validate_mirror_source_for_target(user, source, target_problem=None, target_
     if target_org is None and target_problem is not None:
         target_org = get_problem_single_organization(target_problem)
         if target_problem.is_organization_private and target_org is None:
-            raise ValidationError(_('Organization-private problems must belong to exactly one organization to use mirroring.'))
+            raise ValidationError(
+                _('Organization-private problems must belong to exactly one organization to use mirroring.'),
+            )
 
     if target_org is not None and not is_organization_admin(user, target_org):
         raise ValidationError(_('Only organization admins can configure mirroring for organization-private problems.'))
@@ -42,10 +44,14 @@ def validate_mirror_source_for_target(user, source, target_problem=None, target_
     if source.is_organization_private:
         source_org = get_problem_single_organization(source)
         if source_org is None:
-            raise ValidationError(_('Only organization-private problems belonging to exactly one organization can be mirrored.'))
+            raise ValidationError(
+                _('Only organization-private problems belonging to exactly one organization can be mirrored.'),
+            )
 
         if target_org is None:
-            raise ValidationError(_('Organization-private source problems can only be mirrored inside the same organization.'))
+            raise ValidationError(
+                _('Organization-private source problems can only be mirrored inside the same organization.'),
+            )
 
         if source_org.id != target_org.id:
             raise ValidationError(_('Mirroring across organizations is not allowed.'))

@@ -113,14 +113,14 @@ class JudgeHandler(ZlibPacketHandler):
         old_timer = cache.get(cache_key)
         if old_timer and isinstance(old_timer, threading.Timer):
             old_timer.cancel()
-            logger.info(f'[FSO AUTO-RESCORE] Cancelled old timer for problem {problem_id} in contest {contest_id}')
+            logger.info('[FSO AUTO-RESCORE] Cancelled old timer for problem %s in contest %s', problem_id, contest_id)
 
         # Create new timer
         def rescore_now():
             try:
-                from judge.models import Contest, ContestParticipation
+                from judge.models import ContestParticipation
 
-                logger.info(f'[FSO AUTO-RESCORE] Starting rescore for problem {problem_id} in contest {contest_id}')
+                logger.info('[FSO AUTO-RESCORE] Starting rescore for problem %s in contest %s', problem_id, contest_id)
 
                 # Get all participations that have submissions for this problem
                 participations = ContestParticipation.objects.filter(
@@ -135,12 +135,15 @@ class JudgeHandler(ZlibPacketHandler):
                     participation.recompute_results()
                     count += 1
 
-                logger.info(f'[FSO AUTO-RESCORE] ✓ Rescored {count} participations for problem {problem_id} in contest {contest_id}')
+                logger.info(
+                    '[FSO AUTO-RESCORE] ✓ Rescored %s participations for problem %s in contest %s',
+                    count, problem_id, contest_id,
+                )
 
                 # Clear cache
                 cache.delete(cache_key)
-            except Exception as e:
-                logger.error(f'[FSO AUTO-RESCORE] Error: {e}', exc_info=True)
+            except Exception:
+                logger.exception('[FSO AUTO-RESCORE] Error')
 
         timer = threading.Timer(delay_seconds, rescore_now)
         timer.daemon = True
@@ -148,7 +151,10 @@ class JudgeHandler(ZlibPacketHandler):
 
         # Store timer in cache
         cache.set(cache_key, timer, delay_seconds + 60)
-        logger.info(f'[FSO AUTO-RESCORE] Scheduled rescore for problem {problem_id} in contest {contest_id} in {delay_seconds}s')
+        logger.info(
+            '[FSO AUTO-RESCORE] Scheduled rescore for problem %s in contest %s in %ss',
+            problem_id, contest_id, delay_seconds,
+        )
 
     def on_connect(self):
         self.timeout = 15
@@ -529,7 +535,10 @@ class JudgeHandler(ZlibPacketHandler):
                 problem_id = submission.contest.problem_id
                 contest_id = contest.id
 
-                logger.info(f'[FSO AUTO-RESCORE] Submission {submission.id} graded, calling rescore for problem {problem_id}')
+                logger.info(
+                    '[FSO AUTO-RESCORE] Submission %s graded, calling rescore for problem %s',
+                    submission.id, problem_id,
+                )
 
                 # Call rescore directly (no transaction.on_commit needed)
                 self._schedule_fso_rescore_with_debounce(contest_id, problem_id)

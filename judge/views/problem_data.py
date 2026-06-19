@@ -17,8 +17,8 @@ from django.forms import (
     CharField,
     ChoiceField,
     HiddenInput,
-    ModelForm,
     ModelChoiceField,
+    ModelForm,
     NumberInput,
     Select,
     Textarea,
@@ -35,12 +35,12 @@ from django.shortcuts import (
     render,
 )
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import (
     escape,
     format_html,
 )
 from django.utils.safestring import mark_safe
-from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views.generic import DetailView
@@ -56,11 +56,11 @@ from judge.models import (
     Submission,
     problem_data_storage,
 )
-from judge.utils.external_judge_client import ExternalJudgeClient, ExternalJudgeError, user_safe_message
 from judge.models.problem_data import (
     CUSTOM_CHECKERS,
     IO_METHODS,
 )
+from judge.utils.external_judge_client import ExternalJudgeClient, ExternalJudgeError, user_safe_message
 from judge.utils.problem_data import ProblemDataCompiler
 from judge.utils.problem_mirror import (
     get_mirrorable_source_queryset,
@@ -281,7 +281,9 @@ class ExternalJudgeForm(ModelForm):
             instance = ExternalProblem(problem=self.problem)
         instance.config = self.cleaned_data.get('config')
         instance.oj = self.cleaned_data.get('oj') or instance.oj or ''
-        instance.external_problem_id = self.cleaned_data.get('external_problem_id') or instance.external_problem_id or ''
+        instance.external_problem_id = (
+            self.cleaned_data.get('external_problem_id') or instance.external_problem_id or ''
+        )
         instance.metadata_cache = self.cleaned_data.get('metadata_cache') or instance.metadata_cache or {}
         if instance.metadata_cache:
             instance.last_synced_at = timezone.now()
@@ -343,7 +345,10 @@ class ProblemMirrorForm(ModelForm):
             }),
         }
         help_texts = {
-            'mirror_of': _('Select a source problem to mirror test archive from. Leave empty to use this problem data.'),
+            'mirror_of': _(
+                'Select a source problem to mirror test archive from. '
+                'Leave empty to use this problem data.',
+            ),
         }
 
 
@@ -609,7 +614,10 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
         data_form.zip_valid = valid_files is not False
         cases_formset = self.get_case_formset(valid_files, post=True)
         archive_change_requested = self._archive_change_requested()
-        uploaded_archive_name = request.FILES.get('problem-data-zipfile').name if 'problem-data-zipfile' in request.FILES else ''
+        uploaded_archive_name = (
+            request.FILES.get('problem-data-zipfile').name
+            if 'problem-data-zipfile' in request.FILES else ''
+        )
 
         if archive_change_requested and (problem.is_mirror or problem.has_external_problem):
             data_form.add_error(None, _(
@@ -648,7 +656,7 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
 
             if previous_mirror_of_id and not problem.mirror_of_id:
                 ProblemTestCase.objects.filter(dataset=problem).delete()
-                current_data, _ = ProblemData.objects.get_or_create(problem=problem)
+                current_data, _created = ProblemData.objects.get_or_create(problem=problem)
                 current_data.zipfile = None
                 current_data.save(update_fields=['zipfile'])
                 ProblemDataCompiler.generate(problem, current_data, problem.cases.none(), [])
@@ -656,7 +664,7 @@ class ProblemDataView(TitleMixin, ProblemManagerMixin):
 
             if mirror_changed and problem.mirror_of_id:
                 ProblemTestCase.objects.filter(dataset=problem).delete()
-                current_data, _ = ProblemData.objects.get_or_create(problem=problem)
+                current_data, _created = ProblemData.objects.get_or_create(problem=problem)
                 current_data.zipfile = None
                 current_data.save(update_fields=['zipfile'])
                 self.object = problem
@@ -777,10 +785,10 @@ def _extract_external_languages(payload):
     if not isinstance(payload, dict):
         return []
     raw_languages = (
-        payload.get('languages')
-        or payload.get('languageMap')
-        or payload.get('language_map')
-        or []
+        payload.get('languages') or
+        payload.get('languageMap') or
+        payload.get('language_map') or
+        []
     )
     if isinstance(raw_languages, dict):
         normalized = []

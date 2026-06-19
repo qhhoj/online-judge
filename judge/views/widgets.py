@@ -16,7 +16,7 @@ from django.http import (
 from django.views.decorators.http import require_POST
 from martor.api import imgur_uploader
 
-from judge.models import Submission, ContestSubmission
+from judge.models import ContestSubmission, Submission
 
 
 __all__ = ['rejudge_submission', 'rescore_contest_problem']

@@ -924,7 +924,10 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
                 )
         else:
             external_mapping = None
-        if not self.object.has_external_problem and not self.object.allowed_languages.filter(id=form.cleaned_data['language'].id).exists():
+        if (
+            not self.object.has_external_problem and
+            not self.object.allowed_languages.filter(id=form.cleaned_data['language'].id).exists()
+        ):
             raise PermissionDenied()
         if not self.request.user.is_superuser and self.object.banned_users.filter(id=self.request.profile.id).exists():
             return generic_message(
@@ -1004,10 +1007,13 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
             context['external_language_options'] = []
             context['selected_external_language_token'] = ''
             context['no_judges'] = not context['form'].fields['language'].queryset
-        context['external_problem'] = getattr(self.object, 'external_problem', None) if self.object.has_external_problem else None
+        context['external_problem'] = (
+            getattr(self.object, 'external_problem', None)
+            if self.object.has_external_problem else None
+        )
         context['can_view_external_meta'] = bool(
-            self.object.has_external_problem
-            and (self.request.user.is_superuser or self.object.is_editable_by(self.request.user))
+            self.object.has_external_problem and
+            (self.request.user.is_superuser or self.object.is_editable_by(self.request.user)),
         )
         context['submission_limit'] = self.contest_problem and self.contest_problem.max_submissions
         context['submissions_left'] = self.remaining_submission_count

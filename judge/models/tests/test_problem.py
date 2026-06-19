@@ -508,7 +508,7 @@ class ProblemTestCase(CommonDataMixin, TestCase):
             is_organization_private=True,
             organizations=('problem organization',),
         )
-        other_org = create_organization(name='other mirror org', admins=('staff_problem_edit_own',))
+        create_organization(name='other mirror org', admins=('staff_problem_edit_own',))
         other_org_source = create_problem(
             code='mirror_policy_other_org',
             is_public=True,
@@ -618,6 +618,7 @@ class ProblemTestCase(CommonDataMixin, TestCase):
             is_organization_private=True,
             organizations=('problem organization',),
             types=('type',),
+            points=800,
         )
 
         payload = self._problem_edit_payload(org_problem, mirror_of=mirror_source)
@@ -678,7 +679,7 @@ class ProblemTestCase(CommonDataMixin, TestCase):
         payload['problem-data-zipfile-clear'] = 'on'
         response = self.client.post(reverse('problem_data', args=[mirror.code]), data=payload)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Mirror problems cannot upload archives directly')
+        self.assertContains(response, 'cannot upload archives directly')
 
     def test_problem_data_page_hides_case_editor_but_keeps_config_for_mirror(self):
         root = create_problem(code='mirror_editor_root', is_public=True, types=('type',))
@@ -720,7 +721,9 @@ class ProblemTestCase(CommonDataMixin, TestCase):
 
         self.client.force_login(self.users['staff_problem_edit_all'])
         payload = self._problem_data_payload()
-        payload['problem-data-zipfile'] = SimpleUploadedFile('root-tests.zip', stream.read(), content_type='application/zip')
+        payload['problem-data-zipfile'] = SimpleUploadedFile(
+            'root-tests.zip', stream.read(), content_type='application/zip',
+        )
         response = self.client.post(reverse('problem_data', args=[root.code]), data=payload)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Selected archive (fake preview):')

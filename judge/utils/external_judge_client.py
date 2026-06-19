@@ -127,24 +127,26 @@ class ExternalJudgeClient:
                 url,
                 headers=self._headers(),
                 timeout=request_timeout,
-                **request_kwargs
+                **request_kwargs,
             )
         except ExternalJudgeError:
             raise
         except ValueError as exc:
+            error_message = str(exc)
             logger.warning(
                 'External judge request configuration error: config=%s path=%s error=%s',
                 self._config_name(),
                 path,
-                exc,
+                error_message,
             )
             raise ExternalJudgeConfigurationError(_('External judge request configuration is invalid.')) from exc
         except requests.RequestException as exc:
+            error_message = str(exc)
             logger.warning(
                 'External judge connection error: config=%s path=%s error=%s',
                 self._config_name(),
                 path,
-                exc,
+                error_message,
             )
             raise ExternalJudgeConnectionError(str(exc)) from exc
 
