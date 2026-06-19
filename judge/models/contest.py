@@ -1096,7 +1096,7 @@ class ContestPublicRankingLink(models.Model):
 
     @classmethod
     def _unique_token(cls):
-        for _ in range(10):
+        for attempt in range(10):
             token = cls.generate_token()
             if not cls.objects.filter(token=token).exists():
                 return token
@@ -1112,7 +1112,7 @@ class ContestPublicRankingLink(models.Model):
         existing = cls.objects.filter(contest=contest).first()
         if existing is not None:
             return existing, False
-        for _ in range(10):
+        for attempt in range(10):
             try:
                 with transaction.atomic():
                     link = cls.objects.create(
@@ -1144,7 +1144,7 @@ class ContestPublicRankingLink(models.Model):
         old_token = self.token
         old_regenerated_at = self.regenerated_at
         old_expires_at = self.expires_at
-        for _ in range(10):
+        for attempt in range(10):
             new_regenerated_at = timezone.now()
             self.token = self._unique_token()
             self.regenerated_at = new_regenerated_at
