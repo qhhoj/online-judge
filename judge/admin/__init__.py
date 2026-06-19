@@ -3,13 +3,13 @@ from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import User
 from django.contrib.flatpages.models import FlatPage
 
+import judge.admin.external_judge  # noqa: F401
 from judge.admin.comments import CommentAdmin
 from judge.admin.contest import (
     ContestAdmin,
     ContestParticipationAdmin,
     ContestTagAdmin,
 )
-import judge.admin.external_judge  # noqa: F401
 from judge.admin.interface import (
     BlogPostAdmin,
     FlatPageAdmin,

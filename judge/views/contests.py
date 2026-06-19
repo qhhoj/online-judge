@@ -1464,7 +1464,7 @@ class ContestJudgeView(ContestMixin, TitleMixin, DetailView):
         if action == 'rescore':
             # Rescore all participations in the contest
             try:
-                logger.info(f'Rescoring all participations for contest {self.object.key}')
+                logger.info('Rescoring all participations for contest %s', self.object.key)
 
                 participations = self.object.users.all()
                 rescored_count = 0
@@ -1477,16 +1477,16 @@ class ContestJudgeView(ContestMixin, TitleMixin, DetailView):
                     request,
                     _('Successfully rescored %(count)d participations.') % {
                         'count': rescored_count,
-                    }
+                    },
                 )
-                logger.info(f'Rescored {rescored_count} participations for contest {self.object.key}')
+                logger.info('Rescored %s participations for contest %s', rescored_count, self.object.key)
 
             except Exception as e:
                 messages.error(
                     request,
-                    _('Error rescoring contest: %(error)s') % {'error': str(e)}
+                    _('Error rescoring contest: %(error)s') % {'error': str(e)},
                 )
-                logger.error(f'Error rescoring contest {self.object.key}: {e}', exc_info=True)
+                logger.exception('Error rescoring contest %s', self.object.key)
         else:
             # Call judging implementation directly (synchronous)
             # This doesn't require Celery worker and is faster
@@ -1494,25 +1494,28 @@ class ContestJudgeView(ContestMixin, TitleMixin, DetailView):
 
             try:
                 # Trigger judging for ALL submissions (synchronous)
-                logger.info(f'Triggering judging for contest {self.object.key}')
+                logger.info('Triggering judging for contest %s', self.object.key)
                 result = _judge_final_submissions_impl(self.object.key, rejudge_all=False)
 
                 # Show success message
                 messages.success(
                     request,
-                    _('Successfully queued %(count)d submissions for judging. Judge server will process them automatically.') % {
+                    _(
+                        'Successfully queued %(count)d submissions for judging. '
+                        'Judge server will process them automatically.',
+                    ) % {
                         'count': result.get('queued_count', 0),
-                    }
+                    },
                 )
-                logger.info(f'Judging completed: {result.get("message")}')
+                logger.info('Judging completed: %s', result.get('message'))
 
             except Exception as e:
                 # Show error message
                 messages.error(
                     request,
-                    _('Error triggering judging: %(error)s') % {'error': str(e)}
+                    _('Error triggering judging: %(error)s') % {'error': str(e)},
                 )
-                logger.error(f'Error judging contest {self.object.key}: {e}', exc_info=True)
+                logger.exception('Error judging contest %s', self.object.key)
 
         # Redirect back to judge page
         return HttpResponseRedirect(reverse('contest_judge', args=(self.object.key,)))

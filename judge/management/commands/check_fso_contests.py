@@ -61,8 +61,8 @@ class Command(BaseCommand):
                 # Trigger judging for this contest
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f'✓ Judging contest {contest.key} ({total_count} submissions)'
-                    )
+                        f'✓ Judging contest {contest.key} ({total_count} submissions)',
+                    ),
                 )
 
                 # Call the implementation directly (synchronous)
@@ -71,14 +71,14 @@ class Command(BaseCommand):
                     result = _judge_final_submissions_impl(contest.key, rejudge_all=False)
                     self.stdout.write(
                         self.style.SUCCESS(
-                            f'  {result.get("message", "completed")}'
-                        )
+                            f'  {result.get("message", "completed")}',
+                        ),
                     )
                 except Exception as e:
                     self.stdout.write(
                         self.style.ERROR(
-                            f'  Error: {str(e)}'
-                        )
+                            f'  Error: {str(e)}',
+                        ),
                     )
                     import traceback
                     traceback.print_exc()
@@ -88,9 +88,8 @@ class Command(BaseCommand):
         if processed_count > 0:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f'✓ Processed {processed_count} contests'
-                )
+                    f'✓ Processed {processed_count} contests',
+                ),
             )
         else:
             self.stdout.write('No contests to process')
-

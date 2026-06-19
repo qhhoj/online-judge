@@ -290,7 +290,10 @@ def build_realtime_snapshot():
             'total_bot_sessions': bot_total,
             'total_bot_unique': len(bot_authenticated_users) + bot_anonymous_sessions,
             'total_sessions': total_sessions,
-            'total_unique_all': len(auth_unique_users) + anonymous_total + len(bot_authenticated_users) + bot_anonymous_sessions,
+            'total_unique_all': (
+                len(auth_unique_users) + anonymous_total +
+                len(bot_authenticated_users) + bot_anonymous_sessions
+            ),
             'generated_at': timezone.now().isoformat(),
         }
 

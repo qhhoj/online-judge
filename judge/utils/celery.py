@@ -80,7 +80,7 @@ def task_status_url(result, message=None, redirect=None):
         import logging
         import uuid
         logger = logging.getLogger('judge.utils.celery')
-        logger.warning(f'Task result is not AsyncResult: {type(result)} - {result}')
+        logger.warning('Task result is not AsyncResult: %s - %s', type(result), result)
         task_id = str(uuid.uuid4())
     return task_status_url_by_id(task_id, message, redirect)
 
@@ -92,7 +92,7 @@ def redirect_to_task_status(result, message=None, redirect=None):
         if redirect:
             import logging
             logger = logging.getLogger('judge.utils.celery')
-            logger.info(f'Task completed synchronously, redirecting to: {redirect}')
+            logger.info('Task completed synchronously, redirecting to: %s', redirect)
             return HttpResponseRedirect(redirect)
 
     return HttpResponseRedirect(task_status_url(result, message, redirect))

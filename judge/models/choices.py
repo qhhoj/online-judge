@@ -1,6 +1,6 @@
+import zoneinfo
 from collections import defaultdict
 from operator import itemgetter
-import zoneinfo
 
 from django.utils.translation import gettext_lazy as _
 

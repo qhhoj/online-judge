@@ -52,7 +52,7 @@ class Command(BaseCommand):
         recent_activities = UserActivity.objects.filter(
             timestamp__gte=cutoff_time,
         ).count()
-        self.stdout.write(f'\n=== RECENT ACTIVITIES ===')
+        self.stdout.write('\n=== RECENT ACTIVITIES ===')
         self.stdout.write(f'Total activities (last 30 min): {recent_activities}')
 
         # Latest sessions
@@ -66,4 +66,3 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(self.style.SUCCESS('\n=== CHECK COMPLETE ==='))
-

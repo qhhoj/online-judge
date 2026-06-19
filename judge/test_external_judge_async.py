@@ -6,7 +6,6 @@ from django.test import TestCase, override_settings
 
 from judge.external_judge import finalize_external_submission, perform_external_submission, schedule_external_submission
 from judge.judgeapi import judge_submission
-from judge.tasks.external_judge import submit_external_submission
 from judge.models import (
     ExternalJudgeConfig,
     ExternalProblem,
@@ -16,6 +15,7 @@ from judge.models import (
     SubmissionSource,
 )
 from judge.models.tests.util import CommonDataMixin, create_problem
+from judge.tasks.external_judge import submit_external_submission
 
 
 TEST_FERNET_KEY = Fernet.generate_key().decode()
@@ -47,7 +47,7 @@ class ExternalJudgeAsyncTests(CommonDataMixin, TestCase):
                 {
                     'qhhoj_key': Language.get_python3().key,
                     'vjudge_id': '9001',
-                }
+                },
             ],
         )
 
@@ -137,7 +137,6 @@ class ExternalJudgeAsyncTests(CommonDataMixin, TestCase):
             'vjudge_name': 'Selected remote language',
         }
         self.external_submission._external_language_mapping = selected_mapping
-        placeholder = uuid.uuid4()
 
         with patch('judge.tasks.external_judge.submit_external_submission.apply_async'):
             result = schedule_external_submission(self.external_submission)
@@ -396,7 +395,10 @@ class ExternalJudgeAsyncTests(CommonDataMixin, TestCase):
         self.assertEqual(perform_external_mock.call_args[0][0].id, self.external_submission.id)
 
     def test_schedule_external_submission_enqueue_failure_marks_submission_error(self):
-        with patch('judge.tasks.external_judge.submit_external_submission.apply_async', side_effect=RuntimeError('queue down')):
+        with patch(
+            'judge.tasks.external_judge.submit_external_submission.apply_async',
+            side_effect=RuntimeError('queue down'),
+        ):
             result = schedule_external_submission(self.external_submission)
 
         self.assertFalse(result)

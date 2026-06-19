@@ -22,7 +22,13 @@ from judge.models import (
 from judge.utils.celery import Progress
 
 
-__all__ = ('rescore_contest', 'run_moss', 'prepare_contest_data', 'judge_final_submissions', 'check_final_submission_contests')
+__all__ = (
+    'rescore_contest',
+    'run_moss',
+    'prepare_contest_data',
+    'judge_final_submissions',
+    'check_final_submission_contests',
+)
 rewildcard = re.compile(r'\*+')
 
 
@@ -201,7 +207,7 @@ def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callb
     import logging
 
     logger = logging.getLogger('judge.tasks.contest')
-    logger.info(f'=== judge_final_submissions started for {contest_key}, rejudge_all={rejudge_all} ===')
+    logger.info('=== judge_final_submissions started for %s, rejudge_all=%s ===', contest_key, rejudge_all)
 
     contest = Contest.objects.get(key=contest_key)
 
@@ -219,10 +225,10 @@ def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callb
         contest__participation__contest=contest,
     ).exclude(status__in=('P', 'G'))  # Exclude currently processing
 
-    logger.info(f'Total submissions in contest: {submissions.count()}')
+    logger.info('Total submissions in contest: %s', submissions.count())
 
     total_submissions = submissions.count()
-    logger.info(f'Submissions to queue: {total_submissions}')
+    logger.info('Submissions to queue: %s', total_submissions)
 
     # Report progress if callback provided
     if progress_callback:
@@ -241,7 +247,7 @@ def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callb
     # Delete old test cases for all submissions (to ensure clean rejudge)
     submission_ids = list(submissions.values_list('id', flat=True))
     deleted_count = SubmissionTestCase.objects.filter(submission_id__in=submission_ids).delete()[0]
-    logger.info(f'Deleted {deleted_count} old test cases')
+    logger.info('Deleted %s old test cases', deleted_count)
 
     # Bulk update all submissions to Queued status
     # This is MUCH faster than calling judge_submission() for each one
@@ -259,7 +265,7 @@ def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callb
 
     # Bulk update in one query - instant!
     queued_count = submissions.update(**update_fields)
-    logger.info(f'✓ Bulk updated {queued_count} submissions to QU status')
+    logger.info('✓ Bulk updated %s submissions to QU status', queued_count)
 
     # Now dispatch all submissions to judge server
     # Get fresh submission objects after update
@@ -279,11 +285,11 @@ def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callb
                 dispatched += 1
             else:
                 failed += 1
-        except Exception as e:
-            logger.error(f'Failed to dispatch submission {submission_id}: {e}')
+        except Exception:
+            logger.exception('Failed to dispatch submission %s', submission_id)
             failed += 1
 
-    logger.info(f'✓ Dispatched {dispatched} submissions to judge server ({failed} failed)')
+    logger.info('✓ Dispatched %s submissions to judge server (%s failed)', dispatched, failed)
 
     # Report final progress
     if progress_callback:
@@ -292,7 +298,7 @@ def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callb
     # Note: Auto-rescore is handled by judge_handler.py after each submission is graded
     # No need to schedule rescore here as it will be triggered automatically
 
-    logger.info(f'=== judge_final_submissions completed for {contest_key} ===')
+    logger.info('=== judge_final_submissions completed for %s ===', contest_key)
 
     return {
         'status': 'completed',
@@ -301,7 +307,10 @@ def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callb
         'dispatched_count': dispatched,
         'failed_count': failed,
         'total': total_submissions,
-        'message': f'Queued {queued_count} submissions, dispatched {dispatched} to judge server. Auto-rescore will trigger after grading.',
+        'message': (
+            f'Queued {queued_count} submissions, dispatched {dispatched} to judge server. '
+            'Auto-rescore will trigger after grading.'
+        ),
     }
 
 
@@ -348,33 +357,33 @@ def check_final_submission_contests(self):
         end_time__lte=now,
     )
 
-    logger.info(f'Found {ended_contests.count()} ended final_submission contests')
+    logger.info('Found %s ended final_submission contests', ended_contests.count())
 
     # Log each contest
     for contest in ended_contests:
-        logger.info(f'  - Contest: {contest.key}, ended: {contest.end_time}, format: {contest.format_name}')
+        logger.info('  - Contest: %s, ended: %s, format: %s', contest.key, contest.end_time, contest.format_name)
 
     processed_count = 0
     for contest in ended_contests:
-        logger.info(f'Processing contest: {contest.key}')
+        logger.info('Processing contest: %s', contest.key)
 
         # Check if auto_judge is enabled (default: True)
         format_config = contest.format_config or {}
         auto_judge = format_config.get('auto_judge', True)
-        logger.info(f'  auto_judge: {auto_judge}')
+        logger.info('  auto_judge: %s', auto_judge)
 
         if not auto_judge:
-            logger.info(f'  Skipping {contest.key}: auto_judge disabled')
+            logger.info('  Skipping %s: auto_judge disabled', contest.key)
             continue
 
         # Use same cache key as trigger_final_submission_judging to avoid duplicate triggers
         end_time_ts = int(contest.end_time.timestamp())
         cache_key = f'fso_judged_{contest.id}_{end_time_ts}'
-        logger.info(f'  cache_key: {cache_key}')
+        logger.info('  cache_key: %s', cache_key)
 
         # Skip if already triggered for this end_time
         if cache.get(cache_key):
-            logger.info(f'  Skipping {contest.key}: already triggered (cache hit)')
+            logger.info('  Skipping %s: already triggered (cache hit)', contest.key)
             continue
 
         # Check if there are any submissions (pending or not)
@@ -387,7 +396,7 @@ def check_final_submission_contests(self):
             status='PD',
         ).count()
 
-        logger.info(f'  total_submissions: {total_count}, pending: {pending_count}')
+        logger.info('  total_submissions: %s, pending: %s', total_count, pending_count)
 
         # Trigger if there are ANY submissions (not just pending)
         # This ensures all submissions are rejudged after contest ends
@@ -397,11 +406,11 @@ def check_final_submission_contests(self):
 
             # Trigger judging task for this contest
             # Always use rejudge_all=False to let the task handle all submissions
-            logger.info(f'✓ Triggering judge task for contest {contest.key} ({total_count} total submissions)')
+            logger.info('✓ Triggering judge task for contest %s (%s total submissions)', contest.key, total_count)
             judge_final_submissions.delay(contest.key, rejudge_all=False)
             processed_count += 1
         else:
-            logger.info(f'  Skipping {contest.key}: no submissions')
+            logger.info('  Skipping %s: no submissions', contest.key)
 
-    logger.info(f'=== Periodic check completed: processed {processed_count} contests ===')
+    logger.info('=== Periodic check completed: processed %s contests ===', processed_count)
     return processed_count

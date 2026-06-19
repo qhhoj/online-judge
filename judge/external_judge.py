@@ -107,10 +107,10 @@ def get_external_status_canonical(data):
     if not isinstance(raw_status, dict):
         raw_status = {}
     status = (
-        data.get('statusCanonical')
-        or data.get('vjudgeStatusCanonical')
-        or raw_status.get('statusCanonical')
-        or raw_status.get('vjudgeStatusCanonical')
+        data.get('statusCanonical') or
+        data.get('vjudgeStatusCanonical') or
+        raw_status.get('statusCanonical') or
+        raw_status.get('vjudgeStatusCanonical')
     )
     return _status_token(status)
 
@@ -120,9 +120,9 @@ def external_result_is_processing(data):
     system_status = _external_system_status(data)
     processing = data.get('processing') if isinstance(data, dict) else None
     return (
-        processing is True
-        or status_canonical in PROCESSING_STATUS_CANONICALS
-        or system_status in PROCESSING_SYSTEM_STATUSES
+        processing is True or
+        status_canonical in PROCESSING_STATUS_CANONICALS or
+        system_status in PROCESSING_SYSTEM_STATUSES
     )
 
 
@@ -130,8 +130,8 @@ def external_result_is_submit_failed(data):
     status_canonical = get_external_status_canonical(data)
     system_status = _external_system_status(data)
     return (
-        status_canonical.startswith('SUBMIT_FAILED')
-        or system_status.startswith('submit_failed')
+        status_canonical.startswith('SUBMIT_FAILED') or
+        system_status.startswith('submit_failed')
     )
 
 
@@ -152,10 +152,10 @@ def get_external_score_text(data):
     if not isinstance(raw_status, dict):
         raw_status = {}
     return (
-        data.get('scoreText')
-        or data.get('vjudgeScoreText')
-        or raw_status.get('scoreText')
-        or raw_status.get('vjudgeScoreText')
+        data.get('scoreText') or
+        data.get('vjudgeScoreText') or
+        raw_status.get('scoreText') or
+        raw_status.get('vjudgeScoreText')
     )
 
 
@@ -319,7 +319,7 @@ def perform_external_submission(submission, rejudge=False, batch_rejudge=False, 
             open=True,
         )
     except ExternalJudgeError as exc:
-        logger.warning(
+        logger.warning(  # noqa: G200
             'External submit failed: config=%s submission_id=%s status=%s error=%s',
             getattr(external_problem.config, 'name', '<unknown>'),
             submission.id,

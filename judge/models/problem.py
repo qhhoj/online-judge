@@ -337,7 +337,7 @@ class Problem(models.Model):
         blank=True,
         related_name='direct_mirrors',
         on_delete=SET_NULL,
-        help_text=_('Use another problem\'s test archive while keeping this problem\'s own config/init.yml.'),
+        help_text=_("Use another problem's test archive while keeping this problem's own config/init.yml."),
     )
     mirror_root = models.ForeignKey(
         'self',
