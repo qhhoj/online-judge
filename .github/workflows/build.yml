@@ -37,7 +37,9 @@ jobs:
     - name: Start MySQL
       run: sudo systemctl start mysql.service
     - name: Run unit tests
-      run: coverage run --source=. manage.py test judge
+      run: |
+        python manage.py compilejsi18n
+        coverage run --source=. manage.py test judge
     - name: Generate coverage report
       run: coverage xml
     - uses: codecov/codecov-action@v4
