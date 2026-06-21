@@ -51,6 +51,32 @@
         </tbody>
     </table>
 
+    <div id="external-problem-picker" class="alert alert-info" style="display: none; margin: 12px;" role="region" aria-labelledby="external-problem-picker-title">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+            <strong id="external-problem-picker-title">{{ _('Matching VJudge problems') }}</strong>
+            <button type="button" class="button" id="external-problem-picker-close" aria-label="{{ _('Close problem results') }}">{{ _('Close') }}</button>
+        </div>
+        <p id="external-problem-picker-status" class="helptext" aria-live="polite" style="margin: 8px 0;"></p>
+        <div style="overflow-x: auto;">
+            <table class="table" style="margin-bottom: 8px; min-width: 520px;">
+                <thead>
+                <tr>
+                    <th>{{ _('OJ') }}</th>
+                    <th>{{ _('Problem ID') }}</th>
+                    <th>{{ _('Title') }}</th>
+                    <th>{{ _('Action') }}</th>
+                </tr>
+                </thead>
+                <tbody id="external-problem-picker-body"></tbody>
+            </table>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+            <button type="button" class="button" id="external-problem-picker-prev">{{ _('Previous') }}</button>
+            <span id="external-problem-picker-page" class="helptext"></span>
+            <button type="button" class="button" id="external-problem-picker-next">{{ _('Next') }}</button>
+        </div>
+    </div>
+
     <div id="external-language-section" style="margin-top: 12px; padding: 0 12px;">
         <h4 style="margin-bottom: 8px;">{{ _('Language Mappings') }}</h4>
         <p class="helptext" style="margin-bottom: 8px;">
