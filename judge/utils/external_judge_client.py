@@ -191,6 +191,20 @@ class ExternalJudgeClient:
             '/api/v1/problems/%s/%s' % (quote(str(oj), safe=''), quote(str(problem_id), safe='')),
         )
 
+    def search_problems(self, *, oj='', problem_id='', title='', source='', page=1, page_size=20):
+        return _require_dict_payload(self._request(
+            'GET',
+            '/api/v1/problems',
+            params={
+                'oj': str(oj or ''),
+                'problemId': str(problem_id or ''),
+                'title': str(title or ''),
+                'source': str(source or ''),
+                'page': page,
+                'pageSize': page_size,
+            },
+        ), _('problem search'))
+
     def get_problem_statement(self, oj, problem_id):
         return self._request(
             'GET',

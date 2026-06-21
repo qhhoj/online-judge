@@ -805,6 +805,75 @@ def problem_data_file(request, problem, path):
 
 
 @login_required
+def search_external_problems(request, problem):
+    problem_obj = get_object_or_404(Problem, code=problem)
+    if not problem_obj.is_editable_by(request.user):
+        raise Http404()
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': _('POST is required.')}, status=405)
+
+    config_id = request.POST.get('config') or request.POST.get('config_id')
+    oj = (request.POST.get('oj') or '').strip()
+    problem_id = (request.POST.get('external_problem_id') or request.POST.get('problem_id') or '').strip()
+    if not config_id or not (oj or problem_id):
+        return JsonResponse({
+            'ok': False,
+            'error': _('Select a VJudge server and enter an OJ or problem ID to search.'),
+        }, status=400)
+
+    try:
+        page = int(request.POST.get('page', 1))
+    except (TypeError, ValueError):
+        page = 1
+    page = max(page, 1)
+    page_size = 20
+
+    config = get_object_or_404(ExternalJudgeConfig, id=config_id, is_active=True)
+    try:
+        result = ExternalJudgeClient(config).search_problems(
+            oj=oj,
+            problem_id=problem_id,
+            page=page,
+            page_size=page_size,
+        )
+    except ExternalJudgeError as exc:
+        return JsonResponse({'ok': False, 'error': user_safe_message(exc)}, status=400)
+
+    raw_items = result.get('items') if isinstance(result, dict) else []
+    items = []
+    for item in raw_items if isinstance(raw_items, list) else []:
+        if not isinstance(item, dict):
+            continue
+        item_oj = str(item.get('oj') or '').strip()
+        item_problem_id = str(item.get('problemId') or item.get('problem_id') or '').strip()
+        if not item_oj or not item_problem_id:
+            continue
+        items.append({
+            'oj': item_oj,
+            'problem_id': item_problem_id,
+            'title': str(item.get('title') or '').strip(),
+            'source': str(item.get('source') or '').strip(),
+        })
+
+    try:
+        total = max(int(result.get('total', len(items))), len(items))
+    except (AttributeError, TypeError, ValueError):
+        total = len(items)
+    try:
+        response_page = max(int(result.get('page', page)), 1)
+    except (AttributeError, TypeError, ValueError):
+        response_page = page
+
+    return JsonResponse({
+        'ok': True,
+        'page': response_page,
+        'page_size': page_size,
+        'total': total,
+        'items': items,
+    })
+
+
+@login_required
 def verify_external_problem(request, problem):
     problem_obj = get_object_or_404(Problem, code=problem)
     if not problem_obj.is_editable_by(request.user):

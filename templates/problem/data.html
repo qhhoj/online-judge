@@ -590,6 +590,9 @@
             (function virtual_judge_setup() {
                 var $verify = $('#external-verify-button');
                 var $status = $('#external-verify-status');
+                var $config = $('#id_external-config');
+                var $oj = $('#id_external-oj');
+                var $externalProblemId = $('#id_external-external_problem_id');
                 var $mappings = $('#id_external-language_mappings');
                 var $enabled = $('#id_external-enabled');
                 var $sourceInputs = $('input[name="mirror-test_source"]');
@@ -600,6 +603,17 @@
                 var $archiveRow = $archiveInput.closest('tr');
                 var $localTestcaseSection = $('#local-testcase-section');
                 var $modeMessage = $('#test-source-mode-message');
+                var $problemPicker = $('#external-problem-picker');
+                var $problemPickerStatus = $('#external-problem-picker-status');
+                var $problemPickerBody = $('#external-problem-picker-body');
+                var $problemPickerPage = $('#external-problem-picker-page');
+                var $problemPickerPrevious = $('#external-problem-picker-prev');
+                var $problemPickerNext = $('#external-problem-picker-next');
+                var problemSearchRequest = null;
+                var problemSearchTimer = null;
+                var problemSearchSequence = 0;
+                var currentProblemSearchPage = 1;
+                var currentProblemSearchTotal = 0;
 
                 function updateTestSourceMode() {
                     var mode = $sourceInputs.filter(':checked').val() || 'local';
@@ -677,6 +691,113 @@
                     $status.append(document.createTextNode(message));
                 }
 
+                function hideProblemPicker() {
+                    window.clearTimeout(problemSearchTimer);
+                    problemSearchTimer = null;
+                    problemSearchSequence += 1;
+                    if (problemSearchRequest) {
+                        problemSearchRequest.abort();
+                        problemSearchRequest = null;
+                    }
+                    $problemPicker.hide();
+                    $problemPickerBody.empty();
+                    $problemPickerStatus.empty();
+                    $problemPickerPage.empty();
+                    currentProblemSearchTotal = 0;
+                }
+
+                function renderProblemPicker(response) {
+                    var items = Array.isArray(response.items) ? response.items : [];
+                    var page = parseInt(response.page, 10) || 1;
+                    var total = Math.max(parseInt(response.total, 10) || 0, items.length);
+                    var pageSize = 20;
+                    var first = items.length ? ((page - 1) * pageSize) + 1 : 0;
+                    var last = items.length ? first + items.length - 1 : 0;
+
+                    currentProblemSearchPage = page;
+                    currentProblemSearchTotal = total;
+                    $problemPickerBody.empty();
+                    if (!items.length) {
+                        $problemPickerBody.append($('<tr>').append($('<td>', {
+                            colspan: 4,
+                            'class': 'helptext',
+                            text: "{{ _('No matching problems were found.') }}"
+                        })));
+                    } else {
+                        items.forEach(function (item) {
+                            var $select = $('<button>', {
+                                type: 'button',
+                                'class': 'button external-problem-select',
+                                text: "{{ _('Select') }}"
+                            }).data('externalProblem', item);
+                            $problemPickerBody.append($('<tr>')
+                                .append($('<td>').text(item.oj || ''))
+                                .append($('<td>').text(item.problem_id || ''))
+                                .append($('<td>').text(item.title || item.source || '—'))
+                                .append($('<td>').append($select)));
+                        });
+                    }
+                    $problemPickerStatus.text(total
+                        ? "{{ _('Showing') }} " + first + '–' + last + " {{ _('of') }} " + total
+                        : "{{ _('No matching problems were found.') }}");
+                    $problemPickerPage.text("{{ _('Page') }} " + page);
+                    $problemPickerPrevious.prop('disabled', page <= 1);
+                    $problemPickerNext.prop('disabled', !items.length || page * pageSize >= total);
+                    $problemPicker.show();
+                }
+
+                function searchExternalProblems(page) {
+                    var config = $config.val();
+                    var oj = $oj.val().trim();
+                    var problemId = $externalProblemId.val().trim();
+                    if (!config || (!oj && !problemId)) {
+                        hideProblemPicker();
+                        return;
+                    }
+
+                    var sequence = ++problemSearchSequence;
+                    if (problemSearchRequest) {
+                        problemSearchRequest.abort();
+                    }
+                    $problemPickerBody.empty();
+                    $problemPickerStatus.text("{{ _('Searching VJudge problems...') }}");
+                    $problemPickerPage.empty();
+                    $problemPickerPrevious.prop('disabled', true);
+                    $problemPickerNext.prop('disabled', true);
+                    $problemPicker.show();
+                    problemSearchRequest = $.post('{{ url('problem_data_search_external', problem.code) }}', {
+                        csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val(),
+                        config: config,
+                        oj: oj,
+                        external_problem_id: problemId,
+                        page: page
+                    }).done(function (response) {
+                        if (sequence === problemSearchSequence) {
+                            renderProblemPicker(response);
+                        }
+                    }).fail(function (xhr, textStatus) {
+                        if (textStatus === 'abort' || sequence !== problemSearchSequence) {
+                            return;
+                        }
+                        var response = xhr.responseJSON || {};
+                        $problemPickerBody.empty();
+                        $problemPickerStatus.text(response.error || "{{ _('Could not search VJudge problems.') }}");
+                        $problemPicker.show();
+                    }).always(function () {
+                        if (sequence === problemSearchSequence) {
+                            problemSearchRequest = null;
+                        }
+                    });
+                }
+
+                function scheduleExternalProblemSearch() {
+                    window.clearTimeout(problemSearchTimer);
+                    problemSearchTimer = window.setTimeout(function () {
+                        problemSearchTimer = null;
+                        searchExternalProblems(1);
+                    }, 500);
+                }
+
                 $('#external-language-mapping-body').on('input change', '.external-qhhoj-key-input', function () {
                     var mappings = readMappings();
                     var index = parseInt($(this).data('index'), 10);
@@ -686,13 +807,13 @@
                     writeMappings(mappings);
                 });
 
-                $verify.click(function () {
+                function verifyExternalProblem() {
                     setStatus('fa fa-spinner fa-spin', null, "{{ _('Verifying...') }}");
                     $.post('{{ url('problem_data_verify_external', problem.code) }}', {
                         csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val(),
-                        config: $('#id_external-config').val(),
-                        oj: $('#id_external-oj').val(),
-                        external_problem_id: $('#id_external-external_problem_id').val()
+                        config: $config.val(),
+                        oj: $oj.val(),
+                        external_problem_id: $externalProblemId.val()
                     }).done(function (response) {
                         var mappings = response.languages.map(function (language) {
                             return {
@@ -713,7 +834,34 @@
                         var response = xhr.responseJSON || {};
                         setStatus('fa fa-times', 'red', response.error || "{{ _('Could not verify external problem.') }}");
                     });
+                }
+
+                $verify.click(function () {
+                    verifyExternalProblem();
                     return false;
+                });
+
+                $config.on('change', scheduleExternalProblemSearch);
+                $oj.add($externalProblemId).on('input change', scheduleExternalProblemSearch);
+                $('#external-problem-picker-close').click(function () {
+                    hideProblemPicker();
+                });
+                $problemPickerPrevious.click(function () {
+                    if (currentProblemSearchPage > 1) {
+                        searchExternalProblems(currentProblemSearchPage - 1);
+                    }
+                });
+                $problemPickerNext.click(function () {
+                    if (currentProblemSearchPage * 20 < currentProblemSearchTotal) {
+                        searchExternalProblems(currentProblemSearchPage + 1);
+                    }
+                });
+                $problemPicker.on('click', '.external-problem-select', function () {
+                    var item = $(this).data('externalProblem') || {};
+                    $oj.val(item.oj || '');
+                    $externalProblemId.val(item.problem_id || '');
+                    hideProblemPicker();
+                    verifyExternalProblem();
                 });
 
                 renderMappings(readMappings());

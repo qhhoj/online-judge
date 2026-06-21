@@ -1,6 +1,7 @@
 import io
 import json
 import zipfile
+from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -660,6 +661,88 @@ class ProblemTestCase(CommonDataMixin, TestCase):
             archive.writestr('1.in', '1\n')
             archive.writestr('1.out', '1\n')
         return SimpleUploadedFile(name, stream.getvalue(), content_type='application/zip')
+
+    def test_external_problem_search_returns_a_sanitized_page(self):
+        problem = create_problem(
+            code='external_problem_search',
+            is_public=True,
+            authors=('staff_problem_edit_all',),
+            types=('type',),
+        )
+        config = ExternalJudgeConfig.objects.create(
+            name='search-vjudge',
+            base_url='https://vjudge.example.com',
+            encrypted_api_token='encrypted',
+        )
+
+        self.client.force_login(self.users['staff_problem_edit_all'])
+        with patch('judge.views.problem_data.ExternalJudgeClient.search_problems') as search_mock:
+            search_mock.return_value = {
+                'page': 2,
+                'pageSize': 20,
+                'total': 21,
+                'items': [
+                    {
+                        'oj': 'CodeForces',
+                        'problemId': '2227H',
+                        'title': 'Example problem',
+                        'source': 'Codeforces',
+                        'internal_only': 'must not be returned',
+                    },
+                    {'oj': 'CodeForces', 'title': 'Missing problem ID'},
+                ],
+            }
+            response = self.client.post(
+                reverse('problem_data_search_external', args=[problem.code]),
+                data={
+                    'config': config.id,
+                    'oj': 'CodeForces',
+                    'external_problem_id': '2227',
+                    'page': 2,
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {
+            'ok': True,
+            'page': 2,
+            'page_size': 20,
+            'total': 21,
+            'items': [{
+                'oj': 'CodeForces',
+                'problem_id': '2227H',
+                'title': 'Example problem',
+                'source': 'Codeforces',
+            }],
+        })
+        search_mock.assert_called_once_with(
+            oj='CodeForces',
+            problem_id='2227',
+            page=2,
+            page_size=20,
+        )
+
+    def test_external_problem_search_requires_oj_or_problem_id(self):
+        problem = create_problem(
+            code='external_problem_search_empty',
+            is_public=True,
+            authors=('staff_problem_edit_all',),
+            types=('type',),
+        )
+        config = ExternalJudgeConfig.objects.create(
+            name='empty-search-vjudge',
+            base_url='https://vjudge.example.com',
+            encrypted_api_token='encrypted',
+        )
+
+        self.client.force_login(self.users['staff_problem_edit_all'])
+        response = self.client.post(
+            reverse('problem_data_search_external', args=[problem.code]),
+            data={'config': config.id},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.json()['ok'])
 
     def test_problem_data_page_shows_mirror_selector(self):
         problem = create_problem(
