@@ -4,92 +4,75 @@ Can be run via cron job every minute for immediate judging.
 
 Usage:
     python manage.py check_fso_contests
+    python manage.py check_fso_contests --force --contest <key>
 
 Cron example (run every minute):
     * * * * * cd /path/to/site && python manage.py check_fso_contests >> /var/log/fso_check.log 2>&1
+
+Each contest is judged at most once per end time. The claim is recorded in the database
+(Contest.fso_judged_end_time), so it holds across processes and restarts -- a fresh process from
+cron will not re-judge a contest that has already been handled.
 """
-from django.core.cache import cache
 from django.core.management.base import BaseCommand
+from django.db.models import F
 from django.utils import timezone
 
-from judge.models import Contest, Submission
+from judge.models import Contest
 
 
 class Command(BaseCommand):
     help = 'Check for ended FSO contests and trigger judging'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--contest', help='only consider the contest with this key',
+        )
+        parser.add_argument(
+            '--force', action='store_true',
+            help='judge even if this contest has already been judged for its current end time. '
+                 'Does not reset already-judged submissions unless --rejudge-all is also given.',
+        )
+        parser.add_argument(
+            '--rejudge-all', action='store_true',
+            help='reset and rejudge every submission in the contest, not just unjudged ones. '
+                 'Destructive: discards existing test case results.',
+        )
+
     def handle(self, *args, **options):
         from judge.tasks.contest import _judge_final_submissions_impl
 
-        self.stdout.write(f'[{timezone.now()}] Checking FSO contests...')
+        force = options['force']
+        rejudge_all = options['rejudge_all']
 
-        # Find all final_submission contests that have ended
-        now = timezone.now()
-        ended_contests = Contest.objects.filter(
+        contests = Contest.objects.filter(
             format_name='final_submission',
-            end_time__lte=now,
+            end_time__lte=timezone.now(),
         )
-
-        self.stdout.write(f'Found {ended_contests.count()} ended FSO contests')
+        if options['contest']:
+            contests = contests.filter(key=options['contest'])
+        if not force:
+            contests = contests.exclude(fso_judged_end_time=F('end_time'))
 
         processed_count = 0
-        for contest in ended_contests:
-            # Check if auto_judge is enabled (default: True)
-            format_config = contest.format_config or {}
-            auto_judge = format_config.get('auto_judge', True)
-
-            if not auto_judge:
+        for contest in contests:
+            if not force and not contest.is_fso_auto_judge_pending():
                 continue
 
-            # Use same cache key as trigger_final_submission_judging to avoid duplicate triggers
-            end_time_ts = int(contest.end_time.timestamp())
-            cache_key = f'fso_judged_{contest.id}_{end_time_ts}'
-
-            # Skip if already triggered for this end_time
-            if cache.get(cache_key):
+            # Atomic claim. Without --force this is what makes repeated cron runs a no-op.
+            claimed = contest.claim_fso_auto_judge()
+            if not claimed and not force:
                 continue
 
-            # Check if there are any submissions
-            total_count = Submission.objects.filter(
-                contest__participation__contest=contest,
-            ).count()
+            self.stdout.write(self.style.SUCCESS(f'✓ Judging contest {contest.key}'))
+            try:
+                result = _judge_final_submissions_impl(contest.key, rejudge_all=rejudge_all)
+                self.stdout.write(f'  {result.get("message", "completed")}')
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f'  Error: {e}'))
+                import traceback
+                traceback.print_exc()
 
-            if total_count > 0:
-                # Mark as triggered (cache for 24 hours)
-                cache.set(cache_key, True, 86400)
-
-                # Trigger judging for this contest
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        f'✓ Judging contest {contest.key} ({total_count} submissions)',
-                    ),
-                )
-
-                # Call the implementation directly (synchronous)
-                # This is faster and doesn't require Celery worker
-                try:
-                    result = _judge_final_submissions_impl(contest.key, rejudge_all=False)
-                    self.stdout.write(
-                        self.style.SUCCESS(
-                            f'  {result.get("message", "completed")}',
-                        ),
-                    )
-                except Exception as e:
-                    self.stdout.write(
-                        self.style.ERROR(
-                            f'  Error: {str(e)}',
-                        ),
-                    )
-                    import traceback
-                    traceback.print_exc()
-
-                processed_count += 1
+            processed_count += 1
 
         if processed_count > 0:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f'✓ Processed {processed_count} contests',
-                ),
-            )
-        else:
-            self.stdout.write('No contests to process')
+            self.stdout.write(self.style.SUCCESS(f'✓ Processed {processed_count} contests'))

@@ -189,6 +189,22 @@ def prepare_contest_data(self, contest_id, options):
     return length
 
 
+# Submissions that automatic judging is allowed to touch: the ones the FSO flow parked while the
+# contest was running ('PD'), and ones that failed with an internal error ('IE').
+#
+# Deliberately absent:
+#   'D'      a finished submission must never be reset by an automatic trigger, or repeated triggers
+#            destroy and regenerate test case results for the whole contest.
+#   'QU'     already queued and dispatched; re-dispatching is redundant, and including it would mean
+#            two runs in a row do not settle. Excluding it is what makes this selection idempotent:
+#            every status this set touches moves to 'QU', which the set does not match.
+#   'P','G'  currently on a judge.
+#
+# A submission genuinely stranded in 'QU' (dispatch failed) therefore needs an explicit rejudge --
+# the contest's Judge Submissions button, or `manage.py check_fso_contests --force --rejudge-all`.
+FSO_UNJUDGED_STATUSES = ('PD', 'IE')
+
+
 def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callback=None):
     """
     Implementation of judging logic for FSO contests.
@@ -196,7 +212,11 @@ def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callb
 
     Args:
         contest_key: Contest key
-        rejudge_all: If True, rejudge all submissions
+        rejudge_all: If True, reset and rejudge every submission in the contest (except ones being
+            graded right now). This is destructive and is only appropriate for an explicit,
+            operator-initiated rejudge.
+            If False (the default, and what every automatic trigger passes), only submissions that
+            have not been judged yet are picked up, which makes this function idempotent.
         progress_callback: Optional callback function(current, total, percent) for progress updates
 
     Returns:
@@ -219,15 +239,17 @@ def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callb
             'contest_key': contest_key,
         }
 
-    # Get ALL submissions for this contest
-    # Exclude only currently processing submissions (P, G)
-    submissions = Submission.objects.filter(
-        contest__participation__contest=contest,
-    ).exclude(status__in=('P', 'G'))  # Exclude currently processing
+    submissions = Submission.objects.filter(contest__participation__contest=contest)
+    if rejudge_all:
+        # Explicit operator rejudge: everything except what is on a judge right now.
+        submissions = submissions.exclude(status__in=('P', 'G'))
+    else:
+        submissions = submissions.filter(status__in=FSO_UNJUDGED_STATUSES)
 
-    logger.info('Total submissions in contest: %s', submissions.count())
-
-    total_submissions = submissions.count()
+    # Snapshot the ids up front. Everything below works off this list rather than re-evaluating the
+    # queryset, whose filter is on the very column the bulk update rewrites.
+    submission_ids = list(submissions.values_list('id', flat=True))
+    total_submissions = len(submission_ids)
     logger.info('Submissions to queue: %s', total_submissions)
 
     # Report progress if callback provided
@@ -245,7 +267,6 @@ def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callb
         }
 
     # Delete old test cases for all submissions (to ensure clean rejudge)
-    submission_ids = list(submissions.values_list('id', flat=True))
     deleted_count = SubmissionTestCase.objects.filter(submission_id__in=submission_ids).delete()[0]
     logger.info('Deleted %s old test cases', deleted_count)
 
@@ -264,7 +285,7 @@ def _judge_final_submissions_impl(contest_key, rejudge_all=False, progress_callb
     }
 
     # Bulk update in one query - instant!
-    queued_count = submissions.update(**update_fields)
+    queued_count = Submission.objects.filter(id__in=submission_ids).update(**update_fields)
     logger.info('✓ Bulk updated %s submissions to QU status', queued_count)
 
     # Now dispatch all submissions to judge server
@@ -344,73 +365,35 @@ def check_final_submission_contests(self):
     Runs every minute to ensure immediate judging after contest ends.
     """
     import logging
+    from django.db.models import F
     from django.utils import timezone
-    from django.core.cache import cache
 
     logger = logging.getLogger('judge.tasks.contest')
-    logger.info('=== Periodic check for FSO contests started ===')
 
-    # Find all final_submission contests that have ended
+    # Only contests that have ended and have not already been claimed for their current end_time.
+    # Excluding claimed contests in SQL keeps this cheap as FSO contests accumulate -- previously
+    # every FSO contest that had ever ended was re-examined on every single run.
     now = timezone.now()
     ended_contests = Contest.objects.filter(
         format_name='final_submission',
         end_time__lte=now,
-    )
-
-    logger.info('Found %s ended final_submission contests', ended_contests.count())
-
-    # Log each contest
-    for contest in ended_contests:
-        logger.info('  - Contest: %s, ended: %s, format: %s', contest.key, contest.end_time, contest.format_name)
+    ).exclude(fso_judged_end_time=F('end_time'))
 
     processed_count = 0
     for contest in ended_contests:
-        logger.info('Processing contest: %s', contest.key)
-
-        # Check if auto_judge is enabled (default: True)
-        format_config = contest.format_config or {}
-        auto_judge = format_config.get('auto_judge', True)
-        logger.info('  auto_judge: %s', auto_judge)
-
-        if not auto_judge:
-            logger.info('  Skipping %s: auto_judge disabled', contest.key)
+        if not contest.is_fso_auto_judge_pending():
             continue
 
-        # Use same cache key as trigger_final_submission_judging to avoid duplicate triggers
-        end_time_ts = int(contest.end_time.timestamp())
-        cache_key = f'fso_judged_{contest.id}_{end_time_ts}'
-        logger.info('  cache_key: %s', cache_key)
-
-        # Skip if already triggered for this end_time
-        if cache.get(cache_key):
-            logger.info('  Skipping %s: already triggered (cache hit)', contest.key)
+        # Atomic claim: exactly one caller wins per (contest, end_time), across processes and
+        # restarts. Losing the race simply means someone else is already handling this contest.
+        if not contest.claim_fso_auto_judge():
+            logger.info('Skipping %s: already claimed by another process', contest.key)
             continue
 
-        # Check if there are any submissions (pending or not)
-        total_count = Submission.objects.filter(
-            contest__participation__contest=contest,
-        ).count()
+        logger.info('✓ Triggering judge task for contest %s', contest.key)
+        judge_final_submissions.delay(contest.key, rejudge_all=False)
+        processed_count += 1
 
-        pending_count = Submission.objects.filter(
-            contest__participation__contest=contest,
-            status='PD',
-        ).count()
-
-        logger.info('  total_submissions: %s, pending: %s', total_count, pending_count)
-
-        # Trigger if there are ANY submissions (not just pending)
-        # This ensures all submissions are rejudged after contest ends
-        if total_count > 0:
-            # Mark as triggered (cache for 24 hours)
-            cache.set(cache_key, True, 86400)
-
-            # Trigger judging task for this contest
-            # Always use rejudge_all=False to let the task handle all submissions
-            logger.info('✓ Triggering judge task for contest %s (%s total submissions)', contest.key, total_count)
-            judge_final_submissions.delay(contest.key, rejudge_all=False)
-            processed_count += 1
-        else:
-            logger.info('  Skipping %s: no submissions', contest.key)
-
-    logger.info('=== Periodic check completed: processed %s contests ===', processed_count)
+    if processed_count:
+        logger.info('=== Periodic check completed: processed %s contests ===', processed_count)
     return processed_count

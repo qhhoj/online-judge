@@ -5,7 +5,6 @@ Uses threading.Timer to schedule judging without requiring Celery or cron.
 import logging
 import threading
 
-from django.core.cache import cache
 from django.utils import timezone
 
 logger = logging.getLogger('judge.fso_scheduler')
@@ -72,7 +71,7 @@ def _trigger_judging(contest_key):
     Trigger judging for an FSO contest.
     Called by timer when contest ends.
     """
-    from judge.models import Contest, Submission
+    from judge.models import Contest
     from judge.tasks.contest import _judge_final_submissions_impl
 
     logger.info('=== Timer triggered for contest %s ===', contest_key)
@@ -83,27 +82,17 @@ def _trigger_judging(contest_key):
         logger.error('Contest %s not found', contest_key)
         return
 
-    # Use cache to ensure we only trigger once per end_time
-    end_time_ts = int(contest.end_time.timestamp())
-    cache_key = f'fso_judged_{contest.id}_{end_time_ts}'
-
-    if cache.get(cache_key):
-        logger.info('Contest %s already judged for this end_time (cache hit)', contest_key)
+    if not contest.is_fso_auto_judge_pending():
+        logger.info('Contest %s is not pending auto-judge, skipping', contest_key)
         return
 
-    # Check if there are any submissions
-    total_count = Submission.objects.filter(
-        contest__participation__contest=contest,
-    ).count()
-
-    if total_count == 0:
-        logger.info('Contest %s has no submissions, skipping', contest_key)
+    # Atomic, database-backed claim. Timers are armed per process, so under multiple workers several
+    # of them fire at contest end; exactly one wins here and the rest return immediately.
+    if not contest.claim_fso_auto_judge():
+        logger.info('Contest %s already claimed for this end_time', contest_key)
         return
 
-    # Mark as triggered
-    cache.set(cache_key, True, 86400)  # Cache for 24 hours
-
-    logger.info('Triggering judging for contest %s (%s submissions)', contest_key, total_count)
+    logger.info('Triggering judging for contest %s', contest_key)
 
     # Call judging implementation directly (synchronous)
     try:

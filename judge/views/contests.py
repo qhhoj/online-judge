@@ -1651,9 +1651,11 @@ class ContestJudgeView(ContestMixin, TitleMixin, DetailView):
             from judge.tasks.contest import _judge_final_submissions_impl
 
             try:
-                # Trigger judging for ALL submissions (synchronous)
+                # Explicit operator action: the UI advertises this as "rejudge all submissions in
+                # this contest", so it resets finished submissions too. Automatic triggers use
+                # rejudge_all=False and only pick up submissions that were never judged.
                 logger.info('Triggering judging for contest %s', self.object.key)
-                result = _judge_final_submissions_impl(self.object.key, rejudge_all=False)
+                result = _judge_final_submissions_impl(self.object.key, rejudge_all=True)
 
                 # Show success message
                 messages.success(

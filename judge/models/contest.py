@@ -327,6 +327,13 @@ class Contest(models.Model):
         ),
         blank=True, default='', max_length=255,
     )
+    fso_judged_end_time = models.DateTimeField(
+        verbose_name=_('FSO auto-judge marker'), null=True, blank=True, default=None,
+        help_text=_(
+            'The end time for which Final Submission Only automatic judging has already been triggered. '
+            'Cleared implicitly when the contest end time changes, so extending a contest re-arms judging.',
+        ),
+    )
 
     @cached_property
     def format_class(self):
@@ -669,48 +676,60 @@ class Contest(models.Model):
             ).order_by('end_time'):
                 rate_contest(contest)
 
+    def is_fso_auto_judge_pending(self):
+        """
+        Whether automatic Final Submission Only judging should still run for this contest.
+
+        Does not claim anything; use `claim_fso_auto_judge` for that. This is only a cheap
+        pre-filter so callers can skip contests that are not eligible at all.
+        """
+        if self.format_name != 'final_submission' or not self.ended:
+            return False
+        if not (self.format_config or {}).get('auto_judge', True):
+            return False
+        return self.fso_judged_end_time != self.end_time
+
+    def claim_fso_auto_judge(self):
+        """
+        Atomically claim the right to automatically judge this contest for its current end time.
+
+        Returns True for exactly one caller per (contest, end_time), and False for everyone else --
+        across processes, across restarts, and with no expiry. The guarantee comes from the database:
+        the UPDATE matches at most once because it also writes the value it filters on.
+
+        Storing the end time rather than a flag means extending a contest re-arms judging, which was
+        the intent of the original cache-key-includes-end_time scheme.
+
+        Callers must check eligibility (`is_fso_auto_judge_pending`) first; this only handles the race.
+        """
+        claimed = Contest.objects.filter(
+            Q(fso_judged_end_time__isnull=True) | ~Q(fso_judged_end_time=self.end_time),
+            pk=self.pk,
+            end_time=self.end_time,
+        ).update(fso_judged_end_time=self.end_time)
+
+        if claimed:
+            # Keep the in-memory instance consistent with what we just wrote.
+            self.fso_judged_end_time = self.end_time
+        return bool(claimed)
+
+    claim_fso_auto_judge.alters_data = True
+
     def trigger_final_submission_judging(self):
         """
         Trigger judging for Final Submission Only contests.
-        This is called automatically when contest ends and someone accesses the contest.
-        Uses cache to ensure judging is only triggered once per end_time.
-        If contest time is extended, it will trigger again after the new end_time.
+        Called when someone accesses a contest that has already ended.
+
+        Judging runs at most once per end_time. If the contest time is extended, it runs again
+        after the new end_time.
         """
-        from django.core.cache import cache
-
-        # Only for final_submission format
-        if self.format_name != 'final_submission':
+        if not self.is_fso_auto_judge_pending():
             return False
 
-        # Only if contest has ended
-        if not self.ended:
-            return False
+        if not self.claim_fso_auto_judge():
+            return False  # Another process got there first.
 
-        # Check if auto_judge is enabled (default: True)
-        format_config = self.format_config or {}
-        auto_judge = format_config.get('auto_judge', True)
-        if not auto_judge:
-            return False
-
-        # Use cache to ensure we only trigger once per end_time
-        # Include end_time timestamp in cache key so extending contest time creates new cache key
-        end_time_ts = int(self.end_time.timestamp())
-        cache_key = f'fso_judged_{self.id}_{end_time_ts}'
-        if cache.get(cache_key):
-            return False  # Already triggered for this end_time
-
-        # Check if there are any submissions (not just pending)
-        total_count = Submission.objects.filter(
-            contest__participation__contest=self,
-        ).count()
-
-        if total_count == 0:
-            return False  # Nothing to judge
-
-        # Mark as triggered (cache for 24 hours)
-        cache.set(cache_key, True, 86400)
-
-        # Trigger the judging task for ALL submissions
+        # Judge only the submissions parked by the FSO flow; never touch finished ones.
         from judge.tasks.contest import judge_final_submissions
         judge_final_submissions.delay(self.key, rejudge_all=False)
 
